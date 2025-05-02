@@ -1,454 +1,234 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Logik-Visualisierer</title>
-  <!-- React und ReactDOM -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-  <!-- Babel für JSX -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.22.5/babel.min.js"></script>
-  <style>
-    /* Basis Styles */
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body { 
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-      margin: 0; 
-      padding: 0; 
-      touch-action: manipulation;
-      background-color: #f9fafb;
-    }
-    .container { 
-      max-width: 1200px; 
-      margin: 0 auto; 
-      padding: 0.5rem;
-    }
-    
-    /* Spacing */
-    .p-2 { padding: 0.5rem; }
-    .p-3 { padding: 0.75rem; }
-    .p-4 { padding: 1rem; }
-    .p-6 { padding: 1.5rem; }
-    .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
-    .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
-    .px-4 { padding-left: 1rem; padding-right: 1rem; }
-    .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
-    .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
-    .py-8 { padding-top: 2rem; padding-bottom: 2rem; }
-    .mb-2 { margin-bottom: 0.5rem; }
-    .mb-4 { margin-bottom: 1rem; }
-    .mt-4 { margin-top: 1rem; }
-    .mx-auto { margin-left: auto; margin-right: auto; }
-    
-    /* Layout */
-    .grid { display: grid; }
-    .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
-    .gap-4 { gap: 1rem; }
-    .gap-8 { gap: 2rem; }
-    
-    /* Text */
-    .text-center { text-align: center; }
-    .text-xs { font-size: 0.75rem; }
-    .text-sm { font-size: 0.875rem; }
-    .text-base { font-size: 1rem; }
-    .text-lg { font-size: 1.125rem; }
-    .text-xl { font-size: 1.25rem; }
-    .text-2xl { font-size: 1.5rem; }
-    .font-medium { font-weight: 500; }
-    .font-bold { font-weight: 700; }
-    
-    /* Colors */
-    .text-red-600 { color: #dc2626; }
-    .text-green-600 { color: #16a34a; }
-    .text-yellow-600 { color: #ca8a04; }
-    .text-gray-600 { color: #4b5563; }
-    .bg-white { background-color: #ffffff; }
-    .bg-blue-100 { background-color: #dbeafe; }
-    .bg-blue-200 { background-color: #bfdbfe; }
-    .bg-red-100 { background-color: #fee2e2; }
-    .bg-red-200 { background-color: #fecaca; }
-    .bg-green-100 { background-color: #dcfce7; }
-    .bg-green-200 { background-color: #bbf7d0; }
-    .bg-yellow-100 { background-color: #fef9c3; }
-    .bg-yellow-200 { background-color: #fef08a; }
-    
-    /* Visuals */
-    .rounded { border-radius: 0.25rem; }
-    .rounded-lg { border-radius: 0.5rem; }
-    .border { border-width: 1px; border-style: solid; border-color: #e5e7eb; }
-    .shadow { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); }
-    .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
-    .cursor-pointer { cursor: pointer; }
-    .w-full { width: 100%; }
-    .overflow-auto { overflow: auto; }
-    
-    /* Spezielle Styles */
-    .overline { text-decoration: overline; }
-    .border-collapse { border-collapse: collapse; }
-    
-    /* Table Styles - optimiert für mobile */
-    table { 
-      width: 100%;
-      margin: 0 auto;
-    }
-    th, td { 
-      border: 1px solid #e5e7eb; 
-      padding: 0.5rem;
-      min-width: 2.5rem;
-      min-height: 2.5rem;
-      touch-action: manipulation;
-    }
-    
-    /* Expression Bar */
-    .expression-bar {
-      margin-bottom: 1rem;
-      padding: 0.75rem;
-      background-color: #dbeafe;
-      border-radius: 0.25rem;
-      text-align: center;
-      font-size: 1rem;
-      font-weight: 500;
-      min-height: 3rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-    }
-    
-    /* Card Styles */
-    .card {
-      border-radius: 0.5rem;
-      border: 1px solid #e5e7eb;
-      background-color: white;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-      padding: 1rem;
-      margin-bottom: 1rem;
-      overflow: auto;
-    }
-    
-    /* App Container mit Click Handler */
-    .app-container {
-      min-height: 100vh;
-      padding: 1rem 0;
-    }
-    
-    /* Reset Button */
-    .reset-hint {
-      text-align: center;
-      color: #6b7280;
-      font-size: 0.875rem;
-      margin-top: 1rem;
-    }
-    
-    /* Media Queries */
-    @media (min-width: 640px) {
-      .container { padding: 1rem; }
-      .sm\:p-4 { padding: 1rem; }
-      .sm\:text-lg { font-size: 1.125rem; }
-      th, td { padding: 0.75rem; }
-    }
-    
-    @media (min-width: 768px) {
-      .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .md\:gap-8 { gap: 2rem; }
-      .md\:p-4 { padding: 1rem; }
-      .md\:p-6 { padding: 1.5rem; }
-      .md\:px-4 { padding-left: 1rem; padding-right: 1rem; }
-      .md\:py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
-      .md\:text-base { font-size: 1rem; }
-      .md\:text-xl { font-size: 1.25rem; }
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Wahrheitstabelle & Symmetriediagramm</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+    /*layout*/
+    body        {font-family:system-ui,sans-serif;margin:20px;}
+    h1          {margin-top:0;}
+    button,select{padding:4px 8px;font-size:1rem;cursor:pointer;}
+
+    /* Diagramme*/
+    table       {border-collapse:collapse;margin:12px 0;}
+    th,td       {border:1px solid #888;padding:4px 6px;text-align:center;}
+    th          {background:#eee;}
+
+    /* truth-table & K-map cells */
+    .outCell,
+    .kmap td    {width:42px;height:42px;cursor:pointer;}
+
+    /* colouring */
+    .on  {background:#4caf50;color:#fff;font-weight:bold;}
+    .off {background:#fafafa;}
+
+    /* nebeneinander */
+    #views      {display:flex;gap:32px;flex-wrap:wrap;}
+
+    /* hover highlight */
+    .hl {outline:2px solid #e91e63 !important;
+         background:#ffebee !important;color:#000 !important;}
+</style>
 </head>
 <body>
-  <div class="app-container">
-    <div class="container mx-auto">
-      <h1 class="text-2xl font-bold mb-4 text-center">Logik-Visualisierer</h1>
-      <div id="app"></div>
+
+<h1>Interaktiver Logik-Visualizer</h1>
+
+<label>Presets&nbsp;:
+    <select id="presetOp">
+        <option value="custom">custom</option>
+        <option value="and">AND</option>
+        <option value="or">OR</option>
+        <option value="xor" selected>XOR</option>
+        <option value="nand">NAND</option>
+        <option value="nor">NOR</option>
+        <option value="xnor">XNOR</option>
+    </select>
+</label>
+
+&nbsp;&nbsp;
+
+Variablen&nbsp;
+<button id="minusBtn">−</button>
+<span id="varCountLbl">3</span>
+<button id="plusBtn">+</button>
+
+<!-- two views next to each other -->
+<div id="views">
+    <div>
+        <h2>Wahrheitstabelle</h2>
+        <div id="truthWrap"></div>
     </div>
-  </div>
 
-  <script type="text/babel">
-    const { useState, useEffect, useRef } = React;
+    <div>
+        <h2>Symmetriediagramm</h2>
+        <div id="kmapWrap"></div>
+    </div>
+</div>
 
-    // Card Component
-    function Card({ className, children, ...props }) {
-      return (
-        <div 
-          className={`card ${className || ""}`}
-          {...props}
-        >
-          {children}
-        </div>
-      );
+<script>
+
+const $      = id => document.getElementById(id);
+const gray   = n => n ^ (n >> 1);                     // binary → Gray code
+const binStr = (n,bits) => n.toString(2).padStart(bits,'0');
+
+/* state handlng*/
+let numVars = 3;                                      // allowed: 2 … 4
+let truth   = [];                                     // [{bits:"010",out:0|1},…]
+let preset  = 'xor';
+const letters = ['A','B','C','D'];
+
+/* DOM */
+const presetSel   = $('presetOp');
+const minusBtn    = $('minusBtn');
+const plusBtn     = $('plusBtn');
+const varCountLbl = $('varCountLbl');
+
+/*buiild 01 */
+buildTruth();
+applyPreset();
+render();
+updateVarLabel();
+
+/* UI */
+minusBtn.onclick = () => { if (numVars > 2) { numVars--; rebuild(); } };
+plusBtn.onclick  = () => { if (numVars < 4) { numVars++; rebuild(); } };
+
+presetSel.onchange = () => {
+    preset = presetSel.value;
+    applyPreset();
+    render();
+};
+
+/* reset funktionalität */
+document.addEventListener('dblclick', e => {
+    if (!e.target.closest('#truthWrap') && !e.target.closest('#kmapWrap')) {
+        truth.forEach(r => r.out = 0);
+        presetSel.value = preset = 'custom';
+        render();
     }
+});
 
-    // Logic Visualizer Component
-    function LogicVisualizer() {
-      const initialTruthTable = [
-        { A: 0, B: 0, result: 0 },
-        { A: 0, B: 1, result: 0 },
-        { A: 1, B: 0, result: 0 },
-        { A: 1, B: 1, result: 1 },
-      ];
-      
-      const [truthTable, setTruthTable] = useState(initialTruthTable);
-      const [hoverIndex, setHoverIndex] = useState(null);
-      const [hoveredRowOrCol, setHoveredRowOrCol] = useState({ a: null, b: null });
-      const [isMobile, setIsMobile] = useState(false);
-      const [lastClickTime, setLastClickTime] = useState(0);
-      const containerRef = useRef(null);
-
-      // Mobile Detection
-      useEffect(() => {
-        const checkMobile = () => {
-          setIsMobile(
-            /Mobi|Android|iPhone|iPad|iPod|Tablet/i.test(navigator.userAgent) ||
-              window.innerWidth <= 768
-          );
-        };
-        checkMobile();
-        window.addEventListener("resize", checkMobile);
-        return () => window.removeEventListener("resize", checkMobile);
-      }, []);
-
-      // Clear highlight on click outside
-      useEffect(() => {
-        const handleClickOutside = (event) => {
-          // Prüfen, ob das Klickereignis außerhalb der Tabellen stattfand
-          if (
-            containerRef.current && 
-            !event.target.closest('table') && 
-            !event.target.closest('.expression-bar')
-          ) {
-            setHoverIndex(null);
-            setHoveredRowOrCol({ a: null, b: null });
-            
-            // Doppelklick zum Zurücksetzen der Tabelle
-            const currentTime = new Date().getTime();
-            if (currentTime - lastClickTime < 500) {
-              // Doppelklick erkannt - Tabelle zurücksetzen
-              setTruthTable([...initialTruthTable]);
-            }
-            setLastClickTime(currentTime);
-          }
-        };
-
-        document.addEventListener("mousedown", handleClickOutside);
-        document.addEventListener("touchstart", handleClickOutside, { passive: true });
-        
-        return () => {
-          document.removeEventListener("mousedown", handleClickOutside);
-          document.removeEventListener("touchstart", handleClickOutside);
-        };
-      }, [lastClickTime]);
-
-      const getKVCellIndex = (a, b) => a * 2 + b;
-
-      const renderVariable = (name, value, color) => {
-        return (
-          <span className={`font-bold ${color}`}>
-            {value === 1 ? name : <span className="overline">{name}</span>}
-          </span>
-        );
-      };
-
-      const getExpression = (index) => {
-        if (index === null) return "Kein Wert ausgesucht";
-        const row = truthTable[index];
-        return (
-          <span>
-            {renderVariable("A", row.A, "text-red-600")} &
-            {" "}
-            {renderVariable("B", row.B, "text-green-600")} =
-            <span className="text-yellow-600 font-bold"> {row.result}</span>
-          </span>
-        );
-      };
-
-      const getHoveredValues = (index) => {
-        if (index === null) return { aHover: null, bHover: null };
-        const row = truthTable[index];
-        return { aHover: row.A, bHover: row.B };
-      };
-
-      const toggleResult = (index) => {
-        const updated = [...truthTable];
-        updated[index].result = updated[index].result === 1 ? 0 : 1;
-        setTruthTable(updated);
-      };
-
-      // Mobile: Erster Tap = Highlight, Zweiter Tap = Toggle
-      const handleCellTouch = (index) => {
-        if (isMobile) {
-          if (hoverIndex === index) {
-            // Zweiter Tap auf dieselbe Zelle: Toggle Wert
-            toggleResult(index);
-          } else {
-            // Erster Tap: Highlight setzen
-            setHoverIndex(index);
-            const row = truthTable[index];
-            setHoveredRowOrCol({ a: row.A, b: row.B });
-          }
-        } else {
-          // Desktop: direkt togglen
-          toggleResult(index);
-        }
-      };
-
-      // Label Hover/Touch Handlers
-      const handleLabelInteraction = (label, val, isEnter) => {
-        if (isEnter) {
-          setHoveredRowOrCol(prev => ({ ...prev, [label]: val }));
-        } else if (!isMobile) {
-          setHoveredRowOrCol(prev => ({ ...prev, [label]: null }));
-        }
-      };
-
-      const handleLabelTouch = (label, val) => {
-        if (isMobile) {
-          setHoveredRowOrCol(prev => ({ 
-            ...prev, 
-            [label]: prev[label] === val ? null : val 
-          }));
-        }
-      };
-
-      const { aHover, bHover } = getHoveredValues(hoverIndex);
-
-      return (
-        <div className="text-base" ref={containerRef}>
-          {/* Expression Bar */}
-          <div className="expression-bar">
-            {getExpression(hoverIndex)}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
-            {/* Truth Table */}
-            <Card>
-              <h2 className="text-lg md:text-xl font-bold mb-2">Wahrheitstabelle</h2>
-              <div className="overflow-auto">
-                <table className="border-collapse text-center">
-                  <thead>
-                    <tr>
-                      <th className="border px-2">A</th>
-                      <th className="border px-2">B</th>
-                      <th className="border px-2">Ergebnis</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {truthTable.map((row, index) => {
-                      const highlightBlue =
-                        hoveredRowOrCol.a === row.A || hoveredRowOrCol.b === row.B;
-                      return (
-                        <tr
-                          key={index}
-                          className={`${
-                            hoverIndex === index
-                              ? "bg-yellow-200"
-                              : highlightBlue
-                              ? "bg-blue-100"
-                              : ""
-                          }`}
-                          onMouseEnter={() => !isMobile && setHoverIndex(index)}
-                          onMouseLeave={() => !isMobile && setHoverIndex(null)}
-                          onClick={() => handleCellTouch(index)}
-                        >
-                          <td className={`border px-2 ${hoverIndex === index ? "bg-red-200" : ""}`}>{row.A}</td>
-                          <td className={`border px-2 ${hoverIndex === index ? "bg-green-200" : ""}`}>{row.B}</td>
-                          <td className={`border px-2 cursor-pointer ${hoverIndex === index ? "bg-yellow-100" : ""}`}>
-                            {row.result}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
-
-            {/* KV Diagram */}
-            <Card>
-              <h2 className="text-lg md:text-xl font-bold mb-2">Symetriediagramm</h2>
-              <div className="overflow-auto">
-                <table className="mx-auto border-collapse text-center">
-                  <thead>
-                    <tr>
-                      <th></th>
-                      {[0, 1].map((bVal) => (
-                        <th
-                          key={bVal}
-                          className={`border px-3 cursor-pointer ${
-                            bHover === bVal ? "bg-green-100" : ""
-                          } ${hoveredRowOrCol.b === bVal ? "bg-blue-200" : ""}`}
-                          onMouseEnter={() => handleLabelInteraction("b", bVal, true)}
-                          onMouseLeave={() => handleLabelInteraction("b", bVal, false)}
-                          onClick={() => handleLabelTouch("b", bVal)}
-                        >
-                          {renderVariable("B", bVal)}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[0, 1].map((aVal) => (
-                      <tr key={aVal}>
-                        <th
-                          className={`border px-3 cursor-pointer ${
-                            aHover === aVal ? "bg-red-100" : ""
-                          } ${hoveredRowOrCol.a === aVal ? "bg-blue-200" : ""}`}
-                          onMouseEnter={() => handleLabelInteraction("a", aVal, true)}
-                          onMouseLeave={() => handleLabelInteraction("a", aVal, false)}
-                          onClick={() => handleLabelTouch("a", aVal)}
-                        >
-                          {renderVariable("A", aVal)}
-                        </th>
-                        {[0, 1].map((bVal) => {
-                          const index = getKVCellIndex(aVal, bVal);
-                          const val = truthTable[index].result;
-                          const isActive = hoverIndex === index;
-                          const isBlue = hoveredRowOrCol.a === aVal || hoveredRowOrCol.b === bVal;
-                          return (
-                            <td
-                              key={bVal}
-                              className={`border px-3 py-2 text-center cursor-pointer ${
-                                isActive ? "bg-yellow-200" : isBlue ? "bg-blue-100" : ""
-                              }`}
-                              onMouseEnter={() => !isMobile && setHoverIndex(index)}
-                              onMouseLeave={() => !isMobile && setHoverIndex(null)}
-                              onClick={() => handleCellTouch(index)}
-                            >
-                              {val}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
-          </div>
-          
-          <div className="reset-hint">
-            <em>Tipp: Doppelklick auf leere Fläche zum Zurücksetzen</em>
-          </div>
-        </div>
-      );
+/* building und rebuilding */
+function buildTruth(){
+    truth = [];
+    for (let i = 0; i < (1 << numVars); i++){
+        truth.push({bits: binStr(i,numVars), out: 0});
     }
+}
+function rebuild(){
+    buildTruth();
+    applyPreset();
+    render();
+    updateVarLabel();
+}
+function updateVarLabel(){ varCountLbl.textContent = numVars; }
 
-    // Main App
-    function App() {
-      return (
-        <div>
-          <LogicVisualizer />
-        </div>
-      );
+/* presets */
+function calcPreset(bits, op){
+    const ones = [...bits].filter(b => b === '1').length;
+    switch(op){
+        case 'and' : return ones === bits.length ? 1 : 0;
+        case 'or'  : return ones ? 1 : 0;
+        case 'xor' : return ones & 1;                 // parity
+        case 'nand': return ones === bits.length ? 0 : 1;
+        case 'nor' : return ones ? 0 : 1;
+        case 'xnor': return (ones & 1) ? 0 : 1;
+        default    : return 0;
     }
+}
+function applyPreset(){
+    if (preset === 'custom') return;
+    truth.forEach(r => r.out = calcPreset(r.bits, preset));
+}
 
-    // Render the App
-    ReactDOM.render(<App />, document.getElementById('app'));
-  </script>
+/* render */
+function render(){
+    renderTruthTable();
+    renderKMap();
+}
+
+/* truthtable */
+function renderTruthTable(){
+    let html = '<table><tr>';
+    for (let v = 0; v < numVars; v++) html += `<th>${letters[v]}</th>`;
+    html += '<th>f</th></tr>';
+
+    truth.forEach(row => {
+        const cls = row.out ? 'on' : 'off';
+        html += `<tr data-bits="${row.bits}" class="tt-row">`;
+        [...row.bits].forEach(b => html += `<td>${b}</td>`);
+        html += `<td class="outCell ${cls}" data-bits="${row.bits}">${row.out}</td></tr>`;
+    });
+    html += '</table>';
+    $('truthWrap').innerHTML = html;
+
+    // toggle output 
+    $('truthWrap').querySelectorAll('.outCell').forEach(td => {
+        td.onclick = e => {
+            const bits = e.currentTarget.dataset.bits;
+            const obj  = truth.find(t => t.bits === bits);
+            obj.out ^= 1;
+            presetSel.value = preset = 'custom';
+            render();
+        };
+    });
+
+    addHoverEvents( $('truthWrap').querySelectorAll('.tt-row, .outCell') );
+}
+
+/*KV Diagramm*/
+function renderKMap(){
+    const rBits = Math.floor(numVars / 2);
+    const cBits = numVars - rBits;
+    const rows  = 1 << rBits, cols = 1 << cBits;
+
+    let html = '<table class="kmap"><tr><th></th>';
+    for (let c = 0; c < cols; c++)
+        html += `<th>${binStr(gray(c), cBits)}</th>`;
+    html += '</tr>';
+
+    for (let r = 0; r < rows; r++){
+        html += `<tr><th>${binStr(gray(r), rBits)}</th>`;
+        for (let c = 0; c < cols; c++){
+            const bits = binStr(gray(r), rBits) + binStr(gray(c), cBits);
+            const obj  = truth.find(t => t.bits === bits);
+            const cls  = obj.out ? 'on' : 'off';
+            html += `<td class="${cls}" data-bits="${bits}">${obj.out}</td>`;
+        }
+        html += '</tr>';
+    }
+    html += '</table>';
+    $('kmapWrap').innerHTML = html;
+
+    // toggle on click
+    $('kmapWrap').querySelectorAll('td[data-bits]').forEach(td => {
+        td.onclick = e => {
+            const bits = e.currentTarget.dataset.bits;
+            const obj  = truth.find(t => t.bits === bits);
+            obj.out ^= 1;
+            presetSel.value = preset = 'custom';
+            render();
+        };
+    });
+
+    addHoverEvents( $('kmapWrap').querySelectorAll('td[data-bits]') );
+}
+
+/* hovers synchronisieren*/
+function addHoverEvents(nodeList){
+    nodeList.forEach(el => {
+        const bits = el.dataset.bits;
+        if (!bits) return;
+        el.onmouseenter = () => highlight(bits, true);
+        el.onmouseleave = () => highlight(bits, false);
+    });
+}
+function highlight(bits, flag){
+    document.querySelectorAll(`[data-bits="${bits}"]`)
+            .forEach(el => el.classList.toggle('hl', flag));
+}
+</script>
 </body>
 </html>
