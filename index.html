@@ -2,33 +2,33 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Wahrheitstabelle & Symmetriediagramm</title>
+<title>Logik-Visualizer: TT, K-Map, DNF, KNF</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-    /*layout*/
-    body        {font-family:system-ui,sans-serif;margin:20px;}
-    h1          {margin-top:0;}
-    button,select{padding:4px 8px;font-size:1rem;cursor:pointer;}
+/*–– Layout ––*/
+body        {font-family:system-ui,sans-serif;margin:20px;}
+h1          {margin-top:0;}
+button,select{padding:4px 8px;font-size:1rem;cursor:pointer;}
 
-    /* Diagramme*/
-    table       {border-collapse:collapse;margin:12px 0;}
-    th,td       {border:1px solid #888;padding:4px 6px;text-align:center;}
-    th          {background:#eee;}
+/*–– Tabellen ––*/
+table       {border-collapse:collapse;margin:12px 0;}
+th,td       {border:1px solid #888;padding:4px 6px;text-align:center;}
+th          {background:#eee;}
+.outCell,
+.kmap td    {width:42px;height:42px;cursor:pointer;}
 
-    /* truth-table & K-map cells */
-    .outCell,
-    .kmap td    {width:42px;height:42px;cursor:pointer;}
+/*–– Farben ––*/
+.on   {background:#4caf50;color:#fff;font-weight:bold;}
+.off  {background:#fafafa;}
+.hl   {outline:2px solid #e91e63 !important;background:#ffebee !important;color:#000 !important;}
 
-    /* colouring */
-    .on  {background:#4caf50;color:#fff;font-weight:bold;}
-    .off {background:#fafafa;}
+/*–– Flexbox für alle drei Ansichten ––*/
+#views      {display:flex;gap:32px;flex-wrap:wrap;}
 
-    /* nebeneinander */
-    #views      {display:flex;gap:32px;flex-wrap:wrap;}
-
-    /* hover highlight */
-    .hl {outline:2px solid #e91e63 !important;
-         background:#ffebee !important;color:#000 !important;}
+/*–– Term-Boxen ––*/
+.term        {padding:2px 6px;margin:2px;border-radius:4px;cursor:pointer;display:inline-block}
+.dnfTerm     {background:#d0eaff;}
+.cnfTerm     {background:#ffe0e0;}
 </style>
 </head>
 <body>
@@ -54,7 +54,7 @@ Variablen&nbsp;
 <span id="varCountLbl">3</span>
 <button id="plusBtn">+</button>
 
-<!-- two views next to each other -->
+<!-- Drei Ansichten nebeneinander -->
 <div id="views">
     <div>
         <h2>Wahrheitstabelle</h2>
@@ -65,52 +65,59 @@ Variablen&nbsp;
         <h2>Symmetriediagramm</h2>
         <div id="kmapWrap"></div>
     </div>
+
+    <div>
+        <h2>DNF &amp; KNF</h2>
+        <div id="exprWrap"></div>
+    </div>
 </div>
 
 <script>
-
+/*–––– Hilfsfunktionen ––––*/
 const $      = id => document.getElementById(id);
-const gray   = n => n ^ (n >> 1);                     // binary → Gray code
+const gray   = n => n ^ (n >> 1);                  // binary → Gray
 const binStr = (n,bits) => n.toString(2).padStart(bits,'0');
 
-/* state handlng*/
-let numVars = 3;                                      // allowed: 2 … 4
-let truth   = [];                                     // [{bits:"010",out:0|1},…]
+/*–––– State ––––*/
+let numVars = 3;                                   // 2 … 4
+let truth   = [];                                  // [{bits:"010",out:0|1},…]
 let preset  = 'xor';
 const letters = ['A','B','C','D'];
 
-/* DOM */
+/*–––– DOM-Referenzen ––––*/
 const presetSel   = $('presetOp');
 const minusBtn    = $('minusBtn');
 const plusBtn     = $('plusBtn');
 const varCountLbl = $('varCountLbl');
 
-/*buiild 01 */
+/*–––– Initialaufbau ––––*/
 buildTruth();
 applyPreset();
-render();
+renderAll();
 updateVarLabel();
 
-/* UI */
+/*–––– UI-Events ––––*/
 minusBtn.onclick = () => { if (numVars > 2) { numVars--; rebuild(); } };
 plusBtn.onclick  = () => { if (numVars < 4) { numVars++; rebuild(); } };
 
 presetSel.onchange = () => {
     preset = presetSel.value;
     applyPreset();
-    render();
+    renderAll();
 };
 
-/* reset funktionalität */
+/* Doppelklick = Reset */
 document.addEventListener('dblclick', e => {
-    if (!e.target.closest('#truthWrap') && !e.target.closest('#kmapWrap')) {
+    if (!e.target.closest('#truthWrap') &&
+        !e.target.closest('#kmapWrap')  &&
+        !e.target.closest('#exprWrap')) {
         truth.forEach(r => r.out = 0);
         presetSel.value = preset = 'custom';
-        render();
+        renderAll();
     }
 });
 
-/* building und rebuilding */
+/*–––– Build / Rebuild ––––*/
 function buildTruth(){
     truth = [];
     for (let i = 0; i < (1 << numVars); i++){
@@ -120,18 +127,18 @@ function buildTruth(){
 function rebuild(){
     buildTruth();
     applyPreset();
-    render();
+    renderAll();
     updateVarLabel();
 }
 function updateVarLabel(){ varCountLbl.textContent = numVars; }
 
-/* presets */
+/*–––– Presets ––––*/
 function calcPreset(bits, op){
     const ones = [...bits].filter(b => b === '1').length;
     switch(op){
         case 'and' : return ones === bits.length ? 1 : 0;
         case 'or'  : return ones ? 1 : 0;
-        case 'xor' : return ones & 1;                 // parity
+        case 'xor' : return ones & 1;
         case 'nand': return ones === bits.length ? 0 : 1;
         case 'nor' : return ones ? 0 : 1;
         case 'xnor': return (ones & 1) ? 0 : 1;
@@ -143,13 +150,14 @@ function applyPreset(){
     truth.forEach(r => r.out = calcPreset(r.bits, preset));
 }
 
-/* render */
-function render(){
+/*–––– Render-Funktionen ––––*/
+function renderAll(){
     renderTruthTable();
     renderKMap();
+    renderExpressions();
 }
 
-/* truthtable */
+/* Wahrheitstabelle */
 function renderTruthTable(){
     let html = '<table><tr>';
     for (let v = 0; v < numVars; v++) html += `<th>${letters[v]}</th>`;
@@ -164,29 +172,28 @@ function renderTruthTable(){
     html += '</table>';
     $('truthWrap').innerHTML = html;
 
-    // toggle output 
+    /* Klick → Toggle */
     $('truthWrap').querySelectorAll('.outCell').forEach(td => {
         td.onclick = e => {
             const bits = e.currentTarget.dataset.bits;
             const obj  = truth.find(t => t.bits === bits);
             obj.out ^= 1;
             presetSel.value = preset = 'custom';
-            render();
+            renderAll();
         };
     });
 
     addHoverEvents( $('truthWrap').querySelectorAll('.tt-row, .outCell') );
 }
 
-/*KV Diagramm*/
+/* KV-Diagramm */
 function renderKMap(){
     const rBits = Math.floor(numVars / 2);
     const cBits = numVars - rBits;
     const rows  = 1 << rBits, cols = 1 << cBits;
 
     let html = '<table class="kmap"><tr><th></th>';
-    for (let c = 0; c < cols; c++)
-        html += `<th>${binStr(gray(c), cBits)}</th>`;
+    for (let c = 0; c < cols; c++) html += `<th>${binStr(gray(c), cBits)}</th>`;
     html += '</tr>';
 
     for (let r = 0; r < rows; r++){
@@ -202,21 +209,78 @@ function renderKMap(){
     html += '</table>';
     $('kmapWrap').innerHTML = html;
 
-    // toggle on click
+    /* Toggle */
     $('kmapWrap').querySelectorAll('td[data-bits]').forEach(td => {
         td.onclick = e => {
             const bits = e.currentTarget.dataset.bits;
             const obj  = truth.find(t => t.bits === bits);
             obj.out ^= 1;
             presetSel.value = preset = 'custom';
-            render();
+            renderAll();
         };
     });
 
     addHoverEvents( $('kmapWrap').querySelectorAll('td[data-bits]') );
 }
 
-/* hovers synchronisieren*/
+/* DNF / KNF */
+function renderExpressions(){
+    const dnfRows = truth.filter(r => r.out);
+    const cnfRows = truth.filter(r => !r.out);
+
+    const termToString = (bits,type) => {
+        let parts = [];
+        for (let i = 0; i < numVars; i++){
+            const b = bits[i];
+            const lit = (type==='dnf')
+                       ? (b==='1'?letters[i]:'¬'+letters[i])
+                       : (b==='0'?letters[i]:'¬'+letters[i]);
+            parts.push(lit);
+        }
+        return parts.join(type==='dnf' ? '∧' : '∨');
+    };
+
+
+    let html = '';
+
+    /* DNF */
+    html += '<strong>DNF:</strong><br>';
+    if (dnfRows.length){
+        html += dnfRows.map(r =>
+                 `<span class="term dnfTerm" data-bits="${r.bits}">${termToString(r.bits,'dnf')}</span>`
+              ).join(' ∨ ') ;
+    } else {
+        html += '0';
+    }
+
+    /* KNF */
+    html += '<hr><strong>KNF:</strong><br>';
+    if (cnfRows.length){
+        html += cnfRows.map(r =>
+                 `<span class="term cnfTerm" data-bits="${r.bits}">(${termToString(r.bits,'cnf')})</span>`
+              ).join(' ∧ ');
+    } else {
+        html += '1';
+    }
+
+    $('exprWrap').innerHTML = html;
+
+    /* Hover- & Klick-Events */
+    addHoverEvents( $('exprWrap').querySelectorAll('.term') );
+
+    // Klick auf Term toggelt Zeile im Truth-Table
+    $('exprWrap').querySelectorAll('.term').forEach(el=>{
+        el.onclick = e=>{
+            const bits = e.currentTarget.dataset.bits;
+            const obj  = truth.find(t => t.bits === bits);
+            obj.out ^= 1;
+            presetSel.value = preset = 'custom';
+            renderAll();
+        };
+    });
+}
+
+/*Hover-Synchronisierung*/
 function addHoverEvents(nodeList){
     nodeList.forEach(el => {
         const bits = el.dataset.bits;
