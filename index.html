@@ -5,7 +5,7 @@
 <title>Logik-Visualizer</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-/*Layoout*/
+/*–– Layout ––*/
 body{font-family:system-ui,sans-serif;margin:20px;}
 h1{margin-top:0;} button,select{padding:4px 8px;font-size:1rem;cursor:pointer;}
 table{border-collapse:collapse;margin:12px 0;}
@@ -61,12 +61,12 @@ Variablen
 </div>
 
 <script>
-/*Hilfsfunktionen */
+/*–––– Hilfsfunktionen ––––*/
 const $  = id => document.getElementById(id);
 const gray   = n => n ^ (n>>1);
 const binStr = (n,b) => n.toString(2).padStart(b,'0');
 
-/*Zustands-handler*/
+/*–––– State ––––*/
 let numVars=3;                      // 2…4
 let truth  =[];                     // {bits:"0101",out:0|1|null}
 let preset ='xor';
@@ -76,22 +76,22 @@ const letters=['A','B','C','D'];
 const presetSel=$('presetOp'),minusBtn=$('minusBtn'),
       plusBtn=$('plusBtn'), varLbl=$('varCountLbl');
 
-/*Anfangszustand*/
+/*–––– Initial ––––*/
 buildTruth(); applyPreset(); renderAll();
 
-/*UI*/
+/*–––– UI ––––*/
 minusBtn.onclick=()=>{if(numVars>2){numVars--; rebuild();}};
 plusBtn.onclick =()=>{if(numVars<4){numVars++; rebuild();}};
 presetSel.onchange=()=>{preset=presetSel.value;applyPreset();renderAll();};
 
-/* reset bei double click*/
+/* Dbl-Click reset */
 document.addEventListener('dblclick',e=>{
  if(!e.target.closest('#truthWrap')&&!e.target.closest('#kmapWrap')
     &&!e.target.closest('#exprWrap')){
    truth.forEach(r=>r.out=0); preset='custom';presetSel.value='custom';renderAll();
  }});
 
-/*Build / Rebuild*/
+/*–––– Build / Rebuild ––––*/
 function buildTruth(){
   truth=[]; for(let i=0;i<(1<<numVars);i++)
     truth.push({bits:binStr(i,numVars),out:0});
@@ -113,10 +113,10 @@ function calcPreset(bits,op){
  }
 }
 
-/*Render*/
+/*–––– Render ––––*/
 function renderAll(){renderTruth();renderKMap();renderExpr();varLbl.textContent=numVars;}
 
-/* Wahrheitstabellle */
+/* Wahrheitstabelle */
 function renderTruth(){
  let html='<table><tr>';
  for(let v=0;v<numVars;v++)html+=`<th>${letters[v]}</th>`;
@@ -169,6 +169,7 @@ function renderKMap(){
  addHoverEvents( $('kmapWrap').querySelectorAll('td[data-bits]') );
 }
 
+/*–––– Expressionen ––––*/
 function renderExpr(){
  const ones = truth.filter(r=>r.out===1).map(r=>parseInt(r.bits,2));
  const zeros= truth.filter(r=>r.out===0).map(r=>parseInt(r.bits,2));
@@ -233,11 +234,11 @@ function renderExpr(){
  });
 }
 
-
+/*–––– Quine-McCluskey ––––*/
 function qmSimplify(vars,minterms,dcs=[]){
  const all=[...minterms,...dcs];
  if(!minterms.length)return [];                  // leer -> 0-Funktion
- /* 1. Prime-IMplikanten */
+ /* 1. Prime-Implicants */
  let groups={},nextGroups={},checked=new Set(),primes=new Set();
  const oneCnt=x=>x.toString(2).replace(/0/g,'').length;
  all.forEach(v=>{
@@ -265,7 +266,7 @@ function qmSimplify(vars,minterms,dcs=[]){
   groups={};
   Object.entries(nextGroups).forEach(([k,arr])=>groups[k]=[...new Set(arr)]);
  }
- 
+ /* 2. Prime-chart */
  primes=[...primes];
  const covers=(pat,val)=>{
    const bs=binStr(val,vars);
@@ -284,7 +285,7 @@ function qmSimplify(vars,minterms,dcs=[]){
      }
    }
  });
- /
+ /* 3. Greedy für Rest */
  let rest=minterms.filter(m=>!covered.has(m));
  let chosen=[...essential];
  while(rest.length){
@@ -314,7 +315,7 @@ function expandPattern(pat){          // liefert alle konkreten Bitstrings für 
  return res;
 }
 
-/*Hover Sync */
+/*–––– Hover Sync ––––*/
 function addHoverEvents(nodes){
  nodes.forEach(el=>{
   el.onmouseenter=()=>toggleHighlight(el,true);
