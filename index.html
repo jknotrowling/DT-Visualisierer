@@ -5,331 +5,316 @@
 <title>Logik-Visualizer</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-/*–– Layout ––*/
-body{font-family:system-ui,sans-serif;margin:20px;}
-h1{margin-top:0;} button,select{padding:4px 8px;font-size:1rem;cursor:pointer;}
-table{border-collapse:collapse;margin:12px 0;}
-th,td{border:1px solid #888;padding:4px 6px;text-align:center;}
-th{background:#eee;}
-.outCell,.kmap td{width:42px;height:42px;cursor:pointer;}
-.on {background:#4caf50;color:#fff;font-weight:bold;}
-.off{background:#fafafa;}
-.dc {background:#ff9800;color:#fff;font-weight:bold;}
-.hl {outline:2px solid #e91e63 !important;background:#ffebee !important;color:#000 !important;}
-#views{display:flex;gap:32px;flex-wrap:wrap;}
-#views>div{flex:1 1 280px;min-width:280px;}
+body{font-family:system-ui,sans-serif;margin:20px}
+h1{margin:0 0 12px}
+button,select{padding:4px 8px;font-size:1rem;cursor:pointer}
+
+table{border-collapse:collapse;margin:12px 0}
+th,td{border:1px solid #888;padding:4px 6px;text-align:center}
+th{background:#eee}
+
+.truth th,.truth td,.outCell{width:42px}
+.outCell,.kmap td{height:42px;cursor:pointer}
+
+.on {background:#4caf50;color:#fff;font-weight:bold}
+.off{background:#fafafa}
+.dc {background:#ff9800;color:#fff;font-weight:bold}
+
+.hl {outline:2px solid #e91e63 !important;
+     background:#ffebee !important;color:#000 !important}
+
+#views{display:flex;gap:32px;flex-wrap:wrap}
+#views>div{flex:1 1 280px;min-width:280px}
+
+.kmap th.varhead{width:40px;height:36px}
+
 .term{padding:2px 6px;margin:2px;border-radius:4px;cursor:pointer;display:inline-block}
-.dnfTerm{background:#d0eaff;}   .cnfTerm{background:#ffe0e0;}
-.dmfTerm{background:#b2ffb2;}   .kmfTerm{background:#ffd59e;}
+.dnfTerm{background:#d0eaff}.cnfTerm{background:#ffe0e0}
+.dmfTerm{background:#b2ffb2}.kmfTerm{background:#ffd59e}
+
+.ov{text-decoration:overline}
 </style>
 </head>
 <body>
-
 <h1>Interaktiver Logik-Visualizer</h1>
 
 <label>Presets :
-    <select id="presetOp">
-        <option value="custom">custom</option>
-        <option value="and">AND</option>
-        <option value="or">OR</option>
-        <option value="xor" selected>XOR</option>
-        <option value="nand">NAND</option>
-        <option value="nor">NOR</option>
-        <option value="xnor">XNOR</option>
-    </select>
+  <select id="presetOp">
+    <option value="custom">custom</option>
+    <option value="and">AND</option><option value="or">OR</option>
+    <option value="xor" selected>XOR</option>
+    <option value="nand">NAND</option><option value="nor">NOR</option>
+    <option value="xnor">XNOR</option>
+  </select>
 </label>
-
 &nbsp;&nbsp;
-Variablen 
+Variablen
 <button id="minusBtn">−</button>
 <span id="varCountLbl">3</span>
 <button id="plusBtn">+</button>
 
 <div id="views">
-    <div>
-        <h2>Wahrheitstabelle</h2>
-        <div id="truthWrap"></div>
-    </div>
-    <div>
-        <h2>Symmetriediagramm</h2>
-        <div id="kmapWrap"></div>
-    </div>
-    <div>
-        <h2>DNF/KNF & DMF/KMF</h2>
-        <div id="exprWrap"></div>
-    </div>
+  <div><h2>Wahrheitstabelle</h2><div id="truthWrap"></div></div>
+  <div><h2>Symmetriediagramm</h2><div id="kmapWrap"></div></div>
+  <div><h2>DNF/KNF &amp; DMF/KMF</h2><div id="exprWrap"></div></div>
 </div>
 
 <script>
-/*–––– Hilfsfunktionen ––––*/
-const $  = id => document.getElementById(id);
-const gray   = n => n ^ (n>>1);
-const binStr = (n,b) => n.toString(2).padStart(b,'0');
+/* ===== Utilities ===== */
+const $   = id => document.getElementById(id);
+const bin = (n,b)=>n.toString(2).padStart(b,'0');
+const L   = ['A','B','C','D'];
+const lbl = (i,neg)=>neg?`<span class="ov">${L[i]}</span>`:L[i];
 
-/*–––– State ––––*/
-let numVars=3;                      // 2…4
-let truth  =[];                     // {bits:"0101",out:0|1|null}
-let preset ='xor';
-const letters=['A','B','C','D'];
+/* ===== Gray-Code-Sequenz (stabil) ===== */
+function graySeq(bits){
+  if(bits===0) return [''];
+  let arr=['0','1'];
+  while(arr[0].length<bits){
+    const rev=[...arr].reverse();
+    arr=arr.map(c=>'0'+c).concat(rev.map(c=>'1'+c));
+  }
+  return arr;
+}
 
-/*–– DOM ––*/
-const presetSel=$('presetOp'),minusBtn=$('minusBtn'),
-      plusBtn=$('plusBtn'), varLbl=$('varCountLbl');
+/* ===== State ===== */
+let nVars = 3;          // 2–4
+let truth = [];         // {bits:'010',out:0|1|null}
+let preset= 'xor';
 
-/*–––– Initial ––––*/
+/* ===== Wahrheitstabelle ===== */
+function buildTruth(){
+  truth=[];
+  for(let i=0;i<(1<<nVars);i++){
+    // Bits rückwärts -> A (LSB) wechselt am schnellsten
+    const rev = bin(i,nVars).split('').reverse().join('');
+    truth.push({bits:rev,out:0});
+  }
+}
+function applyPreset(){
+  if(preset==='custom') return;
+  truth.forEach(r=>{
+    const ones=[...r.bits].filter(b=>b==='1').length;
+    switch(preset){
+      case'and':  r.out=ones===nVars?1:0; break;
+      case'or':   r.out=ones?1:0; break;
+      case'xor':  r.out=ones&1; break;
+      case'nand': r.out=ones===nVars?0:1; break;
+      case'nor':  r.out=ones?0:1; break;
+      case'xnor': r.out=(ones&1)?0:1;
+    }
+  });
+}
+
+/* ===== Rendering Root ===== */
+function renderAll(){
+  renderTruth(); renderKMap(); renderExpr();
+  $('varCountLbl').textContent=nVars;
+}
+
+/* ---------- Wahrheitstabelle ---------- */
+function renderTruth(){
+  let h='<table class="truth"><tr>';
+  for(let i=0;i<nVars;i++) h+=`<th>${L[i]}</th>`;
+  h+='<th>f</th></tr>';
+  truth.forEach(r=>{
+    const cls=r.out===1?'on':r.out===null?'dc':'off';
+    const dsp=r.out===null?'/':r.out;
+    h+=`<tr><td>${[...r.bits].join('</td><td>')}</td>
+         <td class="outCell ${cls}" data-bits="${r.bits}">${dsp}</td></tr>`;
+  });
+  h+='</table>';
+  $('truthWrap').innerHTML=h;
+
+  $('truthWrap').querySelectorAll('.outCell').forEach(td=>{
+    td.onclick=e=>{
+      const o=truth.find(t=>t.bits===e.currentTarget.dataset.bits);
+      o.out=o.out===0?1:o.out===1?null:0;
+      preset='custom';$('presetOp').value='custom';renderAll();
+    };
+  });
+  addHover($('truthWrap').querySelectorAll('.outCell'));
+}
+
+/* ---------- KV-Diagramm ---------- */
+function renderKMap(){
+  // columns = C (outer), A (inner) ; rows = D (outer), B (inner)
+  let colVars=[],rowVars=[];
+  if(nVars===2){ colVars=[0];       rowVars=[1];       }  // A | B
+  if(nVars===3){ colVars=[2,0];     rowVars=[1];       }  // C,A | B
+  if(nVars===4){ colVars=[2,0];     rowVars=[3,1];     }  // C,A | D,B
+
+  const colSeq=graySeq(colVars.length);
+  const rowSeq=graySeq(rowVars.length);
+
+  let h='<table class="kmap">';
+
+  // Spaltenkopf
+  colVars.forEach((v,lvl)=>{
+    h+='<tr>';
+    rowVars.forEach(()=>h+='<th></th>');
+    colSeq.forEach(p=>h+=`<th class="varhead">${lbl(v,p[lvl]==='0')}</th>`);
+    h+='</tr>';
+  });
+
+  // Datenzeilen
+  rowSeq.forEach(rPat=>{
+    h+='<tr>';
+    [...rPat].forEach((bit,i)=>h+=`<th class="varhead">${lbl(rowVars[i],bit==='0')}</th>`);
+    colSeq.forEach(cPat=>{
+      const bits=Array(nVars);
+      rowVars.forEach((idx,i)=>bits[idx]=rPat[i]);
+      colVars.forEach((idx,i)=>bits[idx]=cPat[i]);
+      const str=bits.join('');
+      const o  = truth.find(t=>t.bits===str);
+      const cls= o.out===1?'on':o.out===null?'dc':'off';
+      const dsp= o.out===null?'/':o.out;
+      h+=`<td class="${cls}" data-bits="${str}">${dsp}</td>`;
+    });
+    h+='</tr>';
+  });
+  h+='</table>';
+  $('kmapWrap').innerHTML=h;
+
+  $('kmapWrap').querySelectorAll('td[data-bits]').forEach(td=>{
+    td.onclick=e=>{
+      const o=truth.find(t=>t.bits===e.currentTarget.dataset.bits);
+      o.out=o.out===0?1:o.out===1?null:0;
+      preset='custom';$('presetOp').value='custom';renderAll();
+    };
+  });
+  addHover($('kmapWrap').querySelectorAll('td[data-bits]'));
+}
+
+/* ---------- Ausdrücke ---------- */
+function lit(bits,type){
+  return [...bits].map((b,i)=>{
+    if(b==='-') return '';
+    const neg = (type==='dnf'||type==='dmf') ? b==='0' : b==='1';
+    return lbl(i,neg);
+  }).filter(Boolean).join((type==='dnf'||type==='dmf')?'∧':'∨');
+}
+
+function minimize(v,mins,dcs=[]){
+  const ones=x=>x.toString(2).replace(/0/g,'').length;
+  let g={},pr=new Set();
+  [...mins,...dcs].forEach(m=>{
+    const s=bin(m,v); (g[ones(m)]??=[]).push(s);
+  });
+  while(true){
+    const nx={},used=new Set(); let comb=false;
+    const ks=Object.keys(g).map(Number).sort((a,b)=>a-b);
+    for(let i=0;i<ks.length-1;i++){
+      (g[ks[i]]||[]).forEach(a=>(g[ks[i+1]]||[]).forEach(b=>{
+        const diff=[...a].filter((_,k)=>a[k]!==b[k]).length;
+        if(diff===1){
+          comb=true;
+          const m=a.split('').map((ch,k)=>ch===b[k]?ch:'-').join('');
+          (nx[ones(m)]??=[]).push(m);
+          used.add(a); used.add(b);
+        }
+      }));
+    }
+    Object.values(g).flat().forEach(s=>{if(!used.has(s))pr.add(s);});
+    if(!comb)break;
+    g={};Object.entries(nx).forEach(([k,a])=>g[k]=[...new Set(a)]);
+  }
+  const covers=(p,val)=>{
+    const bs=bin(val,v);
+    for(let i=0;i<v;i++) if(p[i]!=='-'&&p[i]!==bs[i]) return false;
+    return true;
+  };
+  const chart=mins.map(m=>[...pr].filter(p=>covers(p,m)));
+  const ess=[],cov=new Set();
+  chart.forEach(pis=>{
+    if(pis.length===1){
+      const p=pis[0];
+      if(!ess.includes(p)){
+        ess.push(p);
+        mins.forEach(m=>covers(p,m)&&cov.add(m));
+      }
+    }
+  });
+  let rest=mins.filter(m=>!cov.has(m)),chosen=[...ess];
+  while(rest.length){
+    let best=null,max=0;
+    pr.forEach(p=>{
+      const c=rest.filter(m=>covers(p,m)).length;
+      if(c>max){max=c;best=p;}
+    });
+    if(!best)break;
+    chosen.push(best);
+    rest=rest.filter(m=>!covers(best,m));
+  }
+  return chosen;
+}
+const expand=p=>{
+  let res=[''];
+  [...p].forEach(ch=>{
+    res = ch==='-' ? res.flatMap(s=>[s+'0',s+'1']) : res.map(s=>s+ch);
+  });
+  return res;
+};
+
+function renderExpr(){
+  const ones = truth.filter(r=>r.out===1).map(r=>parseInt(r.bits,2));
+  const zeros= truth.filter(r=>r.out===0).map(r=>parseInt(r.bits,2));
+  const dcs  = truth.filter(r=>r.out===null).map(r=>parseInt(r.bits,2));
+
+  const dnfR=truth.filter(r=>r.out===1);
+  const cnfR=truth.filter(r=>r.out===0);
+
+  const dmf=minimize(nVars,ones,dcs);
+  const kmf=minimize(nVars,zeros,dcs);
+
+  let h='<strong>DNF:</strong><br>';
+  h+= dnfR.length
+        ? dnfR.map(r=>`<span class="term dnfTerm" data-bits="${r.bits}">${lit(r.bits,'dnf')}</span>`).join(' ∨ ')
+        : '0';
+
+  h+='<hr><strong>KNF:</strong><br>';
+  h+= cnfR.length
+        ? cnfR.map(r=>`<span class="term cnfTerm" data-bits="${r.bits}">(${lit(r.bits,'cnf')})</span>`).join(' ∧ ')
+        : '1';
+
+  h+='<hr><strong>DMF (min):</strong><br>';
+  h+= dmf.length
+        ? dmf.map(p=>`<span class="term dmfTerm" data-cover="${expand(p).join('|')}">${lit(p,'dmf')}</span>`).join(' ∨ ')
+        : '0';
+
+  h+='<hr><strong>KMF (min):</strong><br>';
+  h+= kmf.length
+        ? kmf.map(p=>`<span class="term kmfTerm" data-cover="${expand(p).join('|')}">(${lit(p,'kmf')})</span>`).join(' ∧ ')
+        : '1';
+
+  $('exprWrap').innerHTML=h;
+  addHover($('exprWrap').querySelectorAll('.term'));
+}
+
+/* ---------- Hover-Highlight ---------- */
+function addHover(nodes){
+  nodes.forEach(el=>{
+    el.onmouseenter=()=>toggle(el,true);
+    el.onmouseleave=()=>toggle(el,false);
+  });
+}
+function toggle(el,on){
+  if(el.dataset.bits)  highlight([el.dataset.bits],on);
+  if(el.dataset.cover) highlight(el.dataset.cover.split('|'),on);
+}
+function highlight(arr,on){
+  arr.forEach(b=>{
+    document.querySelectorAll(`[data-bits="${b}"]`)
+            .forEach(n=>n.classList.toggle('hl',on));
+  });
+}
+
+/* ---------- Init & UI-Events ---------- */
 buildTruth(); applyPreset(); renderAll();
 
-/*–––– UI ––––*/
-minusBtn.onclick=()=>{if(numVars>2){numVars--; rebuild();}};
-plusBtn.onclick =()=>{if(numVars<4){numVars++; rebuild();}};
-presetSel.onchange=()=>{preset=presetSel.value;applyPreset();renderAll();};
-
-/* Dbl-Click reset */
-document.addEventListener('dblclick',e=>{
- if(!e.target.closest('#truthWrap')&&!e.target.closest('#kmapWrap')
-    &&!e.target.closest('#exprWrap')){
-   truth.forEach(r=>r.out=0); preset='custom';presetSel.value='custom';renderAll();
- }});
-
-/*–––– Build / Rebuild ––––*/
-function buildTruth(){
-  truth=[]; for(let i=0;i<(1<<numVars);i++)
-    truth.push({bits:binStr(i,numVars),out:0});
-}
-function rebuild(){buildTruth();applyPreset();renderAll();}
-function applyPreset(){
- if(preset==='custom')return;
- truth.forEach(r=>r.out=calcPreset(r.bits,preset));
-}
-function calcPreset(bits,op){
- const ones=[...bits].filter(b=>b==='1').length;
- switch(op){
-  case'and': return ones===bits.length?1:0;
-  case'or' : return ones?1:0;
-  case'xor': return ones&1;
-  case'nand':return ones===bits.length?0:1;
-  case'nor' :return ones?0:1;
-  case'xnor':return (ones&1)?0:1;
- }
-}
-
-/*–––– Render ––––*/
-function renderAll(){renderTruth();renderKMap();renderExpr();varLbl.textContent=numVars;}
-
-/* Wahrheitstabelle */
-function renderTruth(){
- let html='<table><tr>';
- for(let v=0;v<numVars;v++)html+=`<th>${letters[v]}</th>`;
- html+='<th>f</th></tr>';
- truth.forEach(r=>{
-  const cls=r.out===1?'on':r.out===null?'dc':'off';
-  const disp=r.out===null?'/':r.out;
-  html+=`<tr data-bits="${r.bits}" class="tt-row">`;
-  [...r.bits].forEach(b=>html+=`<td>${b}</td>`);
-  html+=`<td class="outCell ${cls}" data-bits="${r.bits}">${disp}</td></tr>`;
- });
- html+='</table>';
- $('truthWrap').innerHTML=html;
- /* Click-Cycling */
- $('truthWrap').querySelectorAll('.outCell').forEach(td=>{
-  td.onclick=e=>{
-   const obj=truth.find(t=>t.bits===e.currentTarget.dataset.bits);
-   obj.out=obj.out===0?1:obj.out===1?null:0;
-   preset='custom';presetSel.value='custom';renderAll();
-  };});
- addHoverEvents( $('truthWrap').querySelectorAll('.tt-row,.outCell') );
-}
-
-/* KV-Diagramm */
-function renderKMap(){
- const rBits=Math.floor(numVars/2),cBits=numVars-rBits,
-       rows=1<<rBits,cols=1<<cBits;
- let html='<table class="kmap"><tr><th></th>';
- for(let c=0;c<cols;c++)html+=`<th>${binStr(gray(c),cBits)}</th>`;
- html+='</tr>';
- for(let r=0;r<rows;r++){
-  html+=`<tr><th>${binStr(gray(r),rBits)}</th>`;
-  for(let c=0;c<cols;c++){
-   const bits=binStr(gray(r),rBits)+binStr(gray(c),cBits);
-   const obj=truth.find(t=>t.bits===bits);
-   const cls=obj.out===1?'on':obj.out===null?'dc':'off';
-   const disp=obj.out===null?'/':obj.out;
-   html+=`<td class="${cls}" data-bits="${bits}">${disp}</td>`;
-  }
-  html+='</tr>';
- }
- html+='</table>';
- $('kmapWrap').innerHTML=html;
- $('kmapWrap').querySelectorAll('td[data-bits]').forEach(td=>{
-  td.onclick=e=>{
-   const obj=truth.find(t=>t.bits===e.currentTarget.dataset.bits);
-   obj.out=obj.out===0?1:obj.out===1?null:0;
-   preset='custom';presetSel.value='custom';renderAll();
-  };});
- addHoverEvents( $('kmapWrap').querySelectorAll('td[data-bits]') );
-}
-
-/*–––– Expressionen ––––*/
-function renderExpr(){
- const ones = truth.filter(r=>r.out===1).map(r=>parseInt(r.bits,2));
- const zeros= truth.filter(r=>r.out===0).map(r=>parseInt(r.bits,2));
- const dcs  = truth.filter(r=>r.out===null).map(r=>parseInt(r.bits,2));
-
- /* DNF / KNF (nicht minimiert) */
- const dnfRows=truth.filter(r=>r.out===1);
- const cnfRows=truth.filter(r=>r.out===0);
-
- const lit=(i,val,neg)=>neg?('¬'+letters[i]):letters[i];
- const termStr=(bits,type)=>[...bits].map((b,i)=>{
-     if(b==='-')return '';
-     return type==='dnf'
-       ? (b==='1'?letters[i]:'¬'+letters[i])
-       : (b==='0'?letters[i]:'¬'+letters[i]);
- }).filter(Boolean).join(type==='dnf'?'∧':'∨');
-
- /* DMF / KMF durch QM-Simplify */
- const dmf   = qmSimplify(numVars,ones,dcs);         // implicants als pattern '1-0-'
- const kmfPI = qmSimplify(numVars,zeros,dcs);        // für KMF über maxterms
-
- /* HTML */
- let html='<strong>DNF:</strong><br>';
- html+= dnfRows.length ? dnfRows.map(r=>`<span class="term dnfTerm" data-bits="${r.bits}">${termStr(r.bits,'dnf')}</span>`).join(' ∨ ')
-                       :'0';
-
- html+='<hr><strong>KNF:</strong><br>';
- html+= cnfRows.length ? cnfRows.map(r=>`<span class="term cnfTerm" data-bits="${r.bits}">(${termStr(r.bits,'cnf')})</span>`).join(' ∧ ')
-                       :'1';
-
- /* DMF */
- html+='<hr><strong>DMF (min):</strong><br>';
- if(dmf.length){
-  html+=dmf.map(p=>{
-      const cover=expandPattern(p).join('|');
-      return `<span class="term dmfTerm" data-cover="${cover}">${termStr(p,'dnf')}</span>`;
-   }).join(' ∨ ');
- }else html+='0';
-
- /* KMF */
- html+='<hr><strong>KMF (min):</strong><br>';
- if(kmfPI.length){
-  html+= kmfPI.map(p=>{
-     const cover=expandPattern(p).join('|');
-     return `<span class="term kmfTerm" data-cover="${cover}">(${termStr(p,'cnf')})</span>`;
-   }).join(' ∧ ');
- }else html+='1';
-
- $('exprWrap').innerHTML=html;
-
- /* Events */
- addHoverEvents( $('exprWrap').querySelectorAll('.term') );
- $('exprWrap').querySelectorAll('.term').forEach(el=>{
-   el.onclick=e=>{
-     const bits=e.currentTarget.dataset.bits;
-     if(bits){                                 // Klick auf explizite Zeile
-       const obj=truth.find(t=>t.bits===bits);
-       obj.out=obj.out===0?1:obj.out===1?null:0;
-       preset='custom';presetSel.value='custom';renderAll();
-     }
-   };
- });
-}
-
-/*–––– Quine-McCluskey ––––*/
-function qmSimplify(vars,minterms,dcs=[]){
- const all=[...minterms,...dcs];
- if(!minterms.length)return [];                  // leer -> 0-Funktion
- /* 1. Prime-Implicants */
- let groups={},nextGroups={},checked=new Set(),primes=new Set();
- const oneCnt=x=>x.toString(2).replace(/0/g,'').length;
- all.forEach(v=>{
-  const s=binStr(v,vars);(groups[oneCnt(v)]??=[]).push(s);
- });
- while(true){
-  nextGroups={}; const used=new Set();
-  const keys=Object.keys(groups).map(Number).sort((a,b)=>a-b);
-  let combined=false;
-  for(let i=0;i<keys.length-1;i++){
-    const g1=groups[keys[i]]||[], g2=groups[keys[i+1]]||[];
-    g1.forEach(a=>g2.forEach(b=>{
-      const diffPos=diffBitPos(a,b);
-      if(diffPos.length===1){
-        combined=true;
-        const merged=replaceAt(a,diffPos[0],'-');
-        const cnt=merged.split('').filter(ch=>'1'===ch).length;
-        (nextGroups[cnt]??=[]).push(merged);
-        used.add(a); used.add(b);
-      }
-    }));
-  }
-  Object.values(groups).flat().forEach(s=>{if(!used.has(s))primes.add(s);});
-  if(!combined)break;
-  groups={};
-  Object.entries(nextGroups).forEach(([k,arr])=>groups[k]=[...new Set(arr)]);
- }
- /* 2. Prime-chart */
- primes=[...primes];
- const covers=(pat,val)=>{
-   const bs=binStr(val,vars);
-   for(let i=0;i<vars;i++){
-     if(pat[i]!=='-' && pat[i]!==bs[i])return false;
-   }
-   return true;
- };
- const chart=minterms.map(m=>primes.filter(p=>covers(p,m)));
- const essential=[]; let covered=new Set();
- chart.forEach((pis,idx)=>{
-   if(pis.length===1){
-     const pi=pis[0]; if(!essential.includes(pi)){
-       essential.push(pi);
-       minterms.filter(m=>covers(pi,m)).forEach(m=>covered.add(m));
-     }
-   }
- });
- /* 3. Greedy für Rest */
- let rest=minterms.filter(m=>!covered.has(m));
- let chosen=[...essential];
- while(rest.length){
-   let bestPi=null,bestCnt=0;
-   primes.forEach(p=>{
-     const cnt=rest.filter(m=>covers(p,m)).length;
-     if(cnt>bestCnt){bestCnt=cnt;bestPi=p;}
-   });
-   if(!bestPi)break;
-   chosen.push(bestPi);
-   rest=rest.filter(m=>!covers(bestPi,m));
- }
- return chosen;
-}
-/* Hilfs-Utilities */
-function diffBitPos(a,b){
- const pos=[]; for(let i=0;i<a.length;i++)if(a[i]!==b[i])pos.push(i);
- return pos;
-}
-function replaceAt(str,idx,ch){return str.substring(0,idx)+ch+str.substring(idx+1);}
-function expandPattern(pat){          // liefert alle konkreten Bitstrings für Highlight
- let res=[''];
- [...pat].forEach(ch=>{
-  if(ch==='-') res=[...res.map(s=>s+'0'),...res.map(s=>s+'1')];
-  else         res=res.map(s=>s+ch);
- });
- return res;
-}
-
-/*–––– Hover Sync ––––*/
-function addHoverEvents(nodes){
- nodes.forEach(el=>{
-  el.onmouseenter=()=>toggleHighlight(el,true);
-  el.onmouseleave=()=>toggleHighlight(el,false);
- });
-}
-function toggleHighlight(el,flag){
- if(el.dataset.bits)   highlightBits([el.dataset.bits],flag);
- if(el.dataset.cover)  highlightBits(el.dataset.cover.split('|'),flag);
-}
-function highlightBits(arr,flag){
- arr.forEach(b=>document.querySelectorAll(`[data-bits="${b}"]`)
-           .forEach(n=>n.classList.toggle('hl',flag)));
-}
+$('minusBtn').onclick = ()=>{ if(nVars>2){ nVars--; buildTruth(); applyPreset(); renderAll(); } };
+$('plusBtn' ).onclick = ()=>{ if(nVars<4){ nVars++; buildTruth(); applyPreset(); renderAll(); } };
+$('presetOp').onchange = ()=>{ preset=presetOp.value; applyPreset(); renderAll(); };
 </script>
 </body>
 </html>
