@@ -8,44 +8,50 @@
 body{font-family:system-ui,sans-serif;margin:20px}
 h1{margin:0 0 12px}
 button,select{padding:4px 8px;font-size:1rem;cursor:pointer}
-
 table{border-collapse:collapse;margin:12px 0}
 th,td{border:1px solid #888;padding:4px 6px;text-align:center}
 th{background:#eee}
-
 .truth th,.truth td,.outCell{width:42px}
 .outCell,.kmap td{height:42px;cursor:pointer}
-
 .on {background:#4caf50;color:#fff;font-weight:bold}
 .off{background:#fafafa}
 .dc {background:#ff9800;color:#fff;font-weight:bold}
 
-.hl {outline:2px solid #e91e63 !important;
-     background:#ffebee !important;color:#000 !important}
+/* Highlight Style for table cells */
+.hl-cell {outline:2px solid #e91e63 !important;background:#ffebee !important;color:#000 !important}
+
+/* Highlight Style for Boolean Expansion and active DNF/KMF/DMF terms (Color) */
+.hl-color {
+    color: #F57C00 !important; /* Orange */
+    background-color: #FFF3E0 !important; /* Light orange background */
+    border-radius: 3px;
+    padding: 0 1px; /* Slight padding for background visibility */
+}
 
 #views{display:flex;gap:32px;flex-wrap:wrap}
 #views>div{flex:1 1 280px;min-width:280px}
-
 .kmap th.varhead{width:40px;height:36px}
-
 .term{padding:2px 6px;margin:2px;border-radius:4px;cursor:pointer;display:inline-block}
 .dnfTerm{background:#d0eaff}.cnfTerm{background:#ffe0e0}
 .dmfTerm{background:#b2ffb2}.kmfTerm{background:#ffd59e}
-
 .ov{text-decoration:overline}
+pre{white-space:pre-wrap;word-break:break-word; margin-top: 5px;}
+pre span { cursor: default; }
 </style>
 </head>
 <body>
 <h1>Interaktiver Logik-Visualizer</h1>
 
 <label>Presets :
-  <select id="presetOp">
-    <option value="custom">custom</option>
-    <option value="and">AND</option><option value="or">OR</option>
-    <option value="xor" selected>XOR</option>
-    <option value="nand">NAND</option><option value="nor">NOR</option>
-    <option value="xnor">XNOR</option>
-  </select>
+  <select id="presetOp">
+    <option value="custom">custom</option>
+    <option value="and">AND</option>
+    <option value="or">OR</option>
+    <option value="xor" selected>XOR</option>
+    <option value="nand">NAND</option>
+    <option value="nor">NOR</option>
+    <option value="xnor">XNOR</option>
+  </select>
 </label>
 &nbsp;&nbsp;
 Variablen
@@ -54,267 +60,553 @@ Variablen
 <button id="plusBtn">+</button>
 
 <div id="views">
-  <div><h2>Wahrheitstabelle</h2><div id="truthWrap"></div></div>
-  <div><h2>Symmetriediagramm</h2><div id="kmapWrap"></div></div>
-  <div><h2>DNF/KNF &amp; DMF/KMF</h2><div id="exprWrap"></div></div>
+  <div><h2>Wahrheitstabelle</h2><div id="truthWrap"></div></div>
+  <div><h2>Symmetriediagramm</h2><div id="kmapWrap"></div></div>
+  <div><h2>DNF/KNF &amp; DMF/KMF</h2><div id="exprWrap"></div></div>
+  <div><h2>Boolesche Entwicklung</h2><div id="devWrap"></div></div>
 </div>
 
 <script>
-/* ===== Utilities ===== */
-const $   = id => document.getElementById(id);
+const $   = id => document.getElementById(id);
 const bin = (n,b)=>n.toString(2).padStart(b,'0');
-const L   = ['A','B','C','D'];
+const L   = ['A','B','C','D']; // Variable names
 const lbl = (i,neg)=>neg?`<span class="ov">${L[i]}</span>`:L[i];
 
-/* ===== Gray-Code-Sequenz (stabil) ===== */
+const expansionSpanData = {}; 
+let expansionSpanIdCounter = 0; 
+let expansionGroupIdCounter = 0; 
+
 function graySeq(bits){
-  if(bits===0) return [''];
-  let arr=['0','1'];
-  while(arr[0].length<bits){
-    const rev=[...arr].reverse();
-    arr=arr.map(c=>'0'+c).concat(rev.map(c=>'1'+c));
-  }
-  return arr;
+  if(bits===0) return [''];
+  let arr=['0','1'];
+  while(arr[0].length<bits){
+    const rev=[...arr].reverse();
+    arr=arr.map(c=>'0'+c).concat(rev.map(c=>'1'+c));
+  }
+  return arr;
 }
 
-/* ===== State ===== */
-let nVars = 3;          // 2–4
-let truth = [];         // {bits:'010',out:0|1|null}
+let nVars = 3;
+let truth = [];
 let preset= 'xor';
 
-/* ===== Wahrheitstabelle ===== */
 function buildTruth(){
-  truth=[];
-  for(let i=0;i<(1<<nVars);i++){
-    // Bits rückwärts -> A (LSB) wechselt am schnellsten
-    const rev = bin(i,nVars).split('').reverse().join('');
-    truth.push({bits:rev,out:0});
-  }
+  truth=[];
+  for(let i=0;i<(1<<nVars);i++){
+    const rev = bin(i,nVars).split('').reverse().join('');
+    truth.push({bits:rev,out:0});
+  }
 }
 function applyPreset(){
-  if(preset==='custom') return;
-  truth.forEach(r=>{
-    const ones=[...r.bits].filter(b=>b==='1').length;
-    switch(preset){
-      case'and':  r.out=ones===nVars?1:0; break;
-      case'or':   r.out=ones?1:0; break;
-      case'xor':  r.out=ones&1; break;
-      case'nand': r.out=ones===nVars?0:1; break;
-      case'nor':  r.out=ones?0:1; break;
-      case'xnor': r.out=(ones&1)?0:1;
-    }
-  });
+  if(preset==='custom') return;
+  truth.forEach(r=>{
+    const ones=[...r.bits].filter(b=>b==='1').length;
+    switch(preset){
+      case'and':  r.out=ones===nVars?1:0; break;
+      case'or':   r.out=ones?1:0; break;
+      case'xor':  r.out=ones&1; break;
+      case'nand': r.out=ones===nVars?0:1; break;
+      case'nor':  r.out=ones?0:1; break;
+      case'xnor': r.out=(ones&1)?0:1;
+    }
+  });
 }
 
-/* ===== Rendering Root ===== */
 function renderAll(){
-  renderTruth(); renderKMap(); renderExpr();
-  $('varCountLbl').textContent=nVars;
+  $('varCountLbl').textContent=nVars;
+  renderTruth();
+  renderKMap();
+  renderExpr();
+  renderDev(); 
+  setupAllHoverInteractions(); 
 }
 
-/* ---------- Wahrheitstabelle ---------- */
 function renderTruth(){
-  let h='<table class="truth"><tr>';
-  for(let i=0;i<nVars;i++) h+=`<th>${L[i]}</th>`;
-  h+='<th>f</th></tr>';
-  truth.forEach(r=>{
-    const cls=r.out===1?'on':r.out===null?'dc':'off';
-    const dsp=r.out===null?'/':r.out;
-    h+=`<tr><td>${[...r.bits].join('</td><td>')}</td>
-         <td class="outCell ${cls}" data-bits="${r.bits}">${dsp}</td></tr>`;
-  });
-  h+='</table>';
-  $('truthWrap').innerHTML=h;
-
-  $('truthWrap').querySelectorAll('.outCell').forEach(td=>{
-    td.onclick=e=>{
-      const o=truth.find(t=>t.bits===e.currentTarget.dataset.bits);
-      o.out=o.out===0?1:o.out===1?null:0;
-      preset='custom';$('presetOp').value='custom';renderAll();
-    };
-  });
-  addHover($('truthWrap').querySelectorAll('.outCell'));
+  let h='<table class="truth"><tr>';
+  for(let i=0;i<nVars;i++) h+=`<th>${L[i]}</th>`;
+  h+='<th>f</th></tr>';
+  truth.forEach(r=>{
+    const cls=r.out===1?'on':r.out===null?'dc':'off';
+    const dsp=r.out===null?'/':r.out;
+    h+=`<tr><td>${[...r.bits].join('</td><td>')}</td>
+         <td class="outCell ${cls}" data-bits="${r.bits}">${dsp}</td></tr>`;
+  });
+  h+='</table>';
+  $('truthWrap').innerHTML=h;
+  $('truthWrap').querySelectorAll('.outCell').forEach(td=>{
+    td.onclick=e=>{
+      const currentTarget = e.currentTarget;
+      if (!currentTarget) return;
+      const bits = currentTarget.dataset.bits;
+      if (!bits) return;
+      const o=truth.find(t=>t.bits===bits);
+      if (!o) return;
+      o.out=o.out===0?1:o.out===1?null:0;
+      preset='custom';
+      const presetOpEl = $('presetOp');
+      if (presetOpEl instanceof HTMLSelectElement) presetOpEl.value='custom';
+      renderAll();
+    };
+  });
 }
 
-/* ---------- KV-Diagramm ---------- */
 function renderKMap(){
-  // columns = C (outer), A (inner) ; rows = D (outer), B (inner)
-  let colVars=[],rowVars=[];
-  if(nVars===2){ colVars=[0];       rowVars=[1];       }  // A | B
-  if(nVars===3){ colVars=[2,0];     rowVars=[1];       }  // C,A | B
-  if(nVars===4){ colVars=[2,0];     rowVars=[3,1];     }  // C,A | D,B
+  let colVars=[],rowVars=[];
+  if(nVars===2){ colVars=[0]; rowVars=[1]; } 
+  if(nVars===3){ colVars=[2,0]; rowVars=[1]; } 
+  if(nVars===4){ colVars=[2,0]; rowVars=[3,1]; } 
 
-  const colSeq=graySeq(colVars.length);
-  const rowSeq=graySeq(rowVars.length);
+  const colSeq=graySeq(colVars.length);
+  const rowSeq=graySeq(rowVars.length);
 
-  let h='<table class="kmap">';
+  let h='<table class="kmap">';
+  colVars.forEach((vIdx,lvl)=>{ 
+    h+='<tr>';
+    rowVars.forEach(()=>h+='<th></th>'); 
+    colSeq.forEach(p=>h+=`<th class="varhead">${lbl(vIdx,p[lvl]==='0')}</th>`);
+    h+='</tr>';
+  });
 
-  // Spaltenkopf
-  colVars.forEach((v,lvl)=>{
-    h+='<tr>';
-    rowVars.forEach(()=>h+='<th></th>');
-    colSeq.forEach(p=>h+=`<th class="varhead">${lbl(v,p[lvl]==='0')}</th>`);
-    h+='</tr>';
-  });
-
-  // Datenzeilen
-  rowSeq.forEach(rPat=>{
-    h+='<tr>';
-    [...rPat].forEach((bit,i)=>h+=`<th class="varhead">${lbl(rowVars[i],bit==='0')}</th>`);
-    colSeq.forEach(cPat=>{
-      const bits=Array(nVars);
-      rowVars.forEach((idx,i)=>bits[idx]=rPat[i]);
-      colVars.forEach((idx,i)=>bits[idx]=cPat[i]);
-      const str=bits.join('');
-      const o  = truth.find(t=>t.bits===str);
-      const cls= o.out===1?'on':o.out===null?'dc':'off';
-      const dsp= o.out===null?'/':o.out;
-      h+=`<td class="${cls}" data-bits="${str}">${dsp}</td>`;
-    });
-    h+='</tr>';
-  });
-  h+='</table>';
-  $('kmapWrap').innerHTML=h;
-
-  $('kmapWrap').querySelectorAll('td[data-bits]').forEach(td=>{
-    td.onclick=e=>{
-      const o=truth.find(t=>t.bits===e.currentTarget.dataset.bits);
-      o.out=o.out===0?1:o.out===1?null:0;
-      preset='custom';$('presetOp').value='custom';renderAll();
-    };
-  });
-  addHover($('kmapWrap').querySelectorAll('td[data-bits]'));
+  rowSeq.forEach(rPat=>{ 
+    h+='<tr>';
+    [...rPat].forEach((bit,i)=>h+=`<th class="varhead">${lbl(rowVars[i],bit==='0')}</th>`);
+    colSeq.forEach(cPat=>{ 
+      const bits=Array(nVars); 
+      rowVars.forEach((idx,i)=>bits[idx]=rPat[i]); 
+      colVars.forEach((idx,i)=>bits[idx]=cPat[i]); 
+      const str=bits.join(''); 
+      const o  = truth.find(t=>t.bits===str);
+      if (!o) return; 
+      const cls= o.out===1?'on':o.out===null?'dc':'off';
+      const dsp= o.out===null?'/':o.out;
+      h+=`<td class="${cls}" data-bits="${str}">${dsp}</td>`;
+    });
+    h+='</tr>';
+  });
+  h+='</table>';
+  $('kmapWrap').innerHTML=h;
+  $('kmapWrap').querySelectorAll('td[data-bits]').forEach(td=>{
+    td.onclick=e=>{
+      const currentTarget = e.currentTarget;
+      if (!currentTarget) return;
+      const bits = currentTarget.dataset.bits;
+      if (!bits) return;
+      const o=truth.find(t=>t.bits===bits);
+      if (!o) return;
+      o.out=o.out===0?1:o.out===1?null:0;
+      preset='custom';
+      const presetOpEl = $('presetOp');
+      if (presetOpEl instanceof HTMLSelectElement) presetOpEl.value='custom';
+      renderAll();
+    };
+  });
 }
 
-/* ---------- Ausdrücke ---------- */
-function lit(bits,type){
-  return [...bits].map((b,i)=>{
-    if(b==='-') return '';
-    const neg = (type==='dnf'||type==='dmf') ? b==='0' : b==='1';
-    return lbl(i,neg);
-  }).filter(Boolean).join((type==='dnf'||type==='dmf')?'∧':'∨');
+function lit(bits,type){ 
+  return [...bits].map((b,i)=>{ 
+    if(b==='-') return ''; 
+    const neg = (type==='dnf'||type==='dmf') ? b==='0' : b==='1'; 
+    return lbl(i,neg); 
+  }).filter(Boolean).join((type==='dnf'||type==='dmf')?'∧':'∨'); 
 }
 
-function minimize(v,mins,dcs=[]){
-  const ones=x=>x.toString(2).replace(/0/g,'').length;
-  let g={},pr=new Set();
-  [...mins,...dcs].forEach(m=>{
-    const s=bin(m,v); (g[ones(m)]??=[]).push(s);
-  });
-  while(true){
-    const nx={},used=new Set(); let comb=false;
-    const ks=Object.keys(g).map(Number).sort((a,b)=>a-b);
-    for(let i=0;i<ks.length-1;i++){
-      (g[ks[i]]||[]).forEach(a=>(g[ks[i+1]]||[]).forEach(b=>{
-        const diff=[...a].filter((_,k)=>a[k]!==b[k]).length;
-        if(diff===1){
-          comb=true;
-          const m=a.split('').map((ch,k)=>ch===b[k]?ch:'-').join('');
-          (nx[ones(m)]??=[]).push(m);
-          used.add(a); used.add(b);
-        }
-      }));
-    }
-    Object.values(g).flat().forEach(s=>{if(!used.has(s))pr.add(s);});
-    if(!comb)break;
-    g={};Object.entries(nx).forEach(([k,a])=>g[k]=[...new Set(a)]);
-  }
-  const covers=(p,val)=>{
-    const bs=bin(val,v);
-    for(let i=0;i<v;i++) if(p[i]!=='-'&&p[i]!==bs[i]) return false;
-    return true;
-  };
-  const chart=mins.map(m=>[...pr].filter(p=>covers(p,m)));
-  const ess=[],cov=new Set();
-  chart.forEach(pis=>{
-    if(pis.length===1){
-      const p=pis[0];
-      if(!ess.includes(p)){
-        ess.push(p);
-        mins.forEach(m=>covers(p,m)&&cov.add(m));
-      }
-    }
-  });
-  let rest=mins.filter(m=>!cov.has(m)),chosen=[...ess];
-  while(rest.length){
-    let best=null,max=0;
-    pr.forEach(p=>{
-      const c=rest.filter(m=>covers(p,m)).length;
-      if(c>max){max=c;best=p;}
-    });
-    if(!best)break;
-    chosen.push(best);
-    rest=rest.filter(m=>!covers(best,m));
-  }
-  return chosen;
+function minimize(v_count,mins,dcs=[]){
+  const ones=x=>x.toString(2).replace(/0/g,'').length;
+  let g={},pr=new Set(); 
+  [...mins,...dcs].forEach(m=>{ 
+    const s=bin(m,v_count); (g[ones(m)]??=[]).push(s);
+  });
+  while(true){
+    const nx={},used=new Set(); let comb=false; 
+    const ks=Object.keys(g).map(Number).sort((a,b)=>a-b);
+    for(let i=0;i<ks.length-1;i++){
+      (g[ks[i]]||[]).forEach(a=>(g[ks[i+1]]||[]).forEach(b=>{
+        const diff=[...a].filter((_,k)=>a[k]!==b[k]).length;
+        if(diff===1){ 
+          comb=true;
+          const m=a.split('').map((ch,k)=>ch===b[k]?ch:'-').join(''); 
+          (nx[ones(m.replace(/-/g,''))]??=[]).push(m); 
+          used.add(a); used.add(b);
+        }
+      }));
+    }
+    Object.values(g).flat().forEach(s=>{if(!used.has(s))pr.add(s);}); 
+    if(!comb)break; 
+    g={};Object.entries(nx).forEach(([k,a])=>g[k]=[...new Set(a)]); 
+  }
+  const covers=(p,val)=>{ 
+    const bs=bin(val,v_count);
+    for(let i=0;i<v_count;i++) if(p[i]!=='-'&&p[i]!==bs[i]) return false;
+    return true;
+  };
+  const chart=mins.map(m=>[...pr].filter(p=>covers(p,m))); 
+  const ess=[],cov=new Set(); 
+  chart.forEach((pis,idx)=>{ 
+    if(pis.length===1){
+      const p=pis[0];
+      if(!ess.includes(p)){
+        ess.push(p);
+        mins.forEach(mVal=>covers(p,mVal)&&cov.add(mVal));
+      }
+    }
+  });
+  let rest=mins.filter(m=>!cov.has(m)),chosen=[...ess]; 
+  while(rest.length){ 
+    let best=null,max=0;
+    pr.forEach(p=>{
+      if (chosen.includes(p)) return; 
+      const c=rest.filter(m=>covers(p,m)).length;
+      if(c>max){max=c;best=p;}
+    });
+    if(!best)break; 
+    chosen.push(best);
+    rest=rest.filter(m=>!covers(best,m));
+  }
+  return chosen;
 }
-const expand=p=>{
-  let res=[''];
-  [...p].forEach(ch=>{
-    res = ch==='-' ? res.flatMap(s=>[s+'0',s+'1']) : res.map(s=>s+ch);
-  });
-  return res;
+const expand=p=>{ 
+  let res=[''];
+  [...p].forEach(ch=>{
+    res = ch==='-' ? res.flatMap(s=>[s+'0',s+'1']) : res.map(s=>s+ch);
+  });
+  return res;
 };
 
 function renderExpr(){
-  const ones = truth.filter(r=>r.out===1).map(r=>parseInt(r.bits,2));
-  const zeros= truth.filter(r=>r.out===0).map(r=>parseInt(r.bits,2));
-  const dcs  = truth.filter(r=>r.out===null).map(r=>parseInt(r.bits,2));
+  const ones = truth.filter(r=>r.out===1).map(r=>parseInt(r.bits,2));
+  const zeros= truth.filter(r=>r.out===0).map(r=>parseInt(r.bits,2));
+  const dcs  = truth.filter(r=>r.out===null).map(r=>parseInt(r.bits,2));
 
-  const dnfR=truth.filter(r=>r.out===1);
-  const cnfR=truth.filter(r=>r.out===0);
+  const dnfR=truth.filter(r=>r.out===1); 
+  const cnfR=truth.filter(r=>r.out===0); 
 
-  const dmf=minimize(nVars,ones,dcs);
-  const kmf=minimize(nVars,zeros,dcs);
+  const dmf=minimize(nVars,ones,dcs); 
+  const kmf=minimize(nVars,zeros,dcs); 
 
-  let h='<strong>DNF:</strong><br>';
-  h+= dnfR.length
-        ? dnfR.map(r=>`<span class="term dnfTerm" data-bits="${r.bits}">${lit(r.bits,'dnf')}</span>`).join(' ∨ ')
-        : '0';
+  let h='<strong>DNF:</strong><br>';
+  h+= dnfR.length
+        ? dnfR.map(r=>`<span class="term dnfTerm" data-bits="${r.bits}">${lit(r.bits,'dnf')}</span>`).join(' ∨ ')
+        : '0';
 
-  h+='<hr><strong>KNF:</strong><br>';
-  h+= cnfR.length
-        ? cnfR.map(r=>`<span class="term cnfTerm" data-bits="${r.bits}">(${lit(r.bits,'cnf')})</span>`).join(' ∧ ')
-        : '1';
+  h+='<hr><strong>KNF:</strong><br>';
+  h+= cnfR.length
+        ? cnfR.map(r=>`<span class="term cnfTerm" data-bits="${r.bits}">(${lit(r.bits,'cnf')})</span>`).join(' ∧ ')
+        : '1';
 
-  h+='<hr><strong>DMF (min):</strong><br>';
-  h+= dmf.length
-        ? dmf.map(p=>`<span class="term dmfTerm" data-cover="${expand(p).join('|')}">${lit(p,'dmf')}</span>`).join(' ∨ ')
-        : '0';
+  h+='<hr><strong>DMF (min):</strong><br>';
+  h+= dmf.length
+        ? dmf.map(p=>`<span class="term dmfTerm" data-cover="${expand(p).join('|')}">${lit(p,'dmf')}</span>`).join(' ∨ ')
+        : '0';
 
-  h+='<hr><strong>KMF (min):</strong><br>';
-  h+= kmf.length
-        ? kmf.map(p=>`<span class="term kmfTerm" data-cover="${expand(p).join('|')}">(${lit(p,'kmf')})</span>`).join(' ∧ ')
-        : '1';
+  h+='<hr><strong>KMF (min):</strong><br>';
+  h+= kmf.length
+        ? kmf.map(p=>`<span class="term kmfTerm" data-cover="${expand(p).join('|')}">(${lit(p,'kmf')})</span>`).join(' ∧ ')
+        : '1';
 
-  $('exprWrap').innerHTML=h;
-  addHover($('exprWrap').querySelectorAll('.term'));
+  $('exprWrap').innerHTML=h;
 }
 
-/* ---------- Hover-Highlight ---------- */
-function addHover(nodes){
-  nodes.forEach(el=>{
-    el.onmouseenter=()=>toggle(el,true);
-    el.onmouseleave=()=>toggle(el,false);
-  });
-}
-function toggle(el,on){
-  if(el.dataset.bits)  highlight([el.dataset.bits],on);
-  if(el.dataset.cover) highlight(el.dataset.cover.split('|'),on);
-}
-function highlight(arr,on){
-  arr.forEach(b=>{
-    document.querySelectorAll(`[data-bits="${b}"]`)
-            .forEach(n=>n.classList.toggle('hl',on));
-  });
+function simplifiedBooleanExpansionRecursive(bits_template_string, depth = 0) {
+    if (depth >= nVars) { 
+        const finalBitsStr = bits_template_string;
+        const row = truth.find(r => r.bits === finalBitsStr);
+        const val = row ? (row.out === null ? '/' : String(row.out)) : '?'; 
+        return { type: 'constant', value: val, minterms: [finalBitsStr], path: finalBitsStr };
+    }
+
+    const varName = L[depth]; 
+
+    const pathForOne = bits_template_string.substring(0, depth) + '1' + bits_template_string.substring(depth + 1);
+    const expNode1 = simplifiedBooleanExpansionRecursive(pathForOne, depth + 1);
+
+    const pathForZero = bits_template_string.substring(0, depth) + '0' + bits_template_string.substring(depth + 1);
+    const expNode0 = simplifiedBooleanExpansionRecursive(pathForZero, depth + 1);
+
+    if (expNode1.type === 'constant' && expNode0.type === 'constant' && expNode1.value === expNode0.value) {
+        return { type: 'constant', value: expNode1.value, minterms: [...new Set([...expNode1.minterms, ...expNode0.minterms].sort())], path: null };
+    }
+    
+    if (expNode1.type === 'constant' && expNode0.type === 'constant') {
+        if (expNode1.value === '/' && (expNode0.value === '0' || expNode0.value === '1')) {
+            return { type: 'constant', value: expNode0.value, minterms: [...new Set([...expNode1.minterms, ...expNode0.minterms].sort())], path: null };
+        }
+        if (expNode0.value === '/' && (expNode1.value === '0' || expNode1.value === '1')) {
+            return { type: 'constant', value: expNode1.value, minterms: [...new Set([...expNode1.minterms, ...expNode0.minterms].sort())], path: null };
+        }
+    }
+
+    return {
+        type: 'expression',
+        variable: varName,
+        varIndex: depth,
+        positiveBranch: expNode1,
+        negativeBranch: expNode0,
+        minterms: [...new Set([...expNode1.minterms, ...expNode0.minterms].sort())]
+    };
 }
 
-/* ---------- Init & UI-Events ---------- */
-buildTruth(); applyPreset(); renderAll();
+function genSpanId() { return `expSpan-${expansionSpanIdCounter++}`; }
+function genGroupId() { return `expGroup-${expansionGroupIdCounter++}`; }
 
-$('minusBtn').onclick = ()=>{ if(nVars>2){ nVars--; buildTruth(); applyPreset(); renderAll(); } };
-$('plusBtn' ).onclick = ()=>{ if(nVars<4){ nVars++; buildTruth(); applyPreset(); renderAll(); } };
-$('presetOp').onchange = ()=>{ preset=presetOp.value; applyPreset(); renderAll(); };
+function generateExpansionHtmlRecursive(node, ancestorGroupChain = []) {
+    let htmlOutput = '';
+    const styleType = "color"; 
+
+    if (node.type === 'constant') {
+        const id = genSpanId();
+        let currentGroupChain = ancestorGroupChain;
+        if (ancestorGroupChain.length === 0) { // If it's a top-level constant
+            currentGroupChain = [genGroupId()]; // Give it its own group
+        }
+        expansionSpanData[id] = { 
+            minterms: node.minterms, 
+            textContent: node.value, 
+            isLeaf: true, 
+            path: node.path, 
+            groupChain: currentGroupChain, 
+            styleType: styleType 
+        };
+        htmlOutput = `<span id="${id}" data-span-id="${id}">${node.value}</span>`;
+    } else if (node.type === 'expression') {
+        const { variable, positiveBranch, negativeBranch } = node;
+
+        const positiveBranchGroupId = genGroupId();
+        const currentPositiveGroupChain = [...ancestorGroupChain, positiveBranchGroupId];
+        
+        const varPosId = genSpanId();
+        expansionSpanData[varPosId] = { minterms: positiveBranch.minterms, textContent: variable, isVar: true, varName: variable, groupChain: currentPositiveGroupChain, styleType: styleType };
+        htmlOutput += `<span id="${varPosId}" data-span-id="${varPosId}">${variable}</span>`;
+
+        const openParenPosId = genSpanId();
+        expansionSpanData[openParenPosId] = { minterms: positiveBranch.minterms, textContent: '(', isParen: true, groupChain: currentPositiveGroupChain, styleType: styleType };
+        htmlOutput += `<span id="${openParenPosId}" data-span-id="${openParenPosId}">(</span>`;
+
+        htmlOutput += generateExpansionHtmlRecursive(positiveBranch, currentPositiveGroupChain); 
+
+        const closeParenPosId = genSpanId();
+        expansionSpanData[closeParenPosId] = { minterms: positiveBranch.minterms, textContent: ')', isParen: true, groupChain: currentPositiveGroupChain, styleType: styleType };
+        htmlOutput += `<span id="${closeParenPosId}" data-span-id="${closeParenPosId}">)</span>`;
+
+        const negativeBranchGroupId = genGroupId();
+        const currentNegativeGroupChain = [...ancestorGroupChain, negativeBranchGroupId];
+
+        const varNegId = genSpanId();
+        expansionSpanData[varNegId] = { minterms: negativeBranch.minterms, textContent: `${variable}'`, isVar: true, varName: variable, isNegated: true, groupChain: currentNegativeGroupChain, styleType: styleType };
+        htmlOutput += `<span id="${varNegId}" data-span-id="${varNegId}" class="ov">${variable}</span>`;
+        
+        const openParenNegId = genSpanId();
+        expansionSpanData[openParenNegId] = { minterms: negativeBranch.minterms, textContent: '(', isParen: true, groupChain: currentNegativeGroupChain, styleType: styleType };
+        htmlOutput += `<span id="${openParenNegId}" data-span-id="${openParenNegId}">(</span>`;
+
+        htmlOutput += generateExpansionHtmlRecursive(negativeBranch, currentNegativeGroupChain); 
+
+        const closeParenNegId = genSpanId();
+        expansionSpanData[closeParenNegId] = { minterms: negativeBranch.minterms, textContent: ')', isParen: true, groupChain: currentNegativeGroupChain, styleType: styleType };
+        htmlOutput += `<span id="${closeParenNegId}" data-span-id="${closeParenNegId}">)</span>`;
+    }
+    return htmlOutput;
+}
+
+function renderDev(){
+    expansionSpanIdCounter = 0; 
+    expansionGroupIdCounter = 0;
+    for(const key in expansionSpanData) delete expansionSpanData[key]; 
+
+    const rootExpansionNode = simplifiedBooleanExpansionRecursive(''.padStart(nVars, '0'), 0);
+    
+    let singleInstanceHtml = `<pre data-style-type="color">`;
+    singleInstanceHtml += generateExpansionHtmlRecursive(rootExpansionNode, []); 
+    singleInstanceHtml += `</pre>`;
+    
+    const devWrapEl = $('devWrap');
+    if (devWrapEl) devWrapEl.innerHTML = singleInstanceHtml;
+    
+    for (const spanId in expansionSpanData) {
+        const spanElement = document.getElementById(spanId);
+        if (spanElement) {
+            const highlightClass = "hl-color"; 
+
+            spanElement.onmouseenter = () => handleExpansionSpanHover(spanElement, true, highlightClass);
+            spanElement.onmouseleave = () => handleExpansionSpanHover(spanElement, false, highlightClass);
+        }
+    }
+}
+
+function setupAllHoverInteractions() {
+    const truthWrapEl = $('truthWrap');
+    if (truthWrapEl) {
+        truthWrapEl.querySelectorAll('.outCell').forEach(el => {
+            el.onmouseenter = () => handleCellOrTermHover(el, true);
+            el.onmouseleave = () => handleCellOrTermHover(el, false);
+        });
+    }
+    const kmapWrapEl = $('kmapWrap');
+    if (kmapWrapEl) {
+        kmapWrapEl.querySelectorAll('td[data-bits]').forEach(el => {
+            el.onmouseenter = () => handleCellOrTermHover(el, true);
+            el.onmouseleave = () => handleCellOrTermHover(el, false);
+        });
+    }
+    const exprWrapEl = $('exprWrap');
+    if (exprWrapEl) {
+        exprWrapEl.querySelectorAll('.term').forEach(el => { 
+            el.onmouseenter = () => handleCellOrTermHover(el, true);
+            el.onmouseleave = () => handleCellOrTermHover(el, false);
+        });
+    }
+}
+
+function handleCellOrTermHover(hoveredElement, isOn) {
+    let mintermsToHighlightInTables = [];
+    let singleMintermForExpansionLookup = null; 
+    let termCoversMintermsForExpansionLookup = []; 
+
+    if (hoveredElement.dataset.bits) { 
+        mintermsToHighlightInTables = [hoveredElement.dataset.bits];
+        singleMintermForExpansionLookup = hoveredElement.dataset.bits;
+
+        const dmfTerms = document.querySelectorAll('.dmfTerm[data-cover]');
+        dmfTerms.forEach(termEl => {
+            const coveredByTerm = termEl.dataset.cover ? termEl.dataset.cover.split('|') : [];
+            if (coveredByTerm.includes(singleMintermForExpansionLookup)) {
+                termEl.classList.toggle('hl-color', isOn);
+            }
+        });
+        const kmfTerms = document.querySelectorAll('.kmfTerm[data-cover]');
+        kmfTerms.forEach(termEl => {
+            const coveredByTerm = termEl.dataset.cover ? termEl.dataset.cover.split('|') : [];
+            if (coveredByTerm.includes(singleMintermForExpansionLookup)) {
+                termEl.classList.toggle('hl-color', isOn);
+            }
+        });
+
+    } else if (hoveredElement.dataset.cover) { 
+        mintermsToHighlightInTables = hoveredElement.dataset.cover.split('|');
+        termCoversMintermsForExpansionLookup = mintermsToHighlightInTables;
+        hoveredElement.classList.toggle('hl-color', isOn);
+    }
+
+    if (mintermsToHighlightInTables.length > 0) {
+        highlightTableCells(mintermsToHighlightInTables, isOn); 
+    }
+
+    // Helper function to apply highlight to a Boolean expansion group
+    const applyHighlightToExpansionGroup = (targetGroupId, highlightState) => {
+        if (!targetGroupId) return;
+        for (const id in expansionSpanData) {
+            const data = expansionSpanData[id];
+            if (data.groupChain && data.groupChain.includes(targetGroupId)) {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.classList.toggle("hl-color", highlightState);
+                }
+            }
+        }
+    };
+
+    if (singleMintermForExpansionLookup) { 
+        let targetGroupIdFound = null;
+        // Priority 1: Find a leaf with a direct path match
+        for (const spanId in expansionSpanData) {
+            const data = expansionSpanData[spanId];
+            if (data.isLeaf && data.path === singleMintermForExpansionLookup && data.groupChain && data.groupChain.length > 0) {
+                targetGroupIdFound = data.groupChain[data.groupChain.length - 1];
+                break; 
+            }
+        }
+        // Priority 2: If no direct path, find a simplified constant leaf covering the minterm
+        if (!targetGroupIdFound) {
+            for (const spanId in expansionSpanData) {
+                const data = expansionSpanData[spanId];
+                if (data.isLeaf && data.path === null && data.minterms && data.minterms.includes(singleMintermForExpansionLookup) && data.groupChain && data.groupChain.length > 0) {
+                    targetGroupIdFound = data.groupChain[data.groupChain.length - 1];
+                    break; 
+                }
+            }
+        }
+        if (targetGroupIdFound) {
+            applyHighlightToExpansionGroup(targetGroupIdFound, isOn);
+        }
+    } else if (termCoversMintermsForExpansionLookup.length > 0) { 
+        const groupsToHighlight = new Set();
+        termCoversMintermsForExpansionLookup.forEach(minterm => {
+            let foundForThisMinterm = false;
+            for (const spanId in expansionSpanData) {
+                const data = expansionSpanData[spanId];
+                if (data.isLeaf && data.path === minterm && data.groupChain && data.groupChain.length > 0) {
+                    groupsToHighlight.add(data.groupChain[data.groupChain.length - 1]);
+                    foundForThisMinterm = true;
+                    break; 
+                }
+            }
+            if (!foundForThisMinterm) {
+                for (const spanId in expansionSpanData) {
+                    const data = expansionSpanData[spanId];
+                    if (data.isLeaf && data.path === null && data.minterms && data.minterms.includes(minterm) && data.groupChain && data.groupChain.length > 0) {
+                        groupsToHighlight.add(data.groupChain[data.groupChain.length - 1]);
+                        break; 
+                    }
+                }
+            }
+        });
+        groupsToHighlight.forEach(groupId => applyHighlightToExpansionGroup(groupId, isOn));
+    }
+}
+
+function handleExpansionSpanHover(spanElement, isOn, highlightClass) {
+    const spanId = spanElement.dataset.spanId;
+    if (!spanId || !expansionSpanData[spanId]) return; 
+
+    const data = expansionSpanData[spanId];
+    const mintermsToHl = data.minterms; 
+    
+    if (!data.groupChain || data.groupChain.length === 0) return;
+    const primaryGroupIdForHover = data.groupChain[data.groupChain.length - 1]; 
+
+    if (mintermsToHl && mintermsToHl.length > 0) {
+        highlightTableCells(mintermsToHl, isOn); 
+    }
+    
+    if (primaryGroupIdForHover && highlightClass) { 
+         for (const id in expansionSpanData) {
+            const iterData = expansionSpanData[id];
+            if (iterData.groupChain && iterData.groupChain.includes(primaryGroupIdForHover)) {
+                const el = document.getElementById(id);
+                if (el) el.classList.toggle(highlightClass, isOn);
+            }
+        }
+    }
+}
+
+function highlightTableCells(arr,on){
+  arr.forEach(b=>{
+    document.querySelectorAll(`[data-bits="${b}"]`)
+            .forEach(n=>n.classList.toggle('hl-cell',on)); 
+  });
+}
+
+// --- Initial Setup ---
+buildTruth(); 
+applyPreset(); 
+renderAll(); 
+
+// --- Event Listeners for variable count and presets ---
+const minusBtnEl = $('minusBtn');
+if (minusBtnEl) {
+    minusBtnEl.onclick = ()=>{ if(nVars>2){ nVars--; buildTruth(); applyPreset(); renderAll(); } };
+}
+const plusBtnEl = $('plusBtn');
+if (plusBtnEl) {
+    plusBtnEl.onclick = ()=>{ if(nVars<4){ nVars++; buildTruth(); applyPreset(); renderAll(); } };
+}
+const presetOpEl = $('presetOp');
+if (presetOpEl instanceof HTMLSelectElement) { 
+    presetOpEl.onchange = ()=>{ 
+        preset=presetOpEl.value; 
+        applyPreset(); 
+        renderAll(); 
+    };
+}
 </script>
 </body>
 </html>
