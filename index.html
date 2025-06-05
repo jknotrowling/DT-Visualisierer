@@ -63,7 +63,12 @@ Variablen
   <div><h2>Wahrheitstabelle</h2><div id="truthWrap"></div></div>
   <div><h2>Symmetriediagramm</h2><div id="kmapWrap"></div></div>
   <div><h2>DNF/KNF &amp; DMF/KMF</h2><div id="exprWrap"></div></div>
-  <div><h2>Boolesche Entwicklung</h2><div id="devWrap"></div></div>
+  <div><h2>Boolesche Entwicklung</h2>
+  <div style="margin-bottom: 10px;"> <!-- Optional wrapper for spacing -->
+    <label for="expansionOrderInput">Entwicklungsreihenfolge:</label>
+    <input type="text" id="expansionOrderInput" placeholder="z.B. cba" style="width: 100px; margin-left: 5px;">
+  </div>
+  <div id="devWrap"></div></div>
 </div>
 
 <script>
@@ -306,26 +311,31 @@ function renderExpr(){
   $('exprWrap').innerHTML=h;
 }
 
-function simplifiedBooleanExpansionRecursive(bits_template_string, depth = 0) {
-    if (depth >= nVars) { 
+function simplifiedBooleanExpansionRecursive(bits_template_string, depth, expansionOrderArray) {
+    if (depth >= nVars) {
         const finalBitsStr = bits_template_string;
         const row = truth.find(r => r.bits === finalBitsStr);
-        const val = row ? (row.out === null ? '/' : String(row.out)) : '?'; 
+        const val = row ? (row.out === null ? '/' : String(row.out)) : '?';
         return { type: 'constant', value: val, minterms: [finalBitsStr], path: finalBitsStr };
     }
 
-    const varName = L[depth]; 
+    const varName = expansionOrderArray[depth];
+    const varIndex = L.indexOf(varName); // Get the original index of the variable
 
-    const pathForOne = bits_template_string.substring(0, depth) + '1' + bits_template_string.substring(depth + 1);
-    const expNode1 = simplifiedBooleanExpansionRecursive(pathForOne, depth + 1);
+    let tempBitsArrayOne = bits_template_string.split('');
+    tempBitsArrayOne[varIndex] = '1';
+    const pathForOne = tempBitsArrayOne.join('');
+    const expNode1 = simplifiedBooleanExpansionRecursive(pathForOne, depth + 1, expansionOrderArray);
 
-    const pathForZero = bits_template_string.substring(0, depth) + '0' + bits_template_string.substring(depth + 1);
-    const expNode0 = simplifiedBooleanExpansionRecursive(pathForZero, depth + 1);
+    let tempBitsArrayZero = bits_template_string.split('');
+    tempBitsArrayZero[varIndex] = '0';
+    const pathForZero = tempBitsArrayZero.join('');
+    const expNode0 = simplifiedBooleanExpansionRecursive(pathForZero, depth + 1, expansionOrderArray);
 
     if (expNode1.type === 'constant' && expNode0.type === 'constant' && expNode1.value === expNode0.value) {
         return { type: 'constant', value: expNode1.value, minterms: [...new Set([...expNode1.minterms, ...expNode0.minterms].sort())], path: null };
     }
-    
+
     if (expNode1.type === 'constant' && expNode0.type === 'constant') {
         if (expNode1.value === '/' && (expNode0.value === '0' || expNode0.value === '1')) {
             return { type: 'constant', value: expNode0.value, minterms: [...new Set([...expNode1.minterms, ...expNode0.minterms].sort())], path: null };
@@ -338,7 +348,7 @@ function simplifiedBooleanExpansionRecursive(bits_template_string, depth = 0) {
     return {
         type: 'expression',
         variable: varName,
-        varIndex: depth,
+        varIndex: varIndex, // Use the original index from L
         positiveBranch: expNode1,
         negativeBranch: expNode0,
         minterms: [...new Set([...expNode1.minterms, ...expNode0.minterms].sort())]
@@ -410,9 +420,45 @@ function generateExpansionHtmlRecursive(node, ancestorGroupChain = []) {
 function renderDev(){
     expansionSpanIdCounter = 0; 
     expansionGroupIdCounter = 0;
-    for(const key in expansionSpanData) delete expansionSpanData[key]; 
+    for(const key in expansionSpanData) delete expansionSpanData[key];
 
-    const rootExpansionNode = simplifiedBooleanExpansionRecursive(''.padStart(nVars, '0'), 0);
+    const orderInputEl = $('expansionOrderInput');
+    let customOrderNames = []; // This will store uppercase names like ['A', 'B', 'C']
+    const defaultOrderUpper = L.slice(0, nVars); // e.g., ['A', 'B', 'C']
+    const defaultOrderLowerStr = defaultOrderUpper.join('').toLowerCase(); // e.g., "abc"
+
+    if (orderInputEl) { // Check if element exists
+        const inputValue = orderInputEl.value.trim();
+        if (inputValue !== '') {
+            const inputPartsUpper = inputValue.toUpperCase().split(''); // Convert to char array, then to uppercase for validation
+            
+            // Validation logic (uses inputPartsUpper and defaultOrderUpper)
+            if (inputPartsUpper.length === nVars && 
+                inputPartsUpper.every(part => defaultOrderUpper.includes(part)) && 
+                new Set(inputPartsUpper).size === inputPartsUpper.length) {
+                customOrderNames = inputPartsUpper;
+            } else {
+                customOrderNames = defaultOrderUpper;
+                orderInputEl.value = defaultOrderLowerStr; // Set input to lowercase default "abc"
+                console.warn("Invalid expansion order input. Using default order:", defaultOrderUpper.join(', ')); // Log with comma for readability
+            }
+        } else { // Empty input
+            customOrderNames = defaultOrderUpper;
+            // Set input to lowercase default "abc" only if the element exists and is empty
+            // This prevents clearing it if it was already empty and focus is lost.
+            // However, onchange fires on blur if value changed, so if it was empty and remains empty, this won't fire.
+            // If it becomes empty, then renderDev is called, and this path is taken.
+             if (orderInputEl.value !== defaultOrderLowerStr) { // Avoid redundant assignment if already default
+                orderInputEl.value = defaultOrderLowerStr;
+             }
+        }
+    } else { // Fallback if inputEl somehow doesn't exist
+         customOrderNames = defaultOrderUpper;
+    }
+    
+    console.log("Using expansion order (uppercase internal):", customOrderNames);
+
+    const rootExpansionNode = simplifiedBooleanExpansionRecursive(''.padStart(nVars, '0'), 0, customOrderNames);
     
     let singleInstanceHtml = `<pre data-style-type="color">`;
     singleInstanceHtml += generateExpansionHtmlRecursive(rootExpansionNode, []); 
@@ -605,6 +651,16 @@ if (presetOpEl instanceof HTMLSelectElement) {
         preset=presetOpEl.value; 
         applyPreset(); 
         renderAll(); 
+    };
+}
+
+const expansionOrderInputEl = $('expansionOrderInput');
+if (expansionOrderInputEl) {
+    expansionOrderInputEl.onchange = () => {
+        renderDev();
+        // setupAllHoverInteractions(); // renderDev re-attaches its own hover listeners.
+                                     // Other general interactions might need this if renderDev clears more than devWrap.
+                                     // For now, assuming renderDev handles its own hover needs.
     };
 }
 </script>
