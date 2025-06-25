@@ -1,133 +1,238 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<title>Logik-Visualizer</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<style>
-body{font-family:system-ui,sans-serif;margin:20px}
-h1{margin:0 0 12px}
-button,select{padding:4px 8px;font-size:1rem;cursor:pointer}
-table{border-collapse:collapse;margin:12px 0}
-th,td{border:1px solid #888;padding:4px 6px;text-align:center}
-th{background:#eee}
-.truth th,.truth td,.outCell{width:42px}
-.outCell,.kmap td{height:42px;cursor:pointer}
-.on {background:#4caf50;color:#fff;font-weight:bold}
-.off{background:#fafafa}
-.dc {background:#ff9800;color:#fff;font-weight:bold}
+  <meta charset="UTF-8">
+  <title>Logik-Visualizer</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    /* Inhalt von kit-layout.css */
+    :root{
+      --kit-blue:#003366;
+      --kit-green:#008C3D;
+      --card-bg:#ffffff;
+      --page-bg:#f8f9fb;
+      --text:#000;
+      --shadow:0 1px 6px rgba(0,0,0,.08);
+    }
 
-/* Highlight Style for table cells */
-.hl-cell {outline:2px solid #e91e63 !important;background:#ffebee !important;color:#000 !important}
+    /* globale Resets */
+    *,*::before,*::after{box-sizing:border-box;}
+    body{margin:0;font-family:"Source Sans Pro",Arial,Helvetica,sans-serif;
+        background:var(--page-bg);color:var(--text);line-height:1.5;}
 
-/* Highlight Style for Boolean Expansion and active DNF/KMF/DMF terms (Color) */
-.hl-color {
-    color: #F57C00 !important; /* Orange */
-    background-color: #FFF3E0 !important; /* Light orange background */
-    border-radius: 3px;
-    padding: 0 1px; /* Slight padding for background visibility */
-}
+    /* Page-Rahmen (Anlehnung an PDF) */
+    .page{max-width:1200px;margin:2rem auto;padding:1.5rem;border:2px solid var(--kit-blue);}
 
-#views{display:flex;gap:32px;flex-wrap:wrap}
-#views>div{flex:1 1 280px;min-width:280px}
-.kmap th.varhead{width:40px;height:36px}
-.term{padding:2px 6px;margin:2px;border-radius:4px;cursor:pointer;display:inline-block}
-.dnfTerm{background:#d0eaff}.cnfTerm{background:#ffe0e0}
-.dmfTerm{background:#b2ffb2}.kmfTerm{background:#ffd59e}
-.ov{text-decoration:overline}
-pre{white-space:pre-wrap;word-break:break-word; margin-top: 5px;}
-pre span { cursor: default; }
-</style>
+    /* Header */
+    .page-header{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+                justify-content:space-between;margin-bottom:2rem;}
+    .logo{height:60px;width:auto;}
+    .title-group{text-align:center;flex:1;} /* Allow title group to take available space */
+    .title-group h1{font-size:1.25rem;font-weight:600;margin:0;}
+    .title-group h2{font-size:2rem;color:var(--kit-blue);margin:.25rem 0 0;}
+    .title-group h3{font-size:1.5rem;margin:.15rem 0 0;}
+
+    /* Card-Grid */
+    .card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+            gap:1.5rem;}
+
+    /* Card */
+    .card{background:var(--card-bg);border:2px solid var(--kit-blue);
+        border-radius:6px;box-shadow:var(--shadow);display:flex;flex-direction:column;}
+    .card-title{background:var(--kit-blue);color:#fff;padding:.5rem 1rem;margin:0;
+                font-size:1.1rem;font-weight:600;border-radius:4px 4px 0 0;} /* Ensure top corners are rounded with border */
+    .card-body{padding:1rem;flex:1;overflow:auto;} /* overflow:auto to handle content larger than card */
+
+    /* Media Queries für Mobile */
+    @media(max-width:768px){ /* Adjusted breakpoint for better responsiveness of header */
+    .page-header{justify-content:center; text-align:center;} /* Center items on smaller screens */
+    .title-group{min-width:100%; order: -1; margin-bottom:1rem;} /* Title full width and first on mobile */
+    }
+
+    @media(max-width:480px){
+    .logo{height:40px;}
+    .title-group h2{font-size:1.5rem;}
+    .page{margin:1rem auto; padding:1rem;}
+    .card-grid{grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1rem;} /* Smaller minmax for very small devices */
+    }
+
+    /* --- Ende Inhalt von kit-layout.css --- */
+
+    /* Alte Stile, die potenziell noch benötigt werden oder später aufgeräumt werden */
+    /* body {font-family:system-ui,sans-serif;} */ /* Überschrieben und entfernt */
+    button,select{padding:4px 8px;font-size:1rem;cursor:pointer}
+    table{border-collapse:collapse;margin:12px 0}
+    th,td{border:1px solid #888;padding:4px 6px;text-align:center}
+    th{background:#eee}
+    .truth th,.truth td,.outCell{width:42px}
+    .outCell,.kmap td{height:42px;cursor:pointer}
+    .on {background:#4caf50;color:#000;font-weight:bold} /* Textfarbe auf schwarz für besseren Kontrast */
+    .off{background:#fafafa}
+    .dc {background:#ff9800;color:#000;font-weight:bold} /* Textfarbe auf schwarz für besseren Kontrast */
+
+    /* Highlight Style for table cells */
+    .hl-cell {outline:2px solid #e91e63 !important;background:#ffebee !important;color:#000 !important}
+
+    /* Highlight Style for Boolean Expansion and active DNF/KMF/DMF terms (Color) */
+    /* Kontrast #F57C00 auf #FFF3E0 ist 3.05:1 - grenzwertig für normalen Text. Belassen gemäß Anforderung "Color". */
+    .hl-color {
+        color: #F57C00 !important; /* Orange */
+        background-color: #FFF3E0 !important; /* Light orange background */
+        border-radius: 3px;
+        padding: 0 1px; /* Slight padding for background visibility */
+    }
+
+    .kmap th.varhead{width:40px;height:36px}
+    .term{padding:2px 6px;margin:2px;border-radius:4px;cursor:pointer;display:inline-block}
+    .dnfTerm{background:#d0eaff}.cnfTerm{background:#ffe0e0}
+    .dmfTerm{background:#b2ffb2}.kmfTerm{background:#ffd59e}
+    .ov{text-decoration:overline}
+    pre{white-space:pre-wrap;word-break:break-word; margin-top: 5px;}
+    pre span { cursor: default; }
+
+    /* Spezifische Stile für Mux-Diagramm, falls noch benötigt */
+    #muxDiagramSvg { display: block; margin: 0 auto; /* Zentrierung, falls nötig */}
+
+  </style>
 </head>
 <body>
-<h1>Interaktiver Logik-Visualizer</h1>
+  <div class="page">
+    <header class="page-header">
+      <img src="assets/KIT_logo.svg" alt="KIT Logo" class="logo kit" role="img">
+      <div class="title-group">
+        <h1>Institut für Technik der Informationsverarbeitung</h1>
+        <h2>Digitaltechnik</h2>
+        <h3>Codierung</h3>
+      </div>
+      <img src="assets/ITIV_logo.svg" alt="ITIV Logo" class="logo itiv" role="img">
+    </header>
 
-<label>Presets :
-  <select id="presetOp">
-    <option value="custom">custom</option>
-    <option value="and">AND</option>
-    <option value="or">OR</option>
-    <option value="xor" selected>XOR</option>
-    <option value="nand">NAND</option>
-    <option value="nor">NOR</option>
-    <option value="xnor">XNOR</option>
-  </select>
-</label>
-&nbsp;&nbsp;
-Variablen
-<button id="minusBtn">−</button>
-<span id="varCountLbl">3</span>
-<button id="plusBtn">+</button>
-
-<div id="views">
-  <div><h2>Wahrheitstabelle</h2><div id="truthWrap"></div></div>
-  <div><h2>Symmetriediagramm</h2><div id="kmapWrap"></div></div>
-  <div><h2>DNF/KNF &amp; DMF/KMF</h2><div id="exprWrap"></div></div>
-  <div><h2>Boolesche Entwicklung</h2>
-  <div style="margin-bottom: 10px;"> <!-- Optional wrapper for spacing -->
-    <label for="expansionOrderInput">Entwicklungsreihenfolge:</label>
-    <input type="text" id="expansionOrderInput" placeholder="z.B. cba" style="width: 100px; margin-left: 5px;">
-  </div>
-  <div id="devWrap"></div></div>
-  <div>
-    <h2>Multiplexer Realisierung</h2>
-    <div id="muxWrap">
-      <svg id="muxDiagramSvg" width="500" height="400" style="border:1px solid #ccc;"></svg>
+    <div style="margin-bottom: 1.5rem; padding: 1rem; background: var(--card-bg); border:2px solid var(--kit-blue); border-radius:6px; box-shadow:var(--shadow);">
+        <label for="presetOp">Presets :</label>
+        <select id="presetOp" aria-label="Logikgatter-Preset auswählen">
+        <option value="custom">custom</option>
+        <option value="and">AND</option>
+        <option value="or">OR</option>
+        <option value="xor" selected>XOR</option>
+        <option value="nand">NAND</option>
+        <option value="nor">NOR</option>
+        <option value="xnor">XNOR</option>
+        </select>
+        &nbsp;&nbsp;
+        Variablen:
+        <button id="minusBtn" aria-label="Anzahl der Variablen verringern">−</button>
+        <span id="varCountLbl">3</span>
+        <button id="plusBtn" aria-label="Anzahl der Variablen erhöhen">+</button>
     </div>
+
+    <main class="card-grid">
+      <section class="card" id="truthTableCard">
+        <h4 class="card-title">Wahrheitstabelle</h4>
+        <div class="card-body">
+          <div id="truthWrap"></div>
+        </div>
+      </section>
+
+      <section class="card" id="kmapCard">
+        <h4 class="card-title">Symmetriediagramm</h4>
+        <div class="card-body">
+          <div id="kmapWrap"></div>
+        </div>
+      </section>
+
+      <section class="card" id="expressionsCard">
+        <h4 class="card-title">DNF/KNF &amp; DMF/KMF</h4>
+        <div class="card-body">
+          <div id="exprWrap"></div>
+        </div>
+      </section>
+
+      <section class="card" id="booleanDevCard">
+        <h4 class="card-title">Boolesche Entwicklung</h4>
+        <div class="card-body">
+          <div style="margin-bottom: 10px;">
+            <label for="expansionOrderInput">Entwicklungsreihenfolge:</label>
+            <input type="text" id="expansionOrderInput" placeholder="z.B. cba" style="width: 100px; margin-left: 5px;" aria-label="Entwicklungsreihenfolge für Boolesche Entwicklung eingeben">
+          </div>
+          <div id="devWrap"></div>
+        </div>
+      </section>
+
+      <section class="card" id="muxCard">
+        <h4 class="card-title">Multiplexer Realisierung</h4>
+        <div class="card-body">
+          <div id="muxWrap">
+            <svg id="muxDiagramSvg" width="100%" height="400" style="border:1px solid #ccc;"></svg>
+          </div>
+        </div>
+      </section>
+    </main>
   </div>
-</div>
 
-<script>
-const $   = id => document.getElementById(id);
-const bin = (n,b)=>n.toString(2).padStart(b,'0');
-const L   = ['A','B','C','D']; // Variable names
-const lbl = (i,neg)=>neg?`<span class="ov">${L[i]}</span>`:L[i];
+  <script>
+    const $ = id => document.getElementById(id);
+    const bin = (n,b)=>n.toString(2).padStart(b,'0');
+    const L = ['A','B','C','D']; // Variable names
+    const lbl = (i,neg)=>neg?`<span class="ov">${L[i]}</span>`:L[i];
 
-const expansionSpanData = {}; 
-let expansionSpanIdCounter = 0; 
-let expansionGroupIdCounter = 0; 
+    const expansionSpanData = {};
+    let expansionSpanIdCounter = 0;
+    let expansionGroupIdCounter = 0;
 
-const DEFAULT_MUX_CONFIG = {
-    width: 60,
-    outputHeight: 20,
-    inputHeight: 40,
-    varFontSize: 14,
-    labelFontSize: 10,
-    strokeColor: '#333',
-    fillColor: '#f0f0f0', // Slightly different fill for distinction
-    labelOffset: 5 // Distance of '0'/'1' labels from MUX body
-};
+    const DEFAULT_MUX_CONFIG = {
+        width: 60,
+        outputHeight: 20,
+        inputHeight: 40,
+        varFontSize: 14,
+        labelFontSize: 10,
+        strokeColor: '#333',
+        fillColor: '#f0f0f0',
+        labelOffset: 5
+    };
 
-// For storing results from renderMuxDiagram and the expansion order used
-let currentMuxDrawnElements = {}; 
-let currentExpansionOrderForMuxHighlight = []; 
-let currentMuxElementsStore = null; // ADD THIS
-let currentActiveMuxConfig = {...DEFAULT_MUX_CONFIG}; // Initialize with default
+    let currentMuxDrawnElements = {};
+    let currentExpansionOrderForMuxHighlight = [];
+    let currentMuxElementsStore = null;
+    let currentActiveMuxConfig = {...DEFAULT_MUX_CONFIG};
 
-const DEFAULT_LAYOUT_CONFIG = {
-    paddingX: 50,
-    paddingY: 50,
-    spacingX: 80, 
-    spacingY: 30  
-};
+    const DEFAULT_LAYOUT_CONFIG = {
+        paddingX: 50,
+        paddingY: 50,
+        spacingX: 80,
+        spacingY: 30
+    };
 
-function highlightMuxElements(activeMintermPaths, isOn, elementsStore, drawnElements, expansionOrder, baseSvgConfig) {
+    // Store the SVG element reference
+    let muxSvgElement;
+
+    // Debounce function
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    function highlightMuxElements(activeMintermPaths, isOn, elementsStore, drawnElements, expansionOrder, baseSvgConfig) {
     if (!drawnElements || Object.keys(drawnElements).length === 0) {
-        // console.log("highlightMuxElements: No drawn elements to highlight/clear.");
         return;
     }
 
-    const highlightColor = '#F57C00'; // Orange
+    const highlightColor = '#F57C00'; 
     const defaultMuxStrokeColor = baseSvgConfig.strokeColor;
     const defaultMuxStrokeWidth = '1.5';
     const highlightedMuxStrokeWidth = '2.5';
     const defaultLineStrokeColor = baseSvgConfig.strokeColor;
     const defaultLineStrokeWidth = '1';
     const highlightedLineStrokeWidth = '2';
-    const defaultConstantColor = baseSvgConfig.strokeColor; // Or a specific text color if defined
-    const L_VARS = ['A', 'B', 'C', 'D']; // Make sure this aligns with global L (it does)
+    const defaultConstantColor = baseSvgConfig.strokeColor; 
+    const L_VARS = ['A', 'B', 'C', 'D']; 
 
-    // Clear All Previous Highlights
     elementsStore.muxes.forEach(mux => {
         const muxSvgGroup = drawnElements[mux.id];
         if (muxSvgGroup && muxSvgGroup.querySelector('polygon')) {
@@ -155,34 +260,28 @@ function highlightMuxElements(activeMintermPaths, isOn, elementsStore, drawnElem
         return;
     }
 
-    // Apply New Highlights
     activeMintermPaths.forEach(mintermPathStr => {
-        if (mintermPathStr.length !== nVars) { // Ensure nVars is globally accessible
+        if (mintermPathStr.length !== nVars) { 
             console.warn(`Minterm path ${mintermPathStr} length does not match nVars ${nVars}. Skipping.`);
-            return; // continue to next path in forEach
+            return; 
         }
 
         let currentLogicalElementId = null;
-        // Find the root MUX: The MUX at depth 0 with varName matching expansionOrder[0]
         const rootMuxVar = expansionOrder[0];
         const rootMux = elementsStore.muxes.find(m => m.depth === 0 && m.varName === rootMuxVar);
 
         if (!rootMux) {
             console.warn(`Root MUX for var ${rootMuxVar} not found. Skipping path ${mintermPathStr}.`);
-            return; // continue to next path in forEach
+            return; 
         }
         currentLogicalElementId = rootMux.id;
 
         for (let depth = 0; depth < expansionOrder.length; depth++) {
-            if (!currentLogicalElementId) {
-                // console.warn("Path tracing stopped: currentLogicalElementId is null.");
-                break; // from this inner for-loop (tracing this path)
-            }
+            if (!currentLogicalElementId) break;
 
-            const currentLogicalItem = elementsStore.muxes.find(m => m.id === currentLogicalElementId);
-            
-            if (!currentLogicalItem) { 
-                 const constItem = elementsStore.constants.find(c => c.id === currentLogicalElementId);
+            const currentLogicalMux = elementsStore.muxes.find(m => m.id === currentLogicalElementId);
+            if (!currentLogicalMux) { 
+                const constItem = elementsStore.constants.find(c => c.id === currentLogicalElementId);
                  if (constItem) { 
                     if(depth === expansionOrder.length) { 
                         const constSvg = drawnElements[constItem.id];
@@ -195,13 +294,13 @@ function highlightMuxElements(activeMintermPaths, isOn, elementsStore, drawnElem
                  break; 
             }
             
-            const muxSvgGroup = drawnElements[currentLogicalItem.id];
+            const muxSvgGroup = drawnElements[currentLogicalMux.id];
             if (muxSvgGroup && muxSvgGroup.querySelector('polygon')) {
                 muxSvgGroup.querySelector('polygon').setAttribute('stroke', highlightColor);
                 muxSvgGroup.querySelector('polygon').setAttribute('stroke-width', highlightedMuxStrokeWidth);
             }
 
-            if (depth === expansionOrder.length - 1) {
+            if (depth === expansionOrder.length - 1) { // Last MUX in this path, leads to a constant
                 const varNameForThisDepth = expansionOrder[depth]; 
                 const originalVarLIndex = L_VARS.indexOf(varNameForThisDepth);
                  if (originalVarLIndex === -1) {
@@ -210,7 +309,7 @@ function highlightMuxElements(activeMintermPaths, isOn, elementsStore, drawnElem
                 }
                 const pinToFollowToConstant = mintermPathStr[originalVarLIndex];
                 
-                const finalConn = elementsStore.connections.find(c => c.fromId === currentLogicalItem.id && c.fromPin === pinToFollowToConstant);
+                const finalConn = elementsStore.connections.find(c => c.fromId === currentLogicalMux.id && c.fromPin === pinToFollowToConstant);
                 if (finalConn) {
                     const finalLineId = `line_${finalConn.fromId}_${finalConn.fromPin}_${finalConn.toId}`;
                     const finalLineSvg = drawnElements[finalLineId];
@@ -228,6 +327,7 @@ function highlightMuxElements(activeMintermPaths, isOn, elementsStore, drawnElem
                 break; 
             }
 
+            // Not the last MUX, follow to next MUX
             const varNameForThisDepth = expansionOrder[depth]; 
             const originalVarLIndex = L_VARS.indexOf(varNameForThisDepth);
             if (originalVarLIndex === -1) {
@@ -236,8 +336,9 @@ function highlightMuxElements(activeMintermPaths, isOn, elementsStore, drawnElem
             }
             const pinToFollow = mintermPathStr[originalVarLIndex];
 
-            const conn = elementsStore.connections.find(c => c.fromId === currentLogicalItem.id && c.fromPin === pinToFollow);
+            const conn = elementsStore.connections.find(c => c.fromId === currentLogicalMux.id && c.fromPin === pinToFollow);
             if (!conn) {
+                 console.warn(`Connection from MUX ${currentLogicalMux.id} via pin ${pinToFollow} not found. Path tracing aborted.`);
                  break;
             }
             
@@ -253,1201 +354,1029 @@ function highlightMuxElements(activeMintermPaths, isOn, elementsStore, drawnElem
     });
 }
 
-function createSvgMuxElement(cx, cy, varName, config = DEFAULT_MUX_CONFIG) {
-    const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    group.dataset.varName = varName; // Store varName for potential future use
+    function createSvgMuxElement(cx, cy, varName, config = DEFAULT_MUX_CONFIG) {
+        const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        group.dataset.varName = varName;
 
-    const x = cx - config.width / 2;
-    const y = cy; // cy is the vertical center
+        const x = cx - config.width / 2;
+        const y = cy;
 
-    // Trapezoid Points
-    const p1 = `${x},${y - config.outputHeight / 2}`;
-    const p2 = `${x + config.width},${y - config.inputHeight / 2}`;
-    const p3 = `${x + config.width},${y + config.inputHeight / 2}`;
-    const p4 = `${x},${y + config.outputHeight / 2}`;
+        const p1 = `${x},${y - config.outputHeight / 2}`;
+        const p2 = `${x + config.width},${y - config.inputHeight / 2}`;
+        const p3 = `${x + config.width},${y + config.inputHeight / 2}`;
+        const p4 = `${x},${y + config.outputHeight / 2}`;
 
-    const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-    polygon.setAttribute('points', `${p1} ${p2} ${p3} ${p4}`);
-    polygon.setAttribute('fill', config.fillColor);
-    polygon.setAttribute('stroke', config.strokeColor);
-    polygon.setAttribute('stroke-width', '1.5');
-    group.appendChild(polygon);
+        const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        polygon.setAttribute('points', `${p1} ${p2} ${p3} ${p4}`);
+        polygon.setAttribute('fill', config.fillColor);
+        polygon.setAttribute('stroke', config.strokeColor);
+        polygon.setAttribute('stroke-width', '1.5');
+        group.appendChild(polygon);
 
-    // Variable Name Text
-    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    text.setAttribute('x', cx);
-    text.setAttribute('y', cy);
-    text.setAttribute('font-family', 'system-ui, sans-serif');
-    text.setAttribute('font-size', config.varFontSize);
-    text.setAttribute('text-anchor', 'middle');
-    text.setAttribute('dominant-baseline', 'middle');
-    text.textContent = varName;
-    group.appendChild(text);
-
-    // Input Labels '1' and '0'
-    const label1 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    label1.setAttribute('x', x + config.width + config.labelOffset);
-    label1.setAttribute('y', y - config.inputHeight / 4); // Align with top input
-    label1.setAttribute('font-family', 'system-ui, sans-serif');
-    label1.setAttribute('font-size', config.labelFontSize);
-    label1.setAttribute('text-anchor', 'start');
-    label1.setAttribute('dominant-baseline', 'middle');
-    label1.textContent = '1';
-    group.appendChild(label1);
-
-    const label0 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    label0.setAttribute('x', x + config.width + config.labelOffset);
-    label0.setAttribute('y', y + config.inputHeight / 4); // Align with bottom input
-    label0.setAttribute('font-family', 'system-ui, sans-serif');
-    label0.setAttribute('font-size', config.labelFontSize);
-    label0.setAttribute('text-anchor', 'start');
-    label0.setAttribute('dominant-baseline', 'middle');
-    label0.textContent = '0';
-    group.appendChild(label0);
-    
-    // Store connection points relative to the group's origin (cx, cy) for the drawing function to use later
-    // These are relative to cx, cy
-    group.dataset.connOutX = -config.width / 2; // Relative X for output
-    group.dataset.connOutY = 0;                 // Relative Y for output (already cy)
-    group.dataset.connIn1X = config.width / 2;  // Relative X for input '1'
-    group.dataset.connIn1Y = -config.inputHeight / 4; // Relative Y for input '1'
-    group.dataset.connIn0X = config.width / 2;  // Relative X for input '0'
-    group.dataset.connIn0Y = config.inputHeight / 4;  // Relative Y for input '0'
-
-    return group;
-}
-
-function getNextMuxId(_idCounter) { 
-    return `el_mux_${_idCounter.next++}`; 
-}
-
-function generateMuxStructureRecursive(node, depth, _elementsStore, _idCounter, _yOrderCounters) {
-    const currentId = getNextMuxId(_idCounter);
-
-    if (typeof _yOrderCounters[depth] === 'undefined') {
-        _yOrderCounters[depth] = 0;
-    }
-    const yOrder = _yOrderCounters[depth];
-    _yOrderCounters[depth]++;
-
-    if (node.type === 'constant') {
-        _elementsStore.constants.push({ 
-            id: currentId, 
-            value: node.value, 
-            depth: depth, 
-            yOrderAtDepth: yOrder,
-            minterms: node.minterms, // Added
-            path: node.path         // Added
-        });
-        return { id: currentId, type: 'constant' };
-    }
-
-    // Expression Node (represents a MUX)
-    _elementsStore.muxes.push({ 
-        id: currentId, 
-        varName: node.variable, 
-        depth: depth, 
-        varIndexOriginal: node.varIndex, 
-        yOrderAtDepth: yOrder,
-        minterms: node.minterms // Added
-    });
-
-    const positiveChildInfo = generateMuxStructureRecursive(node.positiveBranch, depth + 1, _elementsStore, _idCounter, _yOrderCounters);
-    _elementsStore.connections.push({ 
-        fromId: currentId, 
-        fromPin: '1', // MUX input '1'
-        toId: positiveChildInfo.id, 
-        toType: positiveChildInfo.type 
-    });
-
-    const negativeChildInfo = generateMuxStructureRecursive(node.negativeBranch, depth + 1, _elementsStore, _idCounter, _yOrderCounters);
-    _elementsStore.connections.push({ 
-        fromId: currentId, 
-        fromPin: '0', // MUX input '0'
-        toId: negativeChildInfo.id, 
-        toType: negativeChildInfo.type 
-    });
-
-    return { id: currentId, type: 'mux' };
-}
-
-function generateMuxDiagramStructure(rootNode) {
-    const elementsStore = { muxes: [], constants: [], connections: [] };
-    const idCounter = { next: 0 };
-    const yOrderCounters = []; // Stores next yOrder for each depth
-    
-    // The initial call to the recursive function
-    generateMuxStructureRecursive(rootNode, 0, elementsStore, idCounter, yOrderCounters);
-    
-    return elementsStore;
-}
-
-function calculateMuxLayout(elementsStore, layoutConfig = DEFAULT_LAYOUT_CONFIG, muxDisplayConfig = DEFAULT_MUX_CONFIG) {
-    const elementCoords = {};
-    const elementsByDepth = {}; 
-
-    const svgHeight = 400; // Hardcoded SVG height from <svg> tag, consider passing or fetching if dynamic
-    const elementRenderHeight = muxDisplayConfig.inputHeight; // MUX visual height used for layout spacing. Constants assumed similar.
-
-    // Combine MUXes and constants and group them by depth
-    const allElements = [
-        ...(elementsStore.muxes || []),
-        ...(elementsStore.constants || [])
-    ];
-
-    allElements.forEach(element => {
-        if (!elementsByDepth[element.depth]) {
-            elementsByDepth[element.depth] = [];
-        }
-        elementsByDepth[element.depth].push(element);
-    });
-
-    // For each depth, calculate layout
-    Object.keys(elementsByDepth).forEach(depthKey => {
-        const depth = parseInt(depthKey, 10);
-        const elementsInColumn = elementsByDepth[depth];
-
-        // Sort elements by their original yOrderAtDepth to maintain relative order within the column
-        elementsInColumn.sort((a, b) => a.yOrderAtDepth - b.yOrderAtDepth);
-
-        const numElements = elementsInColumn.length;
-        if (numElements === 0) {
-            return; // Skip if no elements at this depth
-        }
-
-        // Calculate total height of content (elements + spacing) in this column
-        const totalContentHeight = (numElements * elementRenderHeight) + (Math.max(0, numElements - 1) * layoutConfig.spacingY);
-
-        // Calculate starting Y position for the top of the content block to center it vertically
-        const columnBlockStartY = (svgHeight - totalContentHeight) / 2;
-        
-        elementsInColumn.forEach((element, index) => {
-            const x = layoutConfig.paddingX + element.depth * (muxDisplayConfig.width + layoutConfig.spacingX);
-            // Calculate the Y for the *center* of the element
-            const y = columnBlockStartY + (index * (elementRenderHeight + layoutConfig.spacingY)) + (elementRenderHeight / 2);
-            
-            // Determine type based on presence of varName (for MUXes) vs value (for constants)
-            elementCoords[element.id] = { x, y, type: element.varName ? 'mux' : 'constant', element: element };
-        });
-    });
-
-    return elementCoords;
-}
-
-function renderMuxDiagram(svgElementId, elementsStore, elementCoords, muxConfig = DEFAULT_MUX_CONFIG) {
-    const svg = $(svgElementId);
-    if (!svg) {
-        console.error(`SVG element with id "${svgElementId}" not found.`);
-        return {}; // Return empty if no SVG
-    }
-    svg.innerHTML = ''; // Clear previous content
-
-    const drawnElements = {}; // To store references to drawn SVG groups/elements
-
-    // Draw MUXes
-    elementsStore.muxes.forEach(muxData => {
-        const coords = elementCoords[muxData.id];
-        if (!coords) {
-            console.error(`Coordinates for MUX id "${muxData.id}" not found.`);
-            return; // continue in forEach
-        }
-        const muxGroup = createSvgMuxElement(coords.x, coords.y, muxData.varName, muxConfig);
-        muxGroup.id = muxData.id; // Assign the ID to the group for easy DOM selection if needed
-        svg.appendChild(muxGroup);
-        drawnElements[muxData.id] = muxGroup;
-    });
-
-    // Draw Constants
-    elementsStore.constants.forEach(constantData => {
-        const coords = elementCoords[constantData.id];
-        if (!coords) {
-            console.error(`Coordinates for constant id "${constantData.id}" not found.`);
-            return; // continue in forEach
-        }
         const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        text.setAttribute('id', constantData.id); // Assign ID
-        text.setAttribute('x', coords.x);
-        text.setAttribute('y', coords.y);
+        text.setAttribute('x', cx);
+        text.setAttribute('y', cy);
         text.setAttribute('font-family', 'system-ui, sans-serif');
-        text.setAttribute('font-size', muxConfig.varFontSize); // Use varFontSize for constants
+        text.setAttribute('font-size', config.varFontSize);
         text.setAttribute('text-anchor', 'middle');
         text.setAttribute('dominant-baseline', 'middle');
-        text.textContent = constantData.value;
-        svg.appendChild(text);
-        drawnElements[constantData.id] = text;
-    });
+        text.textContent = varName;
+        group.appendChild(text);
 
-    // Draw Connections
-    elementsStore.connections.forEach(connData => {
-        const fromCoords = elementCoords[connData.fromId];
-        const toCoords = elementCoords[connData.toId];
-        const fromElementGroup = drawnElements[connData.fromId];
+        const label1 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        label1.setAttribute('x', x + config.width + config.labelOffset);
+        label1.setAttribute('y', y - config.inputHeight / 4);
+        label1.setAttribute('font-family', 'system-ui, sans-serif');
+        label1.setAttribute('font-size', config.labelFontSize);
+        label1.setAttribute('text-anchor', 'start');
+        label1.setAttribute('dominant-baseline', 'middle');
+        label1.textContent = '1';
+        group.appendChild(label1);
 
-        if (!fromCoords || !toCoords || !fromElementGroup) {
-            console.error(`Missing coordinate or element for connection: from ${connData.fromId} to ${connData.toId}`);
-            return; // continue in forEach
+        const label0 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        label0.setAttribute('x', x + config.width + config.labelOffset);
+        label0.setAttribute('y', y + config.inputHeight / 4);
+        label0.setAttribute('font-family', 'system-ui, sans-serif');
+        label0.setAttribute('font-size', config.labelFontSize);
+        label0.setAttribute('text-anchor', 'start');
+        label0.setAttribute('dominant-baseline', 'middle');
+        label0.textContent = '0';
+        group.appendChild(label0);
+        
+        group.dataset.connOutX = -config.width / 2;
+        group.dataset.connOutY = 0;
+        group.dataset.connIn1X = config.width / 2;
+        group.dataset.connIn1Y = -config.inputHeight / 4;
+        group.dataset.connIn0X = config.width / 2;
+        group.dataset.connIn0Y = config.inputHeight / 4;
+
+        return group;
+    }
+
+    function getNextMuxId(_idCounter) { 
+        return `el_mux_${_idCounter.next++}`; 
+    }
+
+    function generateMuxStructureRecursive(node, depth, _elementsStore, _idCounter, _yOrderCounters) {
+        const currentId = getNextMuxId(_idCounter);
+
+        if (typeof _yOrderCounters[depth] === 'undefined') {
+            _yOrderCounters[depth] = 0;
+        }
+        const yOrder = _yOrderCounters[depth];
+        _yOrderCounters[depth]++;
+
+        if (node.type === 'constant') {
+            _elementsStore.constants.push({ 
+                id: currentId, 
+                value: node.value, 
+                depth: depth, 
+                yOrderAtDepth: yOrder,
+                minterms: node.minterms,
+                path: node.path
+            });
+            return { id: currentId, type: 'constant' };
         }
 
-        let startX, startY, endX, endY;
+        _elementsStore.muxes.push({ 
+            id: currentId, 
+            varName: node.variable, 
+            depth: depth, 
+            varIndexOriginal: node.varIndex, 
+            yOrderAtDepth: yOrder,
+            minterms: node.minterms
+        });
 
-        startX = fromCoords.x + parseFloat(fromElementGroup.dataset[connData.fromPin === '1' ? 'connIn1X' : 'connIn0X']);
-        startY = fromCoords.y + parseFloat(fromElementGroup.dataset[connData.fromPin === '1' ? 'connIn1Y' : 'connIn0Y']);
+        const positiveChildInfo = generateMuxStructureRecursive(node.positiveBranch, depth + 1, _elementsStore, _idCounter, _yOrderCounters);
+        _elementsStore.connections.push({ 
+            fromId: currentId, 
+            fromPin: '1',
+            toId: positiveChildInfo.id, 
+            toType: positiveChildInfo.type 
+        });
+
+        const negativeChildInfo = generateMuxStructureRecursive(node.negativeBranch, depth + 1, _elementsStore, _idCounter, _yOrderCounters);
+        _elementsStore.connections.push({ 
+            fromId: currentId, 
+            fromPin: '0',
+            toId: negativeChildInfo.id, 
+            toType: negativeChildInfo.type 
+        });
+
+        return { id: currentId, type: 'mux' };
+    }
+
+    function generateMuxDiagramStructure(rootNode) {
+        const elementsStore = { muxes: [], constants: [], connections: [] };
+        const idCounter = { next: 0 };
+        const yOrderCounters = [];
         
-        if (connData.toType === 'mux') {
-            const toElementGroup = drawnElements[connData.toId];
-            if (!toElementGroup) {
-                 console.error(`Target MUX element for connection not found: ${connData.toId}`);
-                 return; // continue in forEach
+        generateMuxStructureRecursive(rootNode, 0, elementsStore, idCounter, yOrderCounters);
+        return elementsStore;
+    }
+
+    function calculateMuxLayout(elementsStore, layoutConfig = DEFAULT_LAYOUT_CONFIG, muxDisplayConfig = DEFAULT_MUX_CONFIG) {
+        const elementCoords = {};
+        const elementsByDepth = {};
+
+        const muxCardBody = document.querySelector('#muxCard .card-body');
+        // Use card body's offsetHeight if available and greater than a minimum, otherwise fallback.
+        // This makes the layout responsive to the actual rendered height of the card body.
+        const svgActualHeight = muxCardBody && muxCardBody.offsetHeight > 100 ? muxCardBody.offsetHeight - 2 * 16 : 400; // 16 for padding
+        const elementRenderHeight = muxDisplayConfig.inputHeight;
+
+        const allElements = [
+            ...(elementsStore.muxes || []),
+            ...(elementsStore.constants || [])
+        ];
+
+        allElements.forEach(element => {
+            if (!elementsByDepth[element.depth]) {
+                elementsByDepth[element.depth] = [];
             }
-            endX = toCoords.x + parseFloat(toElementGroup.dataset.connOutX);
-            endY = toCoords.y + parseFloat(toElementGroup.dataset.connOutY);
-        } else { 
-            endX = toCoords.x - 5; 
-            endY = toCoords.y;
-        }
+            elementsByDepth[element.depth].push(element);
+        });
 
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', startX);
-        line.setAttribute('y1', startY);
-        line.setAttribute('x2', endX);
-        line.setAttribute('y2', endY);
-        line.setAttribute('stroke', muxConfig.strokeColor);
-        line.setAttribute('stroke-width', '1');
-        
-        const lineId = `line_${connData.fromId}_${connData.fromPin}_${connData.toId}`;
-        line.setAttribute('id', lineId);
-        drawnElements[lineId] = line; // Store the line
-        
-        svg.appendChild(line);
-    });
+        Object.keys(elementsByDepth).forEach(depthKey => {
+            const depth = parseInt(depthKey, 10);
+            const elementsInColumn = elementsByDepth[depth];
+            elementsInColumn.sort((a, b) => a.yOrderAtDepth - b.yOrderAtDepth);
 
-    // Adjust SVG ViewBox (attempt this last)
-    try {
-        const bbox = svg.getBBox();
-        if (bbox.width > 0 && bbox.height > 0) { // Ensure bbox is valid
-             svg.setAttribute('viewBox', `${bbox.x - 20} ${bbox.y - 20} ${bbox.width + 40} ${bbox.height + 40}`); // Added more padding
-        } else {
-            // Fallback if bbox is not valid (e.g. no elements, or SVG not in DOM correctly)
-            // Keep existing width/height attributes if bbox fails
-        }
-    } catch (e) {
-        console.warn("Could not calculate SVG BBox. ViewBox not set.", e);
-    }
-    return drawnElements; // Added return statement
-}
+            const numElements = elementsInColumn.length;
+            if (numElements === 0) return;
 
-function highlightMuxElements(activeMintermPaths, isOn, elementsStore, drawnElements, expansionOrder, baseSvgConfig) {
-    if (!drawnElements || Object.keys(drawnElements).length === 0) {
-        // console.log("highlightMuxElements: No drawn elements to highlight/clear.");
-        return;
+            const totalContentHeight = (numElements * elementRenderHeight) + (Math.max(0, numElements - 1) * layoutConfig.spacingY);
+            const columnBlockStartY = Math.max(layoutConfig.paddingY, (svgActualHeight - totalContentHeight) / 2); // Ensure paddingY is respected
+            
+            elementsInColumn.forEach((element, index) => {
+                const x = layoutConfig.paddingX + element.depth * (muxDisplayConfig.width + layoutConfig.spacingX);
+                const y = columnBlockStartY + (index * (elementRenderHeight + layoutConfig.spacingY)) + (elementRenderHeight / 2);
+                elementCoords[element.id] = { x, y, type: element.varName ? 'mux' : 'constant', element: element };
+            });
+        });
+        return elementCoords;
     }
 
-    const highlightColor = '#F57C00'; // Orange
-    const defaultMuxStrokeColor = baseSvgConfig.strokeColor;
-    const defaultMuxStrokeWidth = '1.5';
-    const highlightedMuxStrokeWidth = '2.5';
-    const defaultLineStrokeColor = baseSvgConfig.strokeColor;
-    const defaultLineStrokeWidth = '1';
-    const highlightedLineStrokeWidth = '2';
-    const defaultConstantColor = baseSvgConfig.strokeColor; // Or a specific text color if defined
-    const L_VARS = ['A', 'B', 'C', 'D']; // Make sure this aligns with global L
+    function renderMuxDiagram(elementsStore, elementCoords, muxConfig = DEFAULT_MUX_CONFIG) {
+        // muxSvgElement is already defined globally and initialized in renderDev
+        if (!muxSvgElement) {
+            console.error(`SVG element for MUX diagram not found.`);
+            return {};
+        }
+        muxSvgElement.innerHTML = '';
 
-    // Clear All Previous Highlights
-    elementsStore.muxes.forEach(mux => {
-        const muxSvgGroup = drawnElements[mux.id];
-        if (muxSvgGroup && muxSvgGroup.querySelector('polygon')) {
-            muxSvgGroup.querySelector('polygon').setAttribute('stroke', defaultMuxStrokeColor);
-            muxSvgGroup.querySelector('polygon').setAttribute('stroke-width', defaultMuxStrokeWidth);
-        }
-    });
-    elementsStore.constants.forEach(constant => {
-        const constSvgText = drawnElements[constant.id];
-        if (constSvgText) {
-            constSvgText.setAttribute('fill', defaultConstantColor);
-            constSvgText.setAttribute('font-weight', 'normal');
-        }
-    });
-    elementsStore.connections.forEach(connection => {
-        const lineId = `line_${connection.fromId}_${connection.fromPin}_${connection.toId}`;
-        const lineSvg = drawnElements[lineId];
-        if (lineSvg) {
-            lineSvg.setAttribute('stroke', defaultLineStrokeColor);
-            lineSvg.setAttribute('stroke-width', defaultLineStrokeWidth);
-        }
-    });
+        const drawnElements = {};
 
-    if (!isOn || !activeMintermPaths || activeMintermPaths.length === 0) {
-        return;
+        // Ensure muxSvgElement has a minimum height if its parent card-body is very small
+        // This is more of a safeguard for viewBox calculation.
+        const muxCardBody = document.querySelector('#muxCard .card-body');
+        if (muxCardBody && muxCardBody.offsetHeight < 150) {
+             muxSvgElement.style.minHeight = '150px';
+        } else if (muxSvgElement.style.minHeight) {
+            muxSvgElement.style.minHeight = ''; // Reset if card body is larger
+        }
+
+        elementsStore.muxes.forEach(muxData => {
+            const coords = elementCoords[muxData.id];
+            if (!coords) return;
+            const muxGroup = createSvgMuxElement(coords.x, coords.y, muxData.varName, muxConfig);
+            muxGroup.id = muxData.id;
+            muxSvgElement.appendChild(muxGroup);
+            drawnElements[muxData.id] = muxGroup;
+        });
+
+        elementsStore.constants.forEach(constantData => {
+            const coords = elementCoords[constantData.id];
+            if (!coords) return;
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('id', constantData.id);
+            text.setAttribute('x', coords.x);
+            text.setAttribute('y', coords.y);
+            text.setAttribute('font-family', 'system-ui, sans-serif');
+            text.setAttribute('font-size', muxConfig.varFontSize);
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('dominant-baseline', 'middle');
+            text.textContent = constantData.value;
+            muxSvgElement.appendChild(text);
+            drawnElements[constantData.id] = text;
+        });
+
+        elementsStore.connections.forEach(connData => {
+            const fromCoords = elementCoords[connData.fromId];
+            const toCoords = elementCoords[connData.toId];
+            const fromElementGroup = drawnElements[connData.fromId];
+
+            if (!fromCoords || !toCoords || !fromElementGroup) return;
+
+            let startX, startY, endX, endY;
+            startX = fromCoords.x + parseFloat(fromElementGroup.dataset[connData.fromPin === '1' ? 'connIn1X' : 'connIn0X']);
+            startY = fromCoords.y + parseFloat(fromElementGroup.dataset[connData.fromPin === '1' ? 'connIn1Y' : 'connIn0Y']);
+            
+            if (connData.toType === 'mux') {
+                const toElementGroup = drawnElements[connData.toId];
+                if (!toElementGroup) return;
+                endX = toCoords.x + parseFloat(toElementGroup.dataset.connOutX);
+                endY = toCoords.y + parseFloat(toElementGroup.dataset.connOutY);
+            } else { 
+                endX = toCoords.x - 5; 
+                endY = toCoords.y;
+            }
+
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', startX);
+            line.setAttribute('y1', startY);
+            line.setAttribute('x2', endX);
+            line.setAttribute('y2', endY);
+            line.setAttribute('stroke', muxConfig.strokeColor);
+            line.setAttribute('stroke-width', '1');
+            
+            const lineId = `line_${connData.fromId}_${connData.fromPin}_${connData.toId}`;
+            line.setAttribute('id', lineId);
+            drawnElements[lineId] = line;
+            muxSvgElement.appendChild(line);
+        });
+
+        try {
+            const bbox = muxSvgElement.getBBox();
+            if (bbox.width > 0 && bbox.height > 0) {
+                const padding = 20; // ViewBox padding
+                // Set viewBox to encompass the bounding box with padding
+                muxSvgElement.setAttribute('viewBox', `${bbox.x - padding} ${bbox.y - padding} ${bbox.width + 2 * padding} ${bbox.height + 2 * padding}`);
+                // Remove explicit width attribute to let SVG scale, height is set in HTML/CSS.
+                muxSvgElement.removeAttribute('width');
+            } else {
+                 // Fallback if bbox is not valid, ensure SVG is at least somewhat visible
+                 // This might happen if there are no elements, or SVG not in DOM correctly during calc
+                 const cardBody = muxSvgElement.closest('.card-body');
+                 const fallbackWidth = cardBody ? cardBody.offsetWidth : 300;
+                 // Keep height from HTML attribute if bbox fails
+                 muxSvgElement.setAttribute('viewBox', `0 0 ${fallbackWidth} 400`);
+                 if (fallbackWidth !== 300) muxSvgElement.removeAttribute('width');
+
+            }
+        } catch (e) {
+            console.warn("Could not calculate SVG BBox for viewBox adjustment. Using fallback.", e);
+            const cardBody = muxSvgElement.closest('.card-body');
+            const fallbackWidth = cardBody ? cardBody.offsetWidth : 300;
+            muxSvgElement.setAttribute('viewBox', `0 0 ${fallbackWidth} 400`);
+            if (fallbackWidth !== 300) muxSvgElement.removeAttribute('width');
+        }
+        return drawnElements;
     }
 
-    // Apply New Highlights
-    activeMintermPaths.forEach(mintermPathStr => {
-        if (mintermPathStr.length !== nVars) { // Ensure nVars is accessible
-            console.warn(`Minterm path ${mintermPathStr} length does not match nVars ${nVars}. Skipping.`);
-            return; // continue to next path
-        }
 
-        let currentLogicalElementId = null;
-        const rootMuxVar = expansionOrder[0];
-        const rootMux = elementsStore.muxes.find(m => m.depth === 0 && m.varName === rootMuxVar);
+    function graySeq(bits){
+    if(bits===0) return [''];
+    let arr=['0','1'];
+    while(arr[0].length<bits){
+        const rev=[...arr].reverse();
+        arr=arr.map(c=>'0'+c).concat(rev.map(c=>'1'+c));
+    }
+    return arr;
+    }
 
-        if (!rootMux) {
-            console.warn(`Root MUX for var ${rootMuxVar} not found. Skipping path ${mintermPathStr}.`);
-            return; // continue to next path
-        }
-        currentLogicalElementId = rootMux.id;
+    let nVars = 3;
+    let truth = [];
+    let preset= 'xor';
 
-        for (let depth = 0; depth < expansionOrder.length; depth++) {
-            if (!currentLogicalElementId) break;
+    function buildTruth(oldTruthArray = null, previousNVars = -1){
+      const newNVars = nVars; 
 
-            const currentLogicalMux = elementsStore.muxes.find(m => m.id === currentLogicalElementId);
-            if (!currentLogicalMux) { // Should not happen if logic is correct and it's not a constant
-                console.warn(`Mux with ID ${currentLogicalElementId} not found in elementsStore.muxes. Path tracing aborted.`);
+      if (preset === 'custom' && oldTruthArray && previousNVars !== -1) {
+        if (newNVars > previousNVars) { 
+          const newTruth = [];
+          const oldTruthMap = new Map();
+          oldTruthArray.forEach(entry => {
+            oldTruthMap.set(entry.bits, entry.out);
+          });
+
+          for (let i = 0; i < (1 << newNVars); i++) {
+            const currentGlobalBitsRev = bin(i, newNVars).split('').reverse().join('');
+            const correspondingOldBitsRev = currentGlobalBitsRev.substring(0, previousNVars);
+            
+            let outputValue;
+            let allNewVarsAreZero = true;
+            for (let k = previousNVars; k < newNVars; k++) {
+              if (((i >> k) & 1) === 1) {
+                allNewVarsAreZero = false;
                 break;
+              }
             }
 
-            const muxSvgGroup = drawnElements[currentLogicalMux.id];
-            if (muxSvgGroup && muxSvgGroup.querySelector('polygon')) {
-                muxSvgGroup.querySelector('polygon').setAttribute('stroke', highlightColor);
-                muxSvgGroup.querySelector('polygon').setAttribute('stroke-width', highlightedMuxStrokeWidth);
+            if (allNewVarsAreZero) {
+              outputValue = oldTruthMap.has(correspondingOldBitsRev) ? oldTruthMap.get(correspondingOldBitsRev) : null;
+            } else {
+              outputValue = null;
             }
+            newTruth.push({ bits: currentGlobalBitsRev, out: outputValue });
+          }
+          truth = newTruth;
+        } else if (newNVars < previousNVars) { 
+          const newTruth = [];
+          const oldTruthMap = new Map();
+          oldTruthArray.forEach(entry => {
+            oldTruthMap.set(entry.bits, entry.out);
+          });
 
-            const varNameForThisDepth = expansionOrder[depth];
-            const originalVarLIndex = L_VARS.indexOf(varNameForThisDepth);
-            if (originalVarLIndex === -1) {
-                 console.warn(`Variable ${varNameForThisDepth} not found in L_VARS. Path tracing aborted.`);
-                 break; 
-            }
-            const pinToFollow = mintermPathStr[originalVarLIndex];
-
-            const conn = elementsStore.connections.find(c => c.fromId === currentLogicalElementId && c.fromPin === pinToFollow);
-            if (!conn) {
-                 console.warn(`Connection from MUX ${currentLogicalElementId} via pin ${pinToFollow} not found. Path tracing aborted.`);
-                 break;
+          for (let i = 0; i < (1 << newNVars); i++) {
+            const currentNewBitsRev = bin(i, newNVars).split('').reverse().join('');
+            let correspondingOldBitsRev = currentNewBitsRev;
+            for (let k = 0; k < (previousNVars - newNVars); k++) {
+              correspondingOldBitsRev += '0';
             }
             
-            const lineId = `line_${conn.fromId}_${conn.fromPin}_${conn.toId}`;
-            const lineSvg = drawnElements[lineId];
-            if (lineSvg) {
-                lineSvg.setAttribute('stroke', highlightColor);
-                lineSvg.setAttribute('stroke-width', highlightedLineStrokeWidth);
+            const outputValue = oldTruthMap.has(correspondingOldBitsRev) ? oldTruthMap.get(correspondingOldBitsRev) : null;
+            newTruth.push({ bits: currentNewBitsRev, out: outputValue });
+          }
+          truth = newTruth;
+        } else { 
+          if (oldTruthArray.length === (1 << newNVars)) {
+            truth = JSON.parse(JSON.stringify(oldTruthArray));
+          } else {
+            truth = [];
+            for (let j = 0; j < (1 << newNVars); j++) {
+              const rev = bin(j, newNVars).split('').reverse().join('');
+              truth.push({ bits: rev, out: 0 });
             }
-
-            currentLogicalElementId = conn.toId; // Move to the next element for the next iteration or for constant highlighting
-
-            // If this was the last MUX in the chain according to expansionOrder, the next element is a constant
-            if (depth === expansionOrder.length - 1) {
-                const constElement = elementsStore.constants.find(c => c.id === currentLogicalElementId);
-                if (constElement) {
-                    const constSvg = drawnElements[constElement.id];
-                    if (constSvg) {
-                        constSvg.setAttribute('fill', highlightColor);
-                        constSvg.setAttribute('font-weight', 'bold');
-                    }
-                } else {
-                    // This case should ideally not be reached if the structure is consistent
-                    console.warn(`Expected constant at end of path, but element ${currentLogicalElementId} is not found in constants.`);
-                }
-                break; // Path fully traced
-            }
-        }
-    });
-}
-
-function graySeq(bits){
-  if(bits===0) return [''];
-  let arr=['0','1'];
-  while(arr[0].length<bits){
-    const rev=[...arr].reverse();
-    arr=arr.map(c=>'0'+c).concat(rev.map(c=>'1'+c));
-  }
-  return arr;
-}
-
-let nVars = 3;
-let truth = [];
-let preset= 'xor';
-
-function buildTruth(oldTruthArray = null, previousNVars = -1){
-  const newNVars = nVars; // Use current global nVars
-
-  if (preset === 'custom' && oldTruthArray && previousNVars !== -1) {
-    if (newNVars > previousNVars) { // Increasing nVars
-      const newTruth = [];
-      const oldTruthMap = new Map();
-      oldTruthArray.forEach(entry => {
-        oldTruthMap.set(entry.bits, entry.out);
-      });
-
-      for (let i = 0; i < (1 << newNVars); i++) {
-        const currentGlobalBitsRev = bin(i, newNVars).split('').reverse().join('');
-        const correspondingOldBitsRev = currentGlobalBitsRev.substring(0, previousNVars);
-        
-        let outputValue;
-        let allNewVarsAreZero = true;
-        for (let k = previousNVars; k < newNVars; k++) {
-          if (((i >> k) & 1) === 1) {
-            allNewVarsAreZero = false;
-            break;
           }
         }
-
-        if (allNewVarsAreZero) {
-          outputValue = oldTruthMap.has(correspondingOldBitsRev) ? oldTruthMap.get(correspondingOldBitsRev) : null;
-        } else {
-          outputValue = null;
-        }
-        newTruth.push({ bits: currentGlobalBitsRev, out: outputValue });
-      }
-      truth = newTruth;
-    } else if (newNVars < previousNVars) { // Decreasing nVars
-      const newTruth = [];
-      const oldTruthMap = new Map();
-      oldTruthArray.forEach(entry => {
-        oldTruthMap.set(entry.bits, entry.out);
-      });
-
-      for (let i = 0; i < (1 << newNVars); i++) {
-        const currentNewBitsRev = bin(i, newNVars).split('').reverse().join('');
-        // Construct the key for the old map by appending '0's for the removed variables
-        // Assumes we take the slice where removed variables were '0'
-        let correspondingOldBitsRev = currentNewBitsRev;
-        for (let k = 0; k < (previousNVars - newNVars); k++) {
-          correspondingOldBitsRev += '0';
-        }
-        
-        const outputValue = oldTruthMap.has(correspondingOldBitsRev) ? oldTruthMap.get(correspondingOldBitsRev) : null;
-        newTruth.push({ bits: currentNewBitsRev, out: outputValue });
-      }
-      truth = newTruth;
-    } else { // newNVars === previousNVars
-      // If nVars didn't change but custom logic was invoked with old state
-      // Re-assign if sizes match, otherwise, it's an anomaly, rebuild to be safe.
-      if (oldTruthArray.length === (1 << newNVars)) {
-        truth = JSON.parse(JSON.stringify(oldTruthArray));
       } else {
-        // Fallback: rebuild if sizes don't match (should not happen in normal flow)
         truth = [];
-        for (let j = 0; j < (1 << newNVars); j++) {
-          const rev = bin(j, newNVars).split('').reverse().join('');
+        for (let i = 0; i < (1 << newNVars); i++) {
+          const rev = bin(i, newNVars).split('').reverse().join('');
           truth.push({ bits: rev, out: 0 });
         }
       }
     }
-  } else {
-    // Original logic for non-custom preset or when not specifically increasing nVars for custom
-    truth = [];
-    for (let i = 0; i < (1 << newNVars); i++) {
-      const rev = bin(i, newNVars).split('').reverse().join('');
-      truth.push({ bits: rev, out: 0 }); // Default to 0 for initial build or non-custom changes
-    }
-  }
-}
-function applyPreset(){
-  if(preset==='custom') return;
-  truth.forEach(r=>{
-    const ones=[...r.bits].filter(b=>b==='1').length;
-    switch(preset){
-      case'and':  r.out=ones===nVars?1:0; break;
-      case'or':   r.out=ones?1:0; break;
-      case'xor':  r.out=ones&1; break;
-      case'nand': r.out=ones===nVars?0:1; break;
-      case'nor':  r.out=ones?0:1; break;
-      case'xnor': r.out=(ones&1)?0:1;
-    }
-  });
-}
-
-function renderAll(){
-  $('varCountLbl').textContent=nVars;
-  renderTruth();
-  renderKMap();
-  renderExpr();
-  renderDev(); 
-  setupAllHoverInteractions(); 
-}
-
-function renderTruth(){
-  let h='<table class="truth"><tr>';
-  for(let i=0;i<nVars;i++) h+=`<th>${L[i]}</th>`;
-  h+='<th>f</th></tr>';
-  truth.forEach(r=>{
-    const cls=r.out===1?'on':r.out===null?'dc':'off';
-    const dsp=r.out===null?'/':r.out;
-    h+=`<tr><td>${[...r.bits].join('</td><td>')}</td>
-         <td class="outCell ${cls}" data-bits="${r.bits}">${dsp}</td></tr>`;
-  });
-  h+='</table>';
-  $('truthWrap').innerHTML=h;
-  $('truthWrap').querySelectorAll('.outCell').forEach(td=>{
-    td.onclick=e=>{
-      const currentTarget = e.currentTarget;
-      if (!currentTarget) return;
-      const bits = currentTarget.dataset.bits;
-      if (!bits) return;
-      const o=truth.find(t=>t.bits===bits);
-      if (!o) return;
-      o.out=o.out===0?1:o.out===1?null:0;
-      preset='custom';
-      const presetOpEl = $('presetOp');
-      if (presetOpEl instanceof HTMLSelectElement) presetOpEl.value='custom';
-      renderAll();
-    };
-  });
-}
-
-function renderKMap(){
-  let colVars=[],rowVars=[];
-  if(nVars===2){ colVars=[0]; rowVars=[1]; } 
-  if(nVars===3){ colVars=[2,0]; rowVars=[1]; } 
-  if(nVars===4){ colVars=[2,0]; rowVars=[3,1]; } 
-
-  const colSeq=graySeq(colVars.length);
-  const rowSeq=graySeq(rowVars.length);
-
-  let h='<table class="kmap">';
-  colVars.forEach((vIdx,lvl)=>{ 
-    h+='<tr>';
-    rowVars.forEach(()=>h+='<th></th>'); 
-    colSeq.forEach(p=>h+=`<th class="varhead">${lbl(vIdx,p[lvl]==='0')}</th>`);
-    h+='</tr>';
-  });
-
-  rowSeq.forEach(rPat=>{ 
-    h+='<tr>';
-    [...rPat].forEach((bit,i)=>h+=`<th class="varhead">${lbl(rowVars[i],bit==='0')}</th>`);
-    colSeq.forEach(cPat=>{ 
-      const bits=Array(nVars); 
-      rowVars.forEach((idx,i)=>bits[idx]=rPat[i]); 
-      colVars.forEach((idx,i)=>bits[idx]=cPat[i]); 
-      const str=bits.join(''); 
-      const o  = truth.find(t=>t.bits===str);
-      if (!o) return; 
-      const cls= o.out===1?'on':o.out===null?'dc':'off';
-      const dsp= o.out===null?'/':o.out;
-      h+=`<td class="${cls}" data-bits="${str}">${dsp}</td>`;
-    });
-    h+='</tr>';
-  });
-  h+='</table>';
-  $('kmapWrap').innerHTML=h;
-  $('kmapWrap').querySelectorAll('td[data-bits]').forEach(td=>{
-    td.onclick=e=>{
-      const currentTarget = e.currentTarget;
-      if (!currentTarget) return;
-      const bits = currentTarget.dataset.bits;
-      if (!bits) return;
-      const o=truth.find(t=>t.bits===bits);
-      if (!o) return;
-      o.out=o.out===0?1:o.out===1?null:0;
-      preset='custom';
-      const presetOpEl = $('presetOp');
-      if (presetOpEl instanceof HTMLSelectElement) presetOpEl.value='custom';
-      renderAll();
-    };
-  });
-}
-
-function lit(bits,type){ 
-  return [...bits].map((b,i)=>{ 
-    if(b==='-') return ''; 
-    const neg = (type==='dnf'||type==='dmf') ? b==='0' : b==='1'; 
-    return lbl(i,neg); 
-  }).filter(Boolean).join((type==='dnf'||type==='dmf')?'∧':'∨'); 
-}
-
-function minimize(v_count,mins,dcs=[]){
-  const ones=x=>x.toString(2).replace(/0/g,'').length;
-  let g={},pr=new Set(); 
-  [...mins,...dcs].forEach(m=>{ 
-    const s=bin(m,v_count); (g[ones(m)]??=[]).push(s);
-  });
-  while(true){
-    const nx={},used=new Set(); let comb=false; 
-    const ks=Object.keys(g).map(Number).sort((a,b)=>a-b);
-    for(let i=0;i<ks.length-1;i++){
-      (g[ks[i]]||[]).forEach(a=>(g[ks[i+1]]||[]).forEach(b=>{
-        const diff=[...a].filter((_,k)=>a[k]!==b[k]).length;
-        if(diff===1){ 
-          comb=true;
-          const m=a.split('').map((ch,k)=>ch===b[k]?ch:'-').join(''); 
-          (nx[ones(m.replace(/-/g,''))]??=[]).push(m); 
-          used.add(a); used.add(b);
-        }
-      }));
-    }
-    Object.values(g).flat().forEach(s=>{if(!used.has(s))pr.add(s);}); 
-    if(!comb)break; 
-    g={};Object.entries(nx).forEach(([k,a])=>g[k]=[...new Set(a)]); 
-  }
-  const covers=(p,val)=>{ 
-    const bs=bin(val,v_count);
-    for(let i=0;i<v_count;i++) if(p[i]!=='-'&&p[i]!==bs[i]) return false;
-    return true;
-  };
-  const chart=mins.map(m=>[...pr].filter(p=>covers(p,m))); 
-  const ess=[],cov=new Set(); 
-  chart.forEach((pis,idx)=>{ 
-    if(pis.length===1){
-      const p=pis[0];
-      if(!ess.includes(p)){
-        ess.push(p);
-        mins.forEach(mVal=>covers(p,mVal)&&cov.add(mVal));
-      }
-    }
-  });
-  let rest=mins.filter(m=>!cov.has(m)),chosen=[...ess]; 
-  while(rest.length){ 
-    let best=null,max=0;
-    pr.forEach(p=>{
-      if (chosen.includes(p)) return; 
-      const c=rest.filter(m=>covers(p,m)).length;
-      if(c>max){max=c;best=p;}
-    });
-    if(!best)break; 
-    chosen.push(best);
-    rest=rest.filter(m=>!covers(best,m));
-  }
-  return chosen;
-}
-const expand=p=>{ 
-  let res=[''];
-  [...p].forEach(ch=>{
-    res = ch==='-' ? res.flatMap(s=>[s+'0',s+'1']) : res.map(s=>s+ch);
-  });
-  return res;
-};
-
-function renderExpr(){
-  const ones = truth.filter(r=>r.out===1).map(r=>parseInt(r.bits,2));
-  const zeros= truth.filter(r=>r.out===0).map(r=>parseInt(r.bits,2));
-  const dcs  = truth.filter(r=>r.out===null).map(r=>parseInt(r.bits,2));
-
-  const dnfR=truth.filter(r=>r.out===1); 
-  const cnfR=truth.filter(r=>r.out===0); 
-
-  const dmf=minimize(nVars,ones,dcs); 
-  const kmf=minimize(nVars,zeros,dcs); 
-
-  let h='<strong>DNF:</strong><br>';
-  h+= dnfR.length
-        ? dnfR.map(r=>`<span class="term dnfTerm" data-bits="${r.bits}">${lit(r.bits,'dnf')}</span>`).join(' ∨ ')
-        : '0';
-
-  h+='<hr><strong>KNF:</strong><br>';
-  h+= cnfR.length
-        ? cnfR.map(r=>`<span class="term cnfTerm" data-bits="${r.bits}">(${lit(r.bits,'cnf')})</span>`).join(' ∧ ')
-        : '1';
-
-  h+='<hr><strong>DMF (min):</strong><br>';
-  h+= dmf.length
-        ? dmf.map(p=>`<span class="term dmfTerm" data-cover="${expand(p).join('|')}">${lit(p,'dmf')}</span>`).join(' ∨ ')
-        : '0';
-
-  h+='<hr><strong>KMF (min):</strong><br>';
-  h+= kmf.length
-        ? kmf.map(p=>`<span class="term kmfTerm" data-cover="${expand(p).join('|')}">(${lit(p,'kmf')})</span>`).join(' ∧ ')
-        : '1';
-
-  $('exprWrap').innerHTML=h;
-}
-
-function simplifiedBooleanExpansionRecursive(bits_template_string, depth, expansionOrderArray) {
-    if (depth >= nVars) {
-        const finalBitsStr = bits_template_string;
-        const row = truth.find(r => r.bits === finalBitsStr);
-        const val = row ? (row.out === null ? '/' : String(row.out)) : '?';
-        return { type: 'constant', value: val, minterms: [finalBitsStr], path: finalBitsStr };
-    }
-
-    const varName = expansionOrderArray[depth];
-    const varIndex = L.indexOf(varName); // Get the original index of the variable
-
-    let tempBitsArrayOne = bits_template_string.split('');
-    tempBitsArrayOne[varIndex] = '1';
-    const pathForOne = tempBitsArrayOne.join('');
-    const expNode1 = simplifiedBooleanExpansionRecursive(pathForOne, depth + 1, expansionOrderArray);
-
-    let tempBitsArrayZero = bits_template_string.split('');
-    tempBitsArrayZero[varIndex] = '0';
-    const pathForZero = tempBitsArrayZero.join('');
-    const expNode0 = simplifiedBooleanExpansionRecursive(pathForZero, depth + 1, expansionOrderArray);
-
-    if (expNode1.type === 'constant' && expNode0.type === 'constant' && expNode1.value === expNode0.value) {
-        return { type: 'constant', value: expNode1.value, minterms: [...new Set([...expNode1.minterms, ...expNode0.minterms].sort())], path: null };
-    }
-
-    if (expNode1.type === 'constant' && expNode0.type === 'constant') {
-        if (expNode1.value === '/' && (expNode0.value === '0' || expNode0.value === '1')) {
-            return { type: 'constant', value: expNode0.value, minterms: [...new Set([...expNode1.minterms, ...expNode0.minterms].sort())], path: null };
+    function applyPreset(){
+    if(preset==='custom') return;
+    truth.forEach(r=>{
+        const ones=[...r.bits].filter(b=>b==='1').length;
+        switch(preset){
+        case'and':  r.out=ones===nVars?1:0; break;
+        case'or':   r.out=ones?1:0; break;
+        case'xor':  r.out=ones&1; break;
+        case'nand': r.out=ones===nVars?0:1; break;
+        case'nor':  r.out=ones?0:1; break;
+        case'xnor': r.out=(ones&1)?0:1;
         }
-        if (expNode0.value === '/' && (expNode1.value === '0' || expNode1.value === '1')) {
+    });
+    }
+
+    function renderAll(){
+    $('varCountLbl').textContent=nVars;
+    renderTruth();
+    renderKMap();
+    renderExpr();
+    renderDev(); 
+    setupAllHoverInteractions(); 
+    }
+
+    function renderTruth(){
+    let h='<table class="truth"><tr>';
+    for(let i=0;i<nVars;i++) h+=`<th>${L[i]}</th>`;
+    h+='<th>f</th></tr>';
+    truth.forEach(r=>{
+        const cls=r.out===1?'on':r.out===null?'dc':'off';
+        const dsp=r.out===null?'/':r.out;
+        h+=`<tr><td>${[...r.bits].join('</td><td>')}</td>
+            <td class="outCell ${cls}" data-bits="${r.bits}">${dsp}</td></tr>`;
+    });
+    h+='</table>';
+    const truthWrap = document.querySelector("#truthTableCard .card-body #truthWrap");
+    if (truthWrap) truthWrap.innerHTML = h;
+    
+    document.querySelectorAll('#truthTableCard .outCell').forEach(td=>{
+        td.onclick=e=>{
+        const currentTarget = e.currentTarget;
+        if (!currentTarget) return;
+        const bits = currentTarget.dataset.bits;
+        if (!bits) return;
+        const o=truth.find(t=>t.bits===bits);
+        if (!o) return;
+        o.out=o.out===0?1:o.out===1?null:0;
+        preset='custom';
+        const presetOpEl = $('presetOp');
+        if (presetOpEl instanceof HTMLSelectElement) presetOpEl.value='custom';
+        renderAll();
+        };
+    });
+    }
+
+    function renderKMap(){
+    let colVars=[],rowVars=[];
+    if(nVars===2){ colVars=[0]; rowVars=[1]; } 
+    if(nVars===3){ colVars=[2,0]; rowVars=[1]; } 
+    if(nVars===4){ colVars=[2,0]; rowVars=[3,1]; } 
+
+    const colSeq=graySeq(colVars.length);
+    const rowSeq=graySeq(rowVars.length);
+
+    let h='<table class="kmap">';
+    colVars.forEach((vIdx,lvl)=>{ 
+        h+='<tr>';
+        rowVars.forEach(()=>h+='<th></th>'); 
+        colSeq.forEach(p=>h+=`<th class="varhead">${lbl(vIdx,p[lvl]==='0')}</th>`);
+        h+='</tr>';
+    });
+
+    rowSeq.forEach(rPat=>{ 
+        h+='<tr>';
+        [...rPat].forEach((bit,i)=>h+=`<th class="varhead">${lbl(rowVars[i],bit==='0')}</th>`);
+        colSeq.forEach(cPat=>{ 
+        const bits=Array(nVars); 
+        rowVars.forEach((idx,i)=>bits[idx]=rPat[i]); 
+        colVars.forEach((idx,i)=>bits[idx]=cPat[i]); 
+        const str=bits.join(''); 
+        const o  = truth.find(t=>t.bits===str);
+        if (!o) return; 
+        const cls= o.out===1?'on':o.out===null?'dc':'off';
+        const dsp= o.out===null?'/':o.out;
+        h+=`<td class="${cls}" data-bits="${str}">${dsp}</td>`;
+        });
+        h+='</tr>';
+    });
+    h+='</table>';
+    const kmapWrap = document.querySelector("#kmapCard .card-body #kmapWrap");
+    if (kmapWrap) kmapWrap.innerHTML = h;
+
+    document.querySelectorAll('#kmapCard td[data-bits]').forEach(td=>{
+        td.onclick=e=>{
+        const currentTarget = e.currentTarget;
+        if (!currentTarget) return;
+        const bits = currentTarget.dataset.bits;
+        if (!bits) return;
+        const o=truth.find(t=>t.bits===bits);
+        if (!o) return;
+        o.out=o.out===0?1:o.out===1?null:0;
+        preset='custom';
+        const presetOpEl = $('presetOp');
+        if (presetOpEl instanceof HTMLSelectElement) presetOpEl.value='custom';
+        renderAll();
+        };
+    });
+    }
+
+    function lit(bits,type){ 
+    return [...bits].map((b,i)=>{ 
+        if(b==='-') return ''; 
+        const neg = (type==='dnf'||type==='dmf') ? b==='0' : b==='1'; 
+        return lbl(i,neg); 
+    }).filter(Boolean).join((type==='dnf'||type==='dmf')?'∧':'∨'); 
+    }
+
+    function minimize(v_count,mins,dcs=[]){
+    const ones=x=>x.toString(2).replace(/0/g,'').length;
+    let g={},pr=new Set(); 
+    [...mins,...dcs].forEach(m=>{ 
+        const s=bin(m,v_count); (g[ones(m)]??=[]).push(s);
+    });
+    while(true){
+        const nx={},used=new Set(); let comb=false; 
+        const ks=Object.keys(g).map(Number).sort((a,b)=>a-b);
+        for(let i=0;i<ks.length-1;i++){
+        (g[ks[i]]||[]).forEach(a=>(g[ks[i+1]]||[]).forEach(b=>{
+            const diff=[...a].filter((_,k)=>a[k]!==b[k]).length;
+            if(diff===1){ 
+            comb=true;
+            const m=a.split('').map((ch,k)=>ch===b[k]?ch:'-').join(''); 
+            (nx[ones(m.replace(/-/g,''))]??=[]).push(m); 
+            used.add(a); used.add(b);
+            }
+        }));
+        }
+        Object.values(g).flat().forEach(s=>{if(!used.has(s))pr.add(s);}); 
+        if(!comb)break; 
+        g={};Object.entries(nx).forEach(([k,a])=>g[k]=[...new Set(a)]); 
+    }
+    const covers=(p,val)=>{ 
+        const bs=bin(val,v_count);
+        for(let i=0;i<v_count;i++) if(p[i]!=='-'&&p[i]!==bs[i]) return false;
+        return true;
+    };
+    const chart=mins.map(m=>[...pr].filter(p=>covers(p,m))); 
+    const ess=[],cov=new Set(); 
+    chart.forEach((pis,idx)=>{ 
+        if(pis.length===1){
+        const p=pis[0];
+        if(!ess.includes(p)){
+            ess.push(p);
+            mins.forEach(mVal=>covers(p,mVal)&&cov.add(mVal));
+        }
+        }
+    });
+    let rest=mins.filter(m=>!cov.has(m)),chosen=[...ess]; 
+    while(rest.length){ 
+        let best=null,max=0;
+        pr.forEach(p=>{
+        if (chosen.includes(p)) return; 
+        const c=rest.filter(m=>covers(p,m)).length;
+        if(c>max){max=c;best=p;}
+        });
+        if(!best)break; 
+        chosen.push(best);
+        rest=rest.filter(m=>!covers(best,m));
+    }
+    return chosen;
+    }
+    const expand=p=>{ 
+    let res=[''];
+    [...p].forEach(ch=>{
+        res = ch==='-' ? res.flatMap(s=>[s+'0',s+'1']) : res.map(s=>s+ch);
+    });
+    return res;
+    };
+
+    function renderExpr(){
+    const ones = truth.filter(r=>r.out===1).map(r=>parseInt(r.bits,2));
+    const zeros= truth.filter(r=>r.out===0).map(r=>parseInt(r.bits,2));
+    const dcs  = truth.filter(r=>r.out===null).map(r=>parseInt(r.bits,2));
+
+    const dnfR=truth.filter(r=>r.out===1); 
+    const cnfR=truth.filter(r=>r.out===0); 
+
+    const dmf=minimize(nVars,ones,dcs); 
+    const kmf=minimize(nVars,zeros,dcs); 
+
+    let h='<strong>DNF:</strong><br>';
+    h+= dnfR.length
+        ? dnfR.map(r=>`<span class="term dnfTerm" data-bits="${r.bits}">${lit(r.bits,'dnf')}</span>`).join(' ∨ ')
+        : '0';
+
+    h+='<hr><strong>KNF:</strong><br>';
+    h+= cnfR.length
+        ? cnfR.map(r=>`<span class="term cnfTerm" data-bits="${r.bits}">(${lit(r.bits,'cnf')})</span>`).join(' ∧ ')
+        : '1';
+
+    h+='<hr><strong>DMF (min):</strong><br>';
+    h+= dmf.length
+        ? dmf.map(p=>`<span class="term dmfTerm" data-cover="${expand(p).join('|')}">${lit(p,'dmf')}</span>`).join(' ∨ ')
+        : '0';
+
+    h+='<hr><strong>KMF (min):</strong><br>';
+    h+= kmf.length
+        ? kmf.map(p=>`<span class="term kmfTerm" data-cover="${expand(p).join('|')}">(${lit(p,'kmf')})</span>`).join(' ∧ ')
+        : '1';
+
+    const exprWrap = document.querySelector("#expressionsCard .card-body #exprWrap");
+    if (exprWrap) exprWrap.innerHTML = h;
+    }
+
+    function simplifiedBooleanExpansionRecursive(bits_template_string, depth, expansionOrderArray) {
+        if (depth >= nVars) {
+            const finalBitsStr = bits_template_string;
+            const row = truth.find(r => r.bits === finalBitsStr);
+            const val = row ? (row.out === null ? '/' : String(row.out)) : '?';
+            return { type: 'constant', value: val, minterms: [finalBitsStr], path: finalBitsStr };
+        }
+
+        const varName = expansionOrderArray[depth];
+        const varIndex = L.indexOf(varName);
+
+        let tempBitsArrayOne = bits_template_string.split('');
+        tempBitsArrayOne[varIndex] = '1';
+        const pathForOne = tempBitsArrayOne.join('');
+        const expNode1 = simplifiedBooleanExpansionRecursive(pathForOne, depth + 1, expansionOrderArray);
+
+        let tempBitsArrayZero = bits_template_string.split('');
+        tempBitsArrayZero[varIndex] = '0';
+        const pathForZero = tempBitsArrayZero.join('');
+        const expNode0 = simplifiedBooleanExpansionRecursive(pathForZero, depth + 1, expansionOrderArray);
+
+        if (expNode1.type === 'constant' && expNode0.type === 'constant' && expNode1.value === expNode0.value) {
             return { type: 'constant', value: expNode1.value, minterms: [...new Set([...expNode1.minterms, ...expNode0.minterms].sort())], path: null };
         }
-    }
 
-    return {
-        type: 'expression',
-        variable: varName,
-        varIndex: varIndex, // Use the original index from L
-        positiveBranch: expNode1,
-        negativeBranch: expNode0,
-        minterms: [...new Set([...expNode1.minterms, ...expNode0.minterms].sort())]
-    };
-}
-
-function genSpanId() { return `expSpan-${expansionSpanIdCounter++}`; }
-function genGroupId() { return `expGroup-${expansionGroupIdCounter++}`; }
-
-function generateExpansionHtmlRecursive(node, ancestorGroupChain = []) {
-    let htmlOutput = '';
-    const styleType = "color"; 
-
-    if (node.type === 'constant') {
-        const id = genSpanId();
-        let currentGroupChain = ancestorGroupChain;
-        if (ancestorGroupChain.length === 0) { // If it's a top-level constant
-            currentGroupChain = [genGroupId()]; // Give it its own group
+        if (expNode1.type === 'constant' && expNode0.type === 'constant') {
+            if (expNode1.value === '/' && (expNode0.value === '0' || expNode0.value === '1')) {
+                return { type: 'constant', value: expNode0.value, minterms: [...new Set([...expNode1.minterms, ...expNode0.minterms].sort())], path: null };
+            }
+            if (expNode0.value === '/' && (expNode1.value === '0' || expNode1.value === '1')) {
+                return { type: 'constant', value: expNode1.value, minterms: [...new Set([...expNode1.minterms, ...expNode0.minterms].sort())], path: null };
+            }
         }
-        expansionSpanData[id] = { 
-            minterms: node.minterms, 
-            textContent: node.value, 
-            isLeaf: true, 
-            path: node.path, 
-            groupChain: currentGroupChain, 
-            styleType: styleType 
+
+        return {
+            type: 'expression',
+            variable: varName,
+            varIndex: varIndex,
+            positiveBranch: expNode1,
+            negativeBranch: expNode0,
+            minterms: [...new Set([...expNode1.minterms, ...expNode0.minterms].sort())]
         };
-        htmlOutput = `<span id="${id}" data-span-id="${id}">${node.value}</span>`;
-    } else if (node.type === 'expression') {
-        const { variable, positiveBranch, negativeBranch } = node;
-
-        const positiveBranchGroupId = genGroupId();
-        const currentPositiveGroupChain = [...ancestorGroupChain, positiveBranchGroupId];
-        
-        const varPosId = genSpanId();
-        expansionSpanData[varPosId] = { minterms: positiveBranch.minterms, textContent: variable, isVar: true, varName: variable, groupChain: currentPositiveGroupChain, styleType: styleType };
-        htmlOutput += `<span id="${varPosId}" data-span-id="${varPosId}">${variable}</span>`;
-
-        const openParenPosId = genSpanId();
-        expansionSpanData[openParenPosId] = { minterms: positiveBranch.minterms, textContent: '(', isParen: true, groupChain: currentPositiveGroupChain, styleType: styleType };
-        htmlOutput += `<span id="${openParenPosId}" data-span-id="${openParenPosId}">(</span>`;
-
-        htmlOutput += generateExpansionHtmlRecursive(positiveBranch, currentPositiveGroupChain); 
-
-        const closeParenPosId = genSpanId();
-        expansionSpanData[closeParenPosId] = { minterms: positiveBranch.minterms, textContent: ')', isParen: true, groupChain: currentPositiveGroupChain, styleType: styleType };
-        htmlOutput += `<span id="${closeParenPosId}" data-span-id="${closeParenPosId}">)</span>`;
-
-        const negativeBranchGroupId = genGroupId();
-        const currentNegativeGroupChain = [...ancestorGroupChain, negativeBranchGroupId];
-
-        const varNegId = genSpanId();
-        expansionSpanData[varNegId] = { minterms: negativeBranch.minterms, textContent: `${variable}'`, isVar: true, varName: variable, isNegated: true, groupChain: currentNegativeGroupChain, styleType: styleType };
-        htmlOutput += `<span id="${varNegId}" data-span-id="${varNegId}" class="ov">${variable}</span>`;
-        
-        const openParenNegId = genSpanId();
-        expansionSpanData[openParenNegId] = { minterms: negativeBranch.minterms, textContent: '(', isParen: true, groupChain: currentNegativeGroupChain, styleType: styleType };
-        htmlOutput += `<span id="${openParenNegId}" data-span-id="${openParenNegId}">(</span>`;
-
-        htmlOutput += generateExpansionHtmlRecursive(negativeBranch, currentNegativeGroupChain); 
-
-        const closeParenNegId = genSpanId();
-        expansionSpanData[closeParenNegId] = { minterms: negativeBranch.minterms, textContent: ')', isParen: true, groupChain: currentNegativeGroupChain, styleType: styleType };
-        htmlOutput += `<span id="${closeParenNegId}" data-span-id="${closeParenNegId}">)</span>`;
     }
-    return htmlOutput;
-}
 
-function renderDev(){
-    expansionSpanIdCounter = 0; 
-    expansionGroupIdCounter = 0;
-    for(const key in expansionSpanData) delete expansionSpanData[key];
+    function genSpanId() { return `expSpan-${expansionSpanIdCounter++}`; }
+    function genGroupId() { return `expGroup-${expansionGroupIdCounter++}`; }
 
-    const orderInputEl = $('expansionOrderInput');
-    let customOrderNames = []; // This will store uppercase names like ['A', 'B', 'C']
-    const defaultOrderUpper = L.slice(0, nVars); // e.g., ['A', 'B', 'C']
-    const defaultOrderLowerStr = defaultOrderUpper.join('').toLowerCase(); // e.g., "abc"
+    function generateExpansionHtmlRecursive(node, ancestorGroupChain = []) {
+        let htmlOutput = '';
+        const styleType = "color"; 
 
-    if (orderInputEl) { // Check if element exists
-        const inputValue = orderInputEl.value.trim();
-        if (inputValue !== '') {
-            const inputPartsUpper = inputValue.toUpperCase().split(''); // Convert to char array, then to uppercase for validation
+        if (node.type === 'constant') {
+            const id = genSpanId();
+            let currentGroupChain = ancestorGroupChain;
+            if (ancestorGroupChain.length === 0) {
+                currentGroupChain = [genGroupId()];
+            }
+            expansionSpanData[id] = { 
+                minterms: node.minterms, 
+                textContent: node.value, 
+                isLeaf: true, 
+                path: node.path, 
+                groupChain: currentGroupChain, 
+                styleType: styleType 
+            };
+            htmlOutput = `<span id="${id}" data-span-id="${id}">${node.value}</span>`;
+        } else if (node.type === 'expression') {
+            const { variable, positiveBranch, negativeBranch } = node;
+
+            const positiveBranchGroupId = genGroupId();
+            const currentPositiveGroupChain = [...ancestorGroupChain, positiveBranchGroupId];
             
-            // Validation logic (uses inputPartsUpper and defaultOrderUpper)
-            if (inputPartsUpper.length === nVars && 
-                inputPartsUpper.every(part => defaultOrderUpper.includes(part)) && 
-                new Set(inputPartsUpper).size === inputPartsUpper.length) {
-                customOrderNames = inputPartsUpper;
+            const varPosId = genSpanId();
+            expansionSpanData[varPosId] = { minterms: positiveBranch.minterms, textContent: variable, isVar: true, varName: variable, groupChain: currentPositiveGroupChain, styleType: styleType };
+            htmlOutput += `<span id="${varPosId}" data-span-id="${varPosId}">${variable}</span>`;
+
+            const openParenPosId = genSpanId();
+            expansionSpanData[openParenPosId] = { minterms: positiveBranch.minterms, textContent: '(', isParen: true, groupChain: currentPositiveGroupChain, styleType: styleType };
+            htmlOutput += `<span id="${openParenPosId}" data-span-id="${openParenPosId}">(</span>`;
+
+            htmlOutput += generateExpansionHtmlRecursive(positiveBranch, currentPositiveGroupChain); 
+
+            const closeParenPosId = genSpanId();
+            expansionSpanData[closeParenPosId] = { minterms: positiveBranch.minterms, textContent: ')', isParen: true, groupChain: currentPositiveGroupChain, styleType: styleType };
+            htmlOutput += `<span id="${closeParenPosId}" data-span-id="${closeParenPosId}">)</span>`;
+
+            const negativeBranchGroupId = genGroupId();
+            const currentNegativeGroupChain = [...ancestorGroupChain, negativeBranchGroupId];
+
+            const varNegId = genSpanId();
+            expansionSpanData[varNegId] = { minterms: negativeBranch.minterms, textContent: `${variable}'`, isVar: true, varName: variable, isNegated: true, groupChain: currentNegativeGroupChain, styleType: styleType };
+            htmlOutput += `<span id="${varNegId}" data-span-id="${varNegId}" class="ov">${variable}</span>`;
+            
+            const openParenNegId = genSpanId();
+            expansionSpanData[openParenNegId] = { minterms: negativeBranch.minterms, textContent: '(', isParen: true, groupChain: currentNegativeGroupChain, styleType: styleType };
+            htmlOutput += `<span id="${openParenNegId}" data-span-id="${openParenNegId}">(</span>`;
+
+            htmlOutput += generateExpansionHtmlRecursive(negativeBranch, currentNegativeGroupChain); 
+
+            const closeParenNegId = genSpanId();
+            expansionSpanData[closeParenNegId] = { minterms: negativeBranch.minterms, textContent: ')', isParen: true, groupChain: currentNegativeGroupChain, styleType: styleType };
+            htmlOutput += `<span id="${closeParenNegId}" data-span-id="${closeParenNegId}">)</span>`;
+        }
+        return htmlOutput;
+    }
+
+    function renderDev(){
+        expansionSpanIdCounter = 0; 
+        expansionGroupIdCounter = 0;
+        for(const key in expansionSpanData) delete expansionSpanData[key];
+
+        const orderInputEl = $('expansionOrderInput');
+        let customOrderNames = [];
+        const defaultOrderUpper = L.slice(0, nVars);
+        const defaultOrderLowerStr = defaultOrderUpper.join('').toLowerCase();
+
+        if (orderInputEl) {
+            const inputValue = orderInputEl.value.trim();
+            if (inputValue !== '') {
+                const inputPartsUpper = inputValue.toUpperCase().split('');
+                if (inputPartsUpper.length === nVars && 
+                    inputPartsUpper.every(part => defaultOrderUpper.includes(part)) && 
+                    new Set(inputPartsUpper).size === inputPartsUpper.length) {
+                    customOrderNames = inputPartsUpper;
+                } else {
+                    customOrderNames = defaultOrderUpper;
+                    orderInputEl.value = defaultOrderLowerStr;
+                    console.warn("Invalid expansion order input. Using default order:", defaultOrderUpper.join(', '));
+                }
             } else {
                 customOrderNames = defaultOrderUpper;
-                orderInputEl.value = defaultOrderLowerStr; // Set input to lowercase default "abc"
-                console.warn("Invalid expansion order input. Using default order:", defaultOrderUpper.join(', ')); // Log with comma for readability
+                if (orderInputEl.value !== defaultOrderLowerStr) {
+                    orderInputEl.value = defaultOrderLowerStr;
+                }
             }
-        } else { // Empty input
+        } else {
             customOrderNames = defaultOrderUpper;
-            // Set input to lowercase default "abc" only if the element exists and is empty
-            // This prevents clearing it if it was already empty and focus is lost.
-            // However, onchange fires on blur if value changed, so if it was empty and remains empty, this won't fire.
-            // If it becomes empty, then renderDev is called, and this path is taken.
-             if (orderInputEl.value !== defaultOrderLowerStr) { // Avoid redundant assignment if already default
-                orderInputEl.value = defaultOrderLowerStr;
-             }
         }
-    } else { // Fallback if inputEl somehow doesn't exist
-         customOrderNames = defaultOrderUpper;
-    }
-    
-    console.log("Using expansion order (uppercase internal):", customOrderNames);
-
-    const rootExpansionNode = simplifiedBooleanExpansionRecursive(''.padStart(nVars, '0'), 0, customOrderNames);
-    
-    let singleInstanceHtml = `<pre data-style-type="color">`;
-    singleInstanceHtml += generateExpansionHtmlRecursive(rootExpansionNode, []); 
-
-    console.log("--- DEBUG: expansionSpanData START ---");
-    try {
-        console.log("expansionSpanData (JSON):", JSON.parse(JSON.stringify(expansionSpanData)));
-    } catch (e) {
-        console.error("Could not stringify expansionSpanData for debug:", e);
-        console.log("expansionSpanData (raw object for debug):", expansionSpanData);
-    }
-    console.log("--- DEBUG: expansionSpanData END ---");
-
-    singleInstanceHtml += `</pre>`;
-    
-    const devWrapEl = $('devWrap');
-    if (devWrapEl) devWrapEl.innerHTML = singleInstanceHtml; // UNCOMMENTED
-    
-    for (const spanId in expansionSpanData) { // UNCOMMENTED ENTIRE LOOP
-        const spanElement = document.getElementById(spanId);
-        if (spanElement) {
-            const highlightClass = "hl-color"; 
-            spanElement.onmouseenter = () => handleExpansionSpanHover(spanElement, true, highlightClass);
-            spanElement.onmouseleave = () => handleExpansionSpanHover(spanElement, false, highlightClass);
+        
+        const rootExpansionNode = simplifiedBooleanExpansionRecursive(''.padStart(nVars, '0'), 0, customOrderNames);
+        
+        let singleInstanceHtml = `<pre data-style-type="color">`;
+        singleInstanceHtml += generateExpansionHtmlRecursive(rootExpansionNode, []); 
+        singleInstanceHtml += `</pre>`;
+        
+        const devWrap = document.querySelector("#booleanDevCard .card-body #devWrap");
+        if (devWrap) devWrap.innerHTML = singleInstanceHtml;
+        
+        for (const spanId in expansionSpanData) {
+            const spanElement = document.getElementById(spanId); // getElementById is fine as IDs are unique
+            if (spanElement) {
+                const highlightClass = "hl-color"; 
+                spanElement.onmouseenter = () => handleExpansionSpanHover(spanElement, true, highlightClass);
+                spanElement.onmouseleave = () => handleExpansionSpanHover(spanElement, false, highlightClass);
+            }
         }
-    }
-    // --- End of existing text-based Boolean Expansion rendering ---
 
-    // --- Add MUX Diagram Rendering ---
+        muxSvgElement = document.querySelector("#muxCard .card-body #muxDiagramSvg"); // Initialize global reference
 
-    // Define active configurations for this render pass
-    let activeMuxConfig = JSON.parse(JSON.stringify(DEFAULT_MUX_CONFIG));
-    let activeLayoutConfig = JSON.parse(JSON.stringify(DEFAULT_LAYOUT_CONFIG));
+        let activeMuxConfig = JSON.parse(JSON.stringify(DEFAULT_MUX_CONFIG));
+        let activeLayoutConfig = JSON.parse(JSON.stringify(DEFAULT_LAYOUT_CONFIG));
 
-    if (nVars === 4) {
-        // Modify activeMuxConfig for 4 variables
-        activeMuxConfig.inputHeight = 30;
-        activeMuxConfig.outputHeight = 15;
-        activeMuxConfig.width = 55;
-        activeMuxConfig.varFontSize = 12;
-        activeMuxConfig.labelFontSize = 9;
+        if (nVars === 4) {
+            activeMuxConfig.inputHeight = 30;
+            activeMuxConfig.outputHeight = 15;
+            activeMuxConfig.width = 55;
+            activeMuxConfig.varFontSize = 12;
+            activeMuxConfig.labelFontSize = 9;
+            activeLayoutConfig.spacingY = 20;
+            activeLayoutConfig.spacingX = 65;
+        }
+        currentActiveMuxConfig = activeMuxConfig;
 
-        // Modify activeLayoutConfig for 4 variables
-        activeLayoutConfig.spacingY = 20;
-        activeLayoutConfig.spacingX = 65;
-    }
-    currentActiveMuxConfig = activeMuxConfig; // Update global reference
-
-    if (rootExpansionNode) { // Check if we have a valid expansion tree
-        try {
-            const elementsStore = generateMuxDiagramStructure(rootExpansionNode);
-            currentMuxElementsStore = elementsStore; 
-            
-            const elementCoords = calculateMuxLayout(elementsStore, activeLayoutConfig, activeMuxConfig);
-
-            currentMuxDrawnElements = renderMuxDiagram("muxDiagramSvg", elementsStore, elementCoords, activeMuxConfig);
-            currentExpansionOrderForMuxHighlight = [...customOrderNames]; 
-            
-        } catch (error) {
-            console.error("Error rendering MUX diagram:", error);
+        if (rootExpansionNode && muxSvgElement) {
+            try {
+                const elementsStore = generateMuxDiagramStructure(rootExpansionNode);
+                currentMuxElementsStore = elementsStore; 
+                
+                const elementCoords = calculateMuxLayout(elementsStore, activeLayoutConfig, activeMuxConfig);
+                currentMuxDrawnElements = renderMuxDiagram(elementsStore, elementCoords, activeMuxConfig);
+                currentExpansionOrderForMuxHighlight = [...customOrderNames]; 
+                
+            } catch (error) {
+                console.error("Error rendering MUX diagram:", error);
+                currentMuxDrawnElements = {}; 
+                currentExpansionOrderForMuxHighlight = [];
+                currentMuxElementsStore = null; 
+                if(muxSvgElement) muxSvgElement.innerHTML = '<text x="10" y="20" fill="red">Error generating MUX diagram.</text>';
+            }
+        } else {
             currentMuxDrawnElements = {}; 
             currentExpansionOrderForMuxHighlight = [];
             currentMuxElementsStore = null; 
-            const svg = $('muxDiagramSvg');
-            if(svg) svg.innerHTML = '<text x="10" y="20" fill="red">Error generating MUX diagram.</text>';
+            if(muxSvgElement) muxSvgElement.innerHTML = ''; 
         }
-    } else {
-        currentMuxDrawnElements = {}; 
-        currentExpansionOrderForMuxHighlight = [];
-        currentMuxElementsStore = null; 
-        const svg = $('muxDiagramSvg');
-        if(svg) svg.innerHTML = ''; 
     }
-    // --- End of MUX Diagram Rendering ---
-}
 
-function setupAllHoverInteractions() {
-    const truthWrapEl = $('truthWrap');
-    if (truthWrapEl) {
-        truthWrapEl.querySelectorAll('.outCell').forEach(el => {
+    function setupAllHoverInteractions() {
+        document.querySelectorAll('#truthTableCard .outCell').forEach(el => {
+            el.onmouseenter = () => handleCellOrTermHover(el, true);
+            el.onmouseleave = () => handleCellOrTermHover(el, false);
+        });
+        document.querySelectorAll('#kmapCard td[data-bits]').forEach(el => {
+            el.onmouseenter = () => handleCellOrTermHover(el, true);
+            el.onmouseleave = () => handleCellOrTermHover(el, false);
+        });
+        document.querySelectorAll('#expressionsCard .term').forEach(el => { 
             el.onmouseenter = () => handleCellOrTermHover(el, true);
             el.onmouseleave = () => handleCellOrTermHover(el, false);
         });
     }
-    const kmapWrapEl = $('kmapWrap');
-    if (kmapWrapEl) {
-        kmapWrapEl.querySelectorAll('td[data-bits]').forEach(el => {
-            el.onmouseenter = () => handleCellOrTermHover(el, true);
-            el.onmouseleave = () => handleCellOrTermHover(el, false);
-        });
-    }
-    const exprWrapEl = $('exprWrap');
-    if (exprWrapEl) {
-        exprWrapEl.querySelectorAll('.term').forEach(el => { 
-            el.onmouseenter = () => handleCellOrTermHover(el, true);
-            el.onmouseleave = () => handleCellOrTermHover(el, false);
-        });
-    }
-}
 
-function handleCellOrTermHover(hoveredElement, isOn) {
-    let mintermsToHighlightInTables = [];
-    let singleMintermForExpansionLookup = null; 
-    let termCoversMintermsForExpansionLookup = []; 
+    function handleCellOrTermHover(hoveredElement, isOn) {
+        let mintermsToHighlightInTables = [];
+        let singleMintermForExpansionLookup = null; 
+        let termCoversMintermsForExpansionLookup = []; 
 
-    if (hoveredElement.dataset.bits) { 
-        mintermsToHighlightInTables = [hoveredElement.dataset.bits];
-        singleMintermForExpansionLookup = hoveredElement.dataset.bits;
+        if (hoveredElement.dataset.bits) { 
+            mintermsToHighlightInTables = [hoveredElement.dataset.bits];
+            singleMintermForExpansionLookup = hoveredElement.dataset.bits;
 
-        const dmfTerms = document.querySelectorAll('.dmfTerm[data-cover]');
-        dmfTerms.forEach(termEl => {
-            const coveredByTerm = termEl.dataset.cover ? termEl.dataset.cover.split('|') : [];
-            if (coveredByTerm.includes(singleMintermForExpansionLookup)) {
-                termEl.classList.toggle('hl-color', isOn);
-            }
-        });
-        const kmfTerms = document.querySelectorAll('.kmfTerm[data-cover]');
-        kmfTerms.forEach(termEl => {
-            const coveredByTerm = termEl.dataset.cover ? termEl.dataset.cover.split('|') : [];
-            if (coveredByTerm.includes(singleMintermForExpansionLookup)) {
-                termEl.classList.toggle('hl-color', isOn);
-            }
-        });
+            document.querySelectorAll('#expressionsCard .dmfTerm[data-cover]').forEach(termEl => {
+                const coveredByTerm = termEl.dataset.cover ? termEl.dataset.cover.split('|') : [];
+                if (coveredByTerm.includes(singleMintermForExpansionLookup)) {
+                    termEl.classList.toggle('hl-color', isOn);
+                }
+            });
+            document.querySelectorAll('#expressionsCard .kmfTerm[data-cover]').forEach(termEl => {
+                const coveredByTerm = termEl.dataset.cover ? termEl.dataset.cover.split('|') : [];
+                if (coveredByTerm.includes(singleMintermForExpansionLookup)) {
+                    termEl.classList.toggle('hl-color', isOn);
+                }
+            });
 
-    } else if (hoveredElement.dataset.cover) { 
-        mintermsToHighlightInTables = hoveredElement.dataset.cover.split('|');
-        termCoversMintermsForExpansionLookup = mintermsToHighlightInTables;
-        hoveredElement.classList.toggle('hl-color', isOn);
-    }
+        } else if (hoveredElement.dataset.cover) { 
+            mintermsToHighlightInTables = hoveredElement.dataset.cover.split('|');
+            termCoversMintermsForExpansionLookup = mintermsToHighlightInTables;
+            hoveredElement.classList.toggle('hl-color', isOn);
+        }
 
-    if (mintermsToHighlightInTables.length > 0) {
-        highlightTableCells(mintermsToHighlightInTables, isOn); 
-    }
+        if (mintermsToHighlightInTables.length > 0) {
+            highlightTableCells(mintermsToHighlightInTables, isOn); 
+        }
 
-    // Helper function to apply highlight to a Boolean expansion group
-    const applyHighlightToExpansionGroup = (targetGroupId, highlightState) => {
-        if (!targetGroupId) return;
-        for (const id in expansionSpanData) {
-            const data = expansionSpanData[id];
-            if (data.groupChain && data.groupChain.includes(targetGroupId)) {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.classList.toggle("hl-color", highlightState);
+        const applyHighlightToExpansionGroup = (targetGroupId, highlightState) => {
+            if (!targetGroupId) return;
+            for (const id in expansionSpanData) {
+                const data = expansionSpanData[id];
+                if (data.groupChain && data.groupChain.includes(targetGroupId)) {
+                    const el = document.getElementById(id); // ID is unique
+                    if (el) {
+                        el.classList.toggle("hl-color", highlightState);
+                    }
                 }
             }
-        }
-    };
+        };
 
-    if (singleMintermForExpansionLookup) { 
-        let targetGroupIdFound = null;
-        // Priority 1: Find a leaf with a direct path match
-        for (const spanId in expansionSpanData) {
-            const data = expansionSpanData[spanId];
-            if (data.isLeaf && data.path === singleMintermForExpansionLookup && data.groupChain && data.groupChain.length > 0) {
-                targetGroupIdFound = data.groupChain[data.groupChain.length - 1];
-                break; 
-            }
-        }
-        // Priority 2: If no direct path, find a simplified constant leaf covering the minterm
-        if (!targetGroupIdFound) {
+        if (singleMintermForExpansionLookup) { 
+            let targetGroupIdFound = null;
             for (const spanId in expansionSpanData) {
                 const data = expansionSpanData[spanId];
-                if (data.isLeaf && data.path === null && data.minterms && data.minterms.includes(singleMintermForExpansionLookup) && data.groupChain && data.groupChain.length > 0) {
+                if (data.isLeaf && data.path === singleMintermForExpansionLookup && data.groupChain && data.groupChain.length > 0) {
                     targetGroupIdFound = data.groupChain[data.groupChain.length - 1];
                     break; 
                 }
             }
-        }
-        if (targetGroupIdFound) {
-            applyHighlightToExpansionGroup(targetGroupIdFound, isOn);
-        }
-    } else if (termCoversMintermsForExpansionLookup.length > 0) { 
-        const groupsToHighlight = new Set();
-        termCoversMintermsForExpansionLookup.forEach(minterm => {
-            let foundForThisMinterm = false;
-            for (const spanId in expansionSpanData) {
-                const data = expansionSpanData[spanId];
-                if (data.isLeaf && data.path === minterm && data.groupChain && data.groupChain.length > 0) {
-                    groupsToHighlight.add(data.groupChain[data.groupChain.length - 1]);
-                    foundForThisMinterm = true;
-                    break; 
-                }
-            }
-            if (!foundForThisMinterm) {
+            if (!targetGroupIdFound) {
                 for (const spanId in expansionSpanData) {
                     const data = expansionSpanData[spanId];
-                    if (data.isLeaf && data.path === null && data.minterms && data.minterms.includes(minterm) && data.groupChain && data.groupChain.length > 0) {
-                        groupsToHighlight.add(data.groupChain[data.groupChain.length - 1]);
+                    if (data.isLeaf && data.path === null && data.minterms && data.minterms.includes(singleMintermForExpansionLookup) && data.groupChain && data.groupChain.length > 0) {
+                        targetGroupIdFound = data.groupChain[data.groupChain.length - 1];
                         break; 
                     }
                 }
             }
-        });
-        groupsToHighlight.forEach(groupId => applyHighlightToExpansionGroup(groupId, isOn));
-    }
+            if (targetGroupIdFound) {
+                applyHighlightToExpansionGroup(targetGroupIdFound, isOn);
+            }
+        } else if (termCoversMintermsForExpansionLookup.length > 0) { 
+            const groupsToHighlight = new Set();
+            termCoversMintermsForExpansionLookup.forEach(minterm => {
+                let foundForThisMinterm = false;
+                for (const spanId in expansionSpanData) {
+                    const data = expansionSpanData[spanId];
+                    if (data.isLeaf && data.path === minterm && data.groupChain && data.groupChain.length > 0) {
+                        groupsToHighlight.add(data.groupChain[data.groupChain.length - 1]);
+                        foundForThisMinterm = true;
+                        break; 
+                    }
+                }
+                if (!foundForThisMinterm) {
+                    for (const spanId in expansionSpanData) {
+                        const data = expansionSpanData[spanId];
+                        if (data.isLeaf && data.path === null && data.minterms && data.minterms.includes(minterm) && data.groupChain && data.groupChain.length > 0) {
+                            groupsToHighlight.add(data.groupChain[data.groupChain.length - 1]);
+                            break; 
+                        }
+                    }
+                }
+            });
+            groupsToHighlight.forEach(groupId => applyHighlightToExpansionGroup(groupId, isOn));
+        }
 
-    // --- MUX Highlighting ---
-    let activePathsForMux = [];
-    if (hoveredElement.dataset.spanId && expansionSpanData && expansionSpanData[hoveredElement.dataset.spanId]) {
-        // This block is for hovers on a text expansion span from devWrap
-        const mintermSource = expansionSpanData[hoveredElement.dataset.spanId].minterms;
-        if (mintermSource) {
-            if (Array.isArray(mintermSource)) {
-                // Filter out non-strings to ensure a clean array of strings
-                activePathsForMux = mintermSource.filter(p => typeof p === 'string');
-            } else if (typeof mintermSource === 'string') {
-                activePathsForMux = [mintermSource]; // Wrap a single string in an array
+        let activePathsForMux = [];
+        if (hoveredElement.dataset.spanId && expansionSpanData && expansionSpanData[hoveredElement.dataset.spanId]) {
+            const mintermSource = expansionSpanData[hoveredElement.dataset.spanId].minterms;
+            if (mintermSource) {
+                activePathsForMux = Array.isArray(mintermSource) ? mintermSource.filter(p => typeof p === 'string') : (typeof mintermSource === 'string' ? [mintermSource] : []);
             } else {
-                activePathsForMux = []; // Fallback for unexpected format
+                activePathsForMux = [];
             }
-        } else {
-            activePathsForMux = []; // No minterms found for this specific spanId
+        } else if (hoveredElement.dataset.bits) {
+            activePathsForMux = [hoveredElement.dataset.bits];
+        } else if (hoveredElement.dataset.cover) {
+            activePathsForMux = hoveredElement.dataset.cover.split('|');
         }
-    } else if (hoveredElement.dataset.bits) {
-        // This handles hovers on truth table cells, kmap cells, or non-minimized DNF/CNF terms
-        activePathsForMux = [hoveredElement.dataset.bits];
-    } else if (hoveredElement.dataset.cover) {
-        // This handles hovers on a minimized DMF/KMF term from exprWrap
-        activePathsForMux = hoveredElement.dataset.cover.split('|');
+
+        if (currentMuxElementsStore && currentMuxDrawnElements && typeof highlightMuxElements === 'function' && muxSvgElement) {
+            highlightMuxElements(
+                activePathsForMux,
+                isOn, 
+                currentMuxElementsStore,
+                currentMuxDrawnElements,
+                currentExpansionOrderForMuxHighlight, 
+                currentActiveMuxConfig
+            );
+        }
     }
 
-    if (currentMuxElementsStore && currentMuxDrawnElements && typeof highlightMuxElements === 'function') {
-        highlightMuxElements(
-            activePathsForMux,
-            isOn, // This is the existing boolean parameter of handleExpansionSpanHover
-            currentMuxElementsStore,
-            currentMuxDrawnElements,
-            currentExpansionOrderForMuxHighlight, 
-            currentActiveMuxConfig // Changed from DEFAULT_MUX_CONFIG
-        );
-    }
-}
+    function handleExpansionSpanHover(spanElement, isOn, highlightClass) {
+        const spanId = spanElement.dataset.spanId;
+        if (!spanId || !expansionSpanData[spanId]) return; 
 
-function handleExpansionSpanHover(spanElement, isOn, highlightClass) {
-    const spanId = spanElement.dataset.spanId;
-    if (!spanId || !expansionSpanData[spanId]) return; 
+        const data = expansionSpanData[spanId];
+        const mintermsToHl = data.minterms; 
+        
+        if (!data.groupChain || data.groupChain.length === 0) return;
+        const primaryGroupIdForHover = data.groupChain[data.groupChain.length - 1]; 
 
-    const data = expansionSpanData[spanId];
-    const mintermsToHl = data.minterms; 
-    
-    if (!data.groupChain || data.groupChain.length === 0) return;
-    const primaryGroupIdForHover = data.groupChain[data.groupChain.length - 1]; 
-
-    if (mintermsToHl && mintermsToHl.length > 0) {
-        highlightTableCells(mintermsToHl, isOn); 
-    }
-    
-    if (primaryGroupIdForHover && highlightClass) { 
-         for (const id in expansionSpanData) {
-            const iterData = expansionSpanData[id];
-            if (iterData.groupChain && iterData.groupChain.includes(primaryGroupIdForHover)) {
-                const el = document.getElementById(id);
-                if (el) el.classList.toggle(highlightClass, isOn);
+        if (mintermsToHl && mintermsToHl.length > 0) {
+            highlightTableCells(mintermsToHl, isOn); 
+        }
+        
+        if (primaryGroupIdForHover && highlightClass) { 
+            for (const id in expansionSpanData) {
+                const iterData = expansionSpanData[id];
+                if (iterData.groupChain && iterData.groupChain.includes(primaryGroupIdForHover)) {
+                    const el = document.getElementById(id); // ID is unique
+                    if (el) el.classList.toggle(highlightClass, isOn);
+                }
             }
         }
-    }
 
-    // --- MUX Highlighting ---
-    let activePathsForMux = [];
-    // For hovers on a text expansion span (which is what this function handles)
-    // We use data.minterms (which is mintermsToHl)
-    if (mintermsToHl) {
-        if (Array.isArray(mintermsToHl)) {
-            activePathsForMux = mintermsToHl.filter(p => typeof p === 'string');
-        } else if (typeof mintermsToHl === 'string') {
-            activePathsForMux = [mintermsToHl];
+        let activePathsForMux = [];
+        if (mintermsToHl) {
+            activePathsForMux = Array.isArray(mintermsToHl) ? mintermsToHl.filter(p => typeof p === 'string') : (typeof mintermsToHl === 'string' ? [mintermsToHl] : []);
         } else {
-            activePathsForMux = []; // Fallback for unexpected format
+            activePathsForMux = [];
         }
-    } else {
-        activePathsForMux = []; // No minterms found for this specific spanId
+
+        if (currentMuxElementsStore && currentMuxDrawnElements && typeof highlightMuxElements === 'function' && muxSvgElement) {
+            highlightMuxElements(
+                activePathsForMux,
+                isOn,
+                currentMuxElementsStore,
+                currentMuxDrawnElements,
+                currentExpansionOrderForMuxHighlight, 
+                currentActiveMuxConfig
+            );
+        }
     }
 
-    if (currentMuxElementsStore && currentMuxDrawnElements && typeof highlightMuxElements === 'function') {
-        highlightMuxElements(
-            activePathsForMux,
-            isOn,
-            currentMuxElementsStore,
-            currentMuxDrawnElements,
-            currentExpansionOrderForMuxHighlight, 
-            currentActiveMuxConfig // Changed from DEFAULT_MUX_CONFIG
-        );
+    function highlightTableCells(arr,on){
+    arr.forEach(b=>{
+        document.querySelectorAll(`.card-body [data-bits="${b}"]`) // Scoped to card-body
+                .forEach(n=>n.classList.toggle('hl-cell',on)); 
+    });
     }
-}
 
-function highlightTableCells(arr,on){
-  arr.forEach(b=>{
-    document.querySelectorAll(`[data-bits="${b}"]`)
-            .forEach(n=>n.classList.toggle('hl-cell',on)); 
-  });
-}
+    // --- Initial Setup ---
+    // DOMContentLoaded to ensure all elements are available, especially for querySelector.
+    document.addEventListener('DOMContentLoaded', () => {
+        muxSvgElement = document.querySelector("#muxCard .card-body #muxDiagramSvg"); // Initialize global reference early
 
-// --- Initial Setup ---
-buildTruth(); 
-applyPreset(); 
-renderAll(); 
-
-// --- Event Listeners for variable count and presets ---
-const minusBtnEl = $('minusBtn');
-if (minusBtnEl) {
-    minusBtnEl.onclick = ()=>{ 
-        if(nVars>2){ 
-            const oldNVars = nVars;
-            const oldTruthCopy = preset === 'custom' ? JSON.parse(JSON.stringify(truth)) : null;
-            nVars--; 
-            buildTruth(oldTruthCopy, oldNVars); // Pass old state if custom
-            applyPreset(); // applyPreset has an internal check for 'custom'
-            renderAll(); 
-        } 
-    };
-}
-const plusBtnEl = $('plusBtn');
-if (plusBtnEl) {
-    plusBtnEl.onclick = ()=>{ 
-        if(nVars<4){ 
-            const oldNVars = nVars;
-            const oldTruthCopy = preset === 'custom' ? JSON.parse(JSON.stringify(truth)) : null;
-            nVars++; 
-            buildTruth(oldTruthCopy, oldNVars); // Pass old state if custom
-            // applyPreset is still needed for non-custom cases, 
-            // and for custom cases it won't overwrite if buildTruth already handled it (implicitly)
-            // However, if buildTruth sets to nulls for custom, applyPreset might overwrite if not careful.
-            // The current buildTruth's "else" branch handles non-custom, so applyPreset is fine.
-            // If preset was custom, buildTruth handles it.
-            // If preset was not custom, buildTruth's "else" path initializes with 0s, then applyPreset sets the actual values.
-            applyPreset(); // applyPreset has an internal check for 'custom' and will do nothing if it is.
-            renderAll(); 
-        } 
-    };
-}
-const presetOpEl = $('presetOp');
-if (presetOpEl instanceof HTMLSelectElement) { 
-    presetOpEl.onchange = ()=>{ 
-        preset=presetOpEl.value; 
+        buildTruth(); 
         applyPreset(); 
         renderAll(); 
-    };
-}
 
-const expansionOrderInputEl = $('expansionOrderInput');
-if (expansionOrderInputEl) {
-    expansionOrderInputEl.onchange = () => {
-        renderDev();
-        // setupAllHoverInteractions(); // renderDev re-attaches its own hover listeners.
-                                     // Other general interactions might need this if renderDev clears more than devWrap.
-                                     // For now, assuming renderDev handles its own hover needs.
-    };
-}
-</script>
+        // --- Event Listeners ---
+        const minusBtnEl = $('minusBtn');
+        if (minusBtnEl) {
+            minusBtnEl.onclick = ()=>{ 
+                if(nVars>2){ 
+                    const oldNVars = nVars;
+                    const oldTruthCopy = preset === 'custom' ? JSON.parse(JSON.stringify(truth)) : null;
+                    nVars--; 
+                    buildTruth(oldTruthCopy, oldNVars);
+                    applyPreset(); 
+                    renderAll(); 
+                } 
+            };
+        }
+        const plusBtnEl = $('plusBtn');
+        if (plusBtnEl) {
+            plusBtnEl.onclick = ()=>{ 
+                if(nVars<4){ 
+                    const oldNVars = nVars;
+                    const oldTruthCopy = preset === 'custom' ? JSON.parse(JSON.stringify(truth)) : null;
+                    nVars++; 
+                    buildTruth(oldTruthCopy, oldNVars);
+                    applyPreset(); 
+                    renderAll(); 
+                } 
+            };
+        }
+        const presetOpEl = $('presetOp');
+        if (presetOpEl instanceof HTMLSelectElement) { 
+            presetOpEl.onchange = ()=>{ 
+                preset=presetOpEl.value; 
+                applyPreset(); 
+                renderAll(); 
+            };
+        }
+
+        const expansionOrderInputEl = $('expansionOrderInput');
+        if (expansionOrderInputEl) {
+            expansionOrderInputEl.onchange = () => {
+                renderDev(); // This will also re-render MUX
+            };
+        }
+
+        // Resize observer for MUX diagram, debounced for performance
+        const muxCardBodyForObserver = document.querySelector('#muxCard .card-body');
+        if (muxCardBodyForObserver && muxSvgElement) {
+            const debouncedMuxRender = debounce(() => {
+                if (currentMuxElementsStore) { // Check if there's a structure to render
+                    // It's important that renderDev() is the primary way to refresh the MUX
+                    // as it recalculates the logical structure (rootExpansionNode)
+                    // which is necessary if nVars or expansionOrder changes.
+                    // A direct call to renderMuxDiagram or parts of it might lead to inconsistencies
+                    // if the logical structure isn't also updated.
+                    // Calling renderDev() ensures everything is rebuilt based on current state.
+                    console.log("Resize detected, re-rendering MUX via renderDev()");
+                    renderDev();
+                }
+            }, 250); // 250ms debounce delay
+
+            const resizeObserver = new ResizeObserver(entries => {
+                // We don't need to loop through entries if we're just triggering a debounced full render
+                debouncedMuxRender();
+            });
+            resizeObserver.observe(muxCardBodyForObserver);
+        }
+    });
+
+  </script>
 </body>
 </html>
