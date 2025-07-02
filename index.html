@@ -91,7 +91,17 @@
     pre span { cursor: default; }
 
     /* Spezifische Stile für Mux-Diagramm, falls noch benötigt */
-    #muxDiagramSvg { display: block; margin: 0 auto; /* Zentrierung, falls nötig */}
+    #muxDiagramSvg { display: block; margin: 0 auto; /* Zentrierung, falls nötig */ width: 100%; height: 100%; }
+
+    #muxCard {
+      grid-column: span 2;
+    }
+
+    #muxWrap {
+      flex-grow: 1; /* Allow muxWrap to grow */
+      display: flex; /* Use flex to make SVG fill height */
+      min-height: 300px; /* Minimum height for the container */
+    }
 
   </style>
 </head>
@@ -108,7 +118,6 @@
     </header>
 
     <div style="margin-bottom: 1.5rem; padding: 1rem; background: var(--card-bg); border:2px solid var(--kit-blue); border-radius:6px; box-shadow:var(--shadow);">
-        <label for="presetOp">Presets :</label>
         <select id="presetOp" aria-label="Logikgatter-Preset auswählen">
         <option value="custom">custom</option>
         <option value="and">AND</option>
@@ -123,6 +132,12 @@
         <button id="minusBtn" aria-label="Anzahl der Variablen verringern">−</button>
         <span id="varCountLbl">3</span>
         <button id="plusBtn" aria-label="Anzahl der Variablen erhöhen">+</button>
+        &nbsp;&nbsp;
+        <input type="checkbox" id="toggleTruthTable" checked> <label for="toggleTruthTable">Wahrheitstabelle</label>
+        <input type="checkbox" id="toggleKmap" checked> <label for="toggleKmap">Symmetriediagramm</label>
+        <input type="checkbox" id="toggleExpressions" checked> <label for="toggleExpressions">Min-/Maxterme</label>
+        <input type="checkbox" id="toggleBooleanDev" checked> <label for="toggleBooleanDev">Boolesche Entwicklung</label>
+        <input type="checkbox" id="toggleMux" checked> <label for="toggleMux">Multiplexer</label>
     </div>
 
     <main class="card-grid">
@@ -160,9 +175,9 @@
 
       <section class="card" id="muxCard">
         <h4 class="card-title">Multiplexer Realisierung</h4>
-        <div class="card-body">
+        <div class="card-body" style="display: flex; flex-direction: column;">
           <div id="muxWrap">
-            <svg id="muxDiagramSvg" width="100%" height="400" style="border:1px solid #ccc;"></svg>
+            <svg id="muxDiagramSvg" style="border:1px solid #ccc;"></svg> <!-- Removed fixed height -->
           </div>
         </div>
       </section>
@@ -1375,6 +1390,71 @@
             });
             resizeObserver.observe(muxCardBodyForObserver);
         }
+
+        // View Toggles
+        const viewToggleMappings = {
+            'toggleTruthTable': 'truthTableCard',
+            'toggleKmap': 'kmapCard',
+            'toggleExpressions': 'expressionsCard',
+            'toggleBooleanDev': 'booleanDevCard',
+            'toggleMux': 'muxCard'
+        };
+
+        for (const checkboxId in viewToggleMappings) {
+            const checkbox = $(checkboxId);
+            const cardId = viewToggleMappings[checkboxId];
+            const card = $(cardId);
+
+            if (checkbox && card) {
+                checkbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        card.style.display = 'flex'; // Or its original display value if not flex
+                    } else {
+                        card.style.display = 'none';
+                    }
+                    // Special handling for MUX card resize when it becomes visible again
+                    if (cardId === 'muxCard' && this.checked) {
+                        debouncedMuxRender();
+                    }
+                    adjustMuxCardHeight(); // Adjust height when any view visibility changes
+                });
+            }
+        }
+
+        function adjustMuxCardHeight() {
+            const truthTableCard = $('truthTableCard');
+            const muxCard = $('muxCard');
+            const muxWrap = $('muxWrap');
+
+            if (truthTableCard && muxCard && muxWrap) {
+                // Ensure truthTableCard is visible to get an accurate height
+                const isTruthTableVisible = window.getComputedStyle(truthTableCard).display !== 'none';
+                if (isTruthTableVisible) {
+                    const referenceHeight = truthTableCard.offsetHeight;
+                    if (referenceHeight > 0) {
+                        muxCard.style.height = `${referenceHeight}px`;
+                        // Ensure muxWrap and SVG can adapt. The existing CSS for muxWrap (flex-grow) and SVG (height 100%) should handle this.
+                        // We might need to re-trigger MUX render if its dimensions changed significantly.
+                        debouncedMuxRender(); 
+                    }
+                } else {
+                    // Fallback if truth table is not visible, perhaps use a default or current height
+                    // For now, let's leave its height as is, or use its own content height if truth table isn't there.
+                    // Alternatively, find another visible card in the first logical row.
+                    // For simplicity, if truth table is hidden, we won't adjust MUX height based on it.
+                    // Consider setting a sensible default or removing the explicit height.
+                    // muxCard.style.height = 'auto'; // Or some default like '400px'
+                    // For now, let's try to make it use its min-height from CSS or content height
+                    muxCard.style.height = ''; // Let CSS take over (which includes card-body flex behavior)
+                }
+            }
+        }
+
+        const debouncedAdjustMuxHeight = debounce(adjustMuxCardHeight, 250);
+
+        window.addEventListener('load', adjustMuxCardHeight);
+        window.addEventListener('resize', debouncedAdjustMuxHeight);
+
     });
 
   </script>
