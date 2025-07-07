@@ -807,4 +807,16 @@ export function init() {
 
   window.addEventListener("load", adjustMuxCardHeight);
   window.addEventListener("resize", debouncedAdjustMuxHeight);
+
+  const landscapeToggleBtnEl = $("landscapeToggleBtn");
+  const pageEl = document.querySelector(".page"); // Assuming .page is the main container to toggle class on
+
+  if (landscapeToggleBtnEl && pageEl) {
+    landscapeToggleBtnEl.onclick = () => {
+      pageEl.classList.toggle("landscape-mode");
+      // After toggling, we might need to trigger a resize/render for elements like MUX
+      debouncedMuxRender(); 
+      debouncedAdjustMuxHeight();
+    };
+  }
 }

@@ -54,6 +54,14 @@
     /* Alte Stile, die potenziell noch benötigt werden oder später aufgeräumt werden */
     /* body {font-family:system-ui,sans-serif;} */ /* Überschrieben und entfernt */
     button,select{padding:4px 8px;font-size:1rem;cursor:pointer}
+    #landscapeToggleBtn {
+        width: 30px; /* Adjust width to be square-like based on padding */
+        height: 30px; /* Adjust height to be square-like based on padding */
+        padding: 4px; /* Adjust padding as needed */
+        font-size: 1rem; /* Ensure text fits */
+        line-height: 1; /* Center the square character if used */
+        vertical-align: middle; /* Align with other form elements */
+    }
     table{border-collapse:collapse;margin:12px 0}
     th,td{border:1px solid #888;padding:4px 6px;text-align:center}
     th{background:#eee}
@@ -105,4 +113,27 @@
       flex-grow: 1; /* Allow muxWrap to grow */
       display: flex; /* Use flex to make SVG fill height */
       min-height: 300px; /* Minimum height for the container */
+    }
+
+    /* Landscape Mode Adjustments */
+    .page.landscape-mode {
+      max-width: 95%; /* Use a percentage for better responsiveness, or a large fixed value like 1800px */
+      /* Consider adjusting padding if needed */
+    }
+
+    .page.landscape-mode .card-grid {
+      grid-template-columns: repeat(5, 1fr); /* Assuming 5 cards, display them in 5 equal columns */
+      /* Adjust gap if necessary, e.g., gap: 1rem; */
+    }
+
+    /* Ensure cards in landscape mode don't try to maintain a tall aspect ratio if their content is small */
+    .page.landscape-mode .card {
+      min-height: 0; /* Reset min-height if it was set elsewhere or inherited causing issues */
+    }
+
+    /* Specific adjustments for muxCard in landscape if it spans columns */
+    .page.landscape-mode #muxCard {
+      grid-column: span 1; /* Override previous span to make it fit in the row */
+       /* If muxCard was taking more space, ensure it also fits. 
+         Its height might need to be managed by its content or specific landscape styles. */
     }
