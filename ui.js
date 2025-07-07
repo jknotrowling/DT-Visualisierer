@@ -719,25 +719,21 @@ export function init() {
     };
   }
 
+  // --- Debounced MUX rendering and height adjustment ---
+  // Define these early in init() so they are in scope for all subsequent uses.
+  const debouncedMuxRender = debounce(() => {
+    if (MUX_DIAGRAM_STATE.currentMuxElementsStore) {
+      console.log("Debounced MUX render triggered (e.g., by resize or toggle)");
+      renderDev(); // renderDev will handle the MUX diagram update
+    }
+  }, 250);
+
+  const debouncedAdjustMuxHeight = debounce(adjustMuxCardHeight, 250);
+
   // Resize observer for MUX diagram, debounced for performance
   const muxCardBodyForObserver = document.querySelector("#muxCard .card-body");
   if (muxCardBodyForObserver && MUX_DIAGRAM_STATE.muxSvgElement) {
-    const debouncedMuxRender = debounce(() => {
-      if (MUX_DIAGRAM_STATE.currentMuxElementsStore) {
-        // Check if there's a structure to render
-        // It's important that renderDev() is the primary way to refresh the MUX
-        // as it recalculates the logical structure (rootExpansionNode)
-        // which is necessary if nVars or expansionOrder changes.
-        // A direct call to renderMuxDiagram or parts of it might lead to inconsistencies
-        // if the logical structure isn't also updated.
-        // Calling renderDev() ensures everything is rebuilt based on current state.
-        console.log("Resize detected, re-rendering MUX via renderDev()");
-        renderDev();
-      }
-    }, 250); // 250ms debounce delay
-
     const resizeObserver = new ResizeObserver((entries) => {
-      // We don't need to loop through entries if we're just triggering a debounced full render
       debouncedMuxRender();
     });
     resizeObserver.observe(muxCardBodyForObserver);
@@ -779,34 +775,25 @@ export function init() {
     const muxWrap = $("muxWrap");
 
     if (truthTableCard && muxCard && muxWrap) {
-      // Ensure truthTableCard is visible to get an accurate height
       const isTruthTableVisible =
         window.getComputedStyle(truthTableCard).display !== "none";
       if (isTruthTableVisible) {
         const referenceHeight = truthTableCard.offsetHeight;
         if (referenceHeight > 0) {
           muxCard.style.height = `${referenceHeight}px`;
-          // Ensure muxWrap and SVG can adapt. The existing CSS for muxWrap (flex-grow) and SVG (height 100%) should handle this.
-          // We might need to re-trigger MUX render if its dimensions changed significantly.
-          debouncedMuxRender();
+          // debouncedMuxRender() will be called by the landscape toggle or resize observer
+          // if a re-render is needed due to size changes.
         }
       } else {
-        // Fallback if truth table is not visible, perhaps use a default or current height
-        // For now, let's leave its height as is, or use its own content height if truth table isn't there.
-        // Alternatively, find another visible card in the first logical row.
-        // For simplicity, if truth table is hidden, we won't adjust MUX height based on it.
-        // Consider setting a sensible default or removing the explicit height.
-        // muxCard.style.height = 'auto'; // Or some default like '400px'
-        // For now, let's try to make it use its min-height from CSS or content height
-        muxCard.style.height = ""; // Let CSS take over (which includes card-body flex behavior)
+        muxCard.style.height = ""; 
       }
     }
   }
 
-  const debouncedAdjustMuxHeight = debounce(adjustMuxCardHeight, 250);
-
-  window.addEventListener("load", adjustMuxCardHeight);
-  window.addEventListener("resize", debouncedAdjustMuxHeight);
+  // Event listeners for load and resize are now using the debouncedAdjustMuxHeight 
+  // that is defined at a higher scope within init()
+  window.addEventListener("load", debouncedAdjustMuxHeight); // Use the correctly scoped version
+  window.addEventListener("resize", debouncedAdjustMuxHeight); // Use the correctly scoped version
 
   const landscapeToggleBtnEl = $("landscapeToggleBtn");
   const pageEl = document.querySelector(".page"); // Assuming .page is the main container to toggle class on
