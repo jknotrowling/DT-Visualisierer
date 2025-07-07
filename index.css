@@ -1,0 +1,108 @@
+  /* Inhalt von kit-layout.css */
+    :root{
+      --kit-blue:#003366;
+      --kit-green:#008C3D;
+      --card-bg:#ffffff;
+      --page-bg:#f8f9fb;
+      --text:#000;
+      --shadow:0 1px 6px rgba(0,0,0,.08);
+    }
+
+    /* globale Resets */
+    *,*::before,*::after{box-sizing:border-box;}
+    body{margin:0;font-family:"Source Sans Pro",Arial,Helvetica,sans-serif;
+        background:var(--page-bg);color:var(--text);line-height:1.5;}
+
+    /* Page-Rahmen (Anlehnung an PDF) */
+    .page{max-width:1200px;margin:2rem auto;padding:1.5rem;border:2px solid var(--kit-blue);}
+
+    /* Header */
+    .page-header{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+                justify-content:space-between;margin-bottom:2rem;}
+    .logo{height:60px;width:auto;}
+    .title-group{text-align:center;flex:1;} /* Allow title group to take available space */
+    .title-group h1{font-size:1.25rem;font-weight:600;margin:0;}
+    .title-group h2{font-size:2rem;color:var(--kit-blue);margin:.25rem 0 0;}
+    .title-group h3{font-size:1.5rem;margin:.15rem 0 0;}
+
+    /* Card-Grid */
+    .card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+            gap:1.5rem;}
+
+    /* Card */
+    .card{background:var(--card-bg);border:2px solid var(--kit-blue);
+        border-radius:6px;box-shadow:var(--shadow);display:flex;flex-direction:column;}
+    .card-title{background:var(--kit-blue);color:#fff;padding:.5rem 1rem;margin:0;
+                font-size:1.1rem;font-weight:600;border-radius:4px 4px 0 0;} /* Ensure top corners are rounded with border */
+    .card-body{padding:1rem;flex:1;overflow:auto;} /* overflow:auto to handle content larger than card */
+
+    /* Media Queries für Mobile */
+    @media(max-width:768px){ /* Adjusted breakpoint for better responsiveness of header */
+    .page-header{justify-content:center; text-align:center;} /* Center items on smaller screens */
+    .title-group{min-width:100%; order: -1; margin-bottom:1rem;} /* Title full width and first on mobile */
+    }
+
+    @media(max-width:480px){
+    .logo{height:40px;}
+    .title-group h2{font-size:1.5rem;}
+    .page{margin:1rem auto; padding:1rem;}
+    .card-grid{grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1rem;} /* Smaller minmax for very small devices */
+    }
+
+    /* --- Ende Inhalt von kit-layout.css --- */
+
+    /* Alte Stile, die potenziell noch benötigt werden oder später aufgeräumt werden */
+    /* body {font-family:system-ui,sans-serif;} */ /* Überschrieben und entfernt */
+    button,select{padding:4px 8px;font-size:1rem;cursor:pointer}
+    table{border-collapse:collapse;margin:12px 0}
+    th,td{border:1px solid #888;padding:4px 6px;text-align:center}
+    th{background:#eee}
+    .truth th,.truth td,.outCell{width:42px}
+    .outCell,.kmap td{height:42px;cursor:pointer}
+    .on {background:#4caf50;color:#000;font-weight:bold} /* Textfarbe auf schwarz für besseren Kontrast */
+    .off{background:#fafafa}
+    .dc {background:#ff9800;color:#000;font-weight:bold} /* Textfarbe auf schwarz für besseren Kontrast */
+
+    /* Highlight Style for table cells */
+    .hl-cell {
+        outline:2px solid #e91e63 !important;
+        background:#ffebee !important;
+        color:#000 !important;
+    }
+
+    .symmetry-hl-cell {
+        border: 2px solid #e91e63 !important;
+        background:#ffebee !important;
+        color:#000 !important;
+        outline: none !important; /* Remove outline to avoid double borders */
+    }
+
+    /* Highlight Style for Boolean Expansion and active DNF/KMF/DMF terms (Color) */
+    /* Kontrast #F57C00 auf #FFF3E0 ist 3.05:1 - grenzwertig für normalen Text. Belassen gemäß Anforderung "Color". */
+    .hl-color {
+        color: #F57C00 !important; /* Orange */
+        background-color: #FFF3E0 !important; /* Light orange background */
+        border-radius: 3px !important;
+        padding: 0 1px; /* Slight padding for background visibility */
+    }
+
+    .kmap th.varhead{width:40px;height:36px}
+    .term{padding:2px 6px;margin:2px;border-radius:4px;cursor:pointer;display:inline-block}
+    .dnfTerm{background:#d0eaff}.cnfTerm{background:#ffe0e0}
+    .dmfTerm{background:#b2ffb2}.kmfTerm{background:#ffd59e}
+    .ov{text-decoration:overline}
+    pre{white-space:pre-wrap;word-break:break-word; margin-top: 5px;}
+    pre span { cursor: default; }
+
+    /* Spezifische Stile für Mux-Diagramm, falls noch benötigt */
+    #muxDiagramSvg { display: block; margin: 0 auto; /* Zentrierung, falls nötig */ width: 100%; height: 100%; }
+
+    #muxCard {
+      grid-column: span 2;
+    }
+
+    #muxWrap {
+      flex-grow: 1; /* Allow muxWrap to grow */
+      display: flex; /* Use flex to make SVG fill height */
+      min-height: 300px; /* Minimum height for the container */
+    }
