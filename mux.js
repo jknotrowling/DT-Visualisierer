@@ -289,11 +289,14 @@ return elementsStore;
 }
 
 export function calculateMuxLayout(elementsStore, layoutConfig = DEFAULT_LAYOUT_CONFIG, muxDisplayConfig = DEFAULT_MUX_CONFIG) {
-    const elementCoords = {};
+    const elementCoords = {}; // Stores { x, y, type, element } for each elementId
     const elementsByDepth = {};
 
     const muxCardBody = document.querySelector('#muxCard .card-body');
-    const svgActualHeight = muxCardBody && muxCardBody.offsetHeight > 100 ? muxCardBody.offsetHeight - (2 * layoutConfig.paddingY) : 400 - (2*layoutConfig.paddingY); // effective height after padding
+    // Usable height between top and bottom paddings
+    const svgUsableHeight = muxCardBody && muxCardBody.offsetHeight > 100 ? 
+                             muxCardBody.offsetHeight - (2 * layoutConfig.paddingY) : 
+                             400 - (2 * layoutConfig.paddingY);
     const elementRenderHeight = muxDisplayConfig.inputHeight;
 
     const allElements = [
@@ -312,50 +315,68 @@ export function calculateMuxLayout(elementsStore, layoutConfig = DEFAULT_LAYOUT_
         }
     });
 
+    // Calculate positions for MUX columns first (all columns except the last one if it's constants)
     Object.keys(elementsByDepth).forEach(depthKey => {
         const depth = parseInt(depthKey, 10);
+        if (depth === maxDepth && elementsByDepth[depthKey].every(el => elementsStore.constants.find(c => c.id === el.id))) {
+            // Skip explicit layout for the last column if it's all constants; will be handled later
+            return;
+        }
+
         const elementsInColumn = elementsByDepth[depth];
         elementsInColumn.sort((a, b) => a.yOrderAtDepth - b.yOrderAtDepth);
 
         const numElements = elementsInColumn.length;
         if (numElements === 0) return;
 
-        const isLastColumn = (depth === maxDepth);
-
-        if (isLastColumn) {
-            // Special handling for the last column (typically constants)
-            // Distribute elements across the full available height, respecting paddingY.
-            const usableHeight = svgActualHeight; // svgActualHeight is already adjusted for padding top & bottom
-            
-            elementsInColumn.forEach((element, index) => {
-                const x = layoutConfig.paddingX + element.depth * (muxDisplayConfig.width + layoutConfig.spacingX);
-                let y;
-                if (numElements === 1) {
-                    y = layoutConfig.paddingY + usableHeight / 2;
-                } else {
-                    // Distribute elements evenly from paddingY to svgActualHeight - paddingY
-                    // The first element is at paddingY + elementRenderHeight / 2
-                    // The last element is at (svgActualHeight + layoutConfig.paddingY) - elementRenderHeight / 2
-                    // No, the usableHeight is already padded. So, first element at elementRenderHeight/2 from top of usable area.
-                    // Last element is usableHeight - elementRenderHeight/2 from top of usable area.
-                     y = layoutConfig.paddingY + (index * (usableHeight - elementRenderHeight) / (numElements - 1)) + (elementRenderHeight / 2);
-                }
-                elementCoords[element.id] = { x, y, type: element.varName ? 'mux' : 'constant', element: element };
-            });
-        } else {
-            // Original logic for other columns: center the block of elements
-            const totalContentHeight = (numElements * elementRenderHeight) + (Math.max(0, numElements - 1) * layoutConfig.spacingY);
-            // columnBlockStartY is the start of the content block, from the top of the padded area
-            const columnBlockStartY = Math.max(0, (svgActualHeight - totalContentHeight) / 2); 
-            
-            elementsInColumn.forEach((element, index) => {
-                const x = layoutConfig.paddingX + element.depth * (muxDisplayConfig.width + layoutConfig.spacingX);
-                // y is relative to the overall SVG, so add back paddingY
-                const y = layoutConfig.paddingY + columnBlockStartY + (index * (elementRenderHeight + layoutConfig.spacingY)) + (elementRenderHeight / 2);
-                elementCoords[element.id] = { x, y, type: element.varName ? 'mux' : 'constant', element: element };
-            });
-        }
+        // Centering logic for MUX columns
+        const totalContentHeight = (numElements * elementRenderHeight) + (Math.max(0, numElements - 1) * layoutConfig.spacingY);
+        const columnBlockStartY = Math.max(0, (svgUsableHeight - totalContentHeight) / 2); 
+        
+        elementsInColumn.forEach((element, index) => {
+            const x = layoutConfig.paddingX + element.depth * (muxDisplayConfig.width + layoutConfig.spacingX);
+            const y = layoutConfig.paddingY + columnBlockStartY + (index * (elementRenderHeight + layoutConfig.spacingY)) + (elementRenderHeight / 2);
+            elementCoords[element.id] = { x, y, type: 'mux', element: element }; // Assume MUX here, constants handled separately
+        });
     });
+
+    // Now, position constants in the last column based on their connected MUX pins
+    if (elementsByDepth[maxDepth] && elementsStore.constants.length > 0) {
+        const lastColumnElements = elementsByDepth[maxDepth];
+        lastColumnElements.forEach(constantElement => {
+            // Find the connection TO this constant
+            const connectionToConstant = elementsStore.connections.find(conn => conn.toId === constantElement.id);
+            if (connectionToConstant) {
+                const sourceMuxId = connectionToConstant.fromId;
+                const sourceMuxCoords = elementCoords[sourceMuxId]; // Get already calculated coords of the source MUX
+
+                if (sourceMuxCoords) {
+                    const x = layoutConfig.paddingX + constantElement.depth * (muxDisplayConfig.width + layoutConfig.spacingX);
+                    // Calculate y based on the source MUX's pin
+                    // connIn1Y is for pin '1' (top input), connIn0Y is for pin '0' (bottom input)
+                    // These are relative to the MUX center (y-coordinate)
+                    const pinOffsetY = connectionToConstant.fromPin === '1' ? 
+                                       (-muxDisplayConfig.inputHeight / 4) : 
+                                       (muxDisplayConfig.inputHeight / 4);
+                    const y = sourceMuxCoords.y + pinOffsetY;
+                    
+                    elementCoords[constantElement.id] = { x, y, type: 'constant', element: constantElement };
+                } else {
+                     // Fallback for safety, though sourceMuxCoords should always exist if structure is valid
+                    const x = layoutConfig.paddingX + constantElement.depth * (muxDisplayConfig.width + layoutConfig.spacingX);
+                    const y = layoutConfig.paddingY + svgUsableHeight / 2; // Default to center if source MUX not found
+                    elementCoords[constantElement.id] = { x, y, type: 'constant', element: constantElement };
+                    console.warn(`Source MUX ${sourceMuxId} for constant ${constantElement.id} not found in elementCoords.`);
+                }
+            } else {
+                 // Fallback for constants not connected (should not happen in a valid MUX tree)
+                const x = layoutConfig.paddingX + constantElement.depth * (muxDisplayConfig.width + layoutConfig.spacingX);
+                const y = layoutConfig.paddingY + svgUsableHeight / 2; // Default to center
+                elementCoords[constantElement.id] = { x, y, type: 'constant', element: constantElement };
+                console.warn(`Constant ${constantElement.id} has no incoming connection.`);
+            }
+        });
+    }
     return elementCoords;
 }
 
