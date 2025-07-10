@@ -55,12 +55,17 @@
     /* body {font-family:system-ui,sans-serif;} */ /* Überschrieben und entfernt */
     button,select{padding:4px 8px;font-size:1rem;cursor:pointer}
     #landscapeToggleBtn {
-        width: 30px; /* Adjust width to be square-like based on padding */
-        height: 30px; /* Adjust height to be square-like based on padding */
-        padding: 4px; /* Adjust padding as needed */
-        font-size: 1rem; /* Ensure text fits */
-        line-height: 1; /* Center the square character if used */
+        width: 30px; 
+        height: 30px; 
+        padding: 2px; /* Reduced padding to give image more space */
         vertical-align: middle; /* Align with other form elements */
+        border: 1px solid #ccc; /* Optional: adds a light border */
+        background-color: #f0f0f0; /* Optional: light background color */
+    }
+    #landscapeToggleBtn img {
+        width: 100%;
+        height: 100%;
+        display: block; /* Remove extra space below image */
     }
     table{border-collapse:collapse;margin:12px 0}
     th,td{border:1px solid #888;padding:4px 6px;text-align:center}
