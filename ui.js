@@ -59,8 +59,21 @@ function renderTruth() {
   );
   if (truthWrap) truthWrap.innerHTML = h;
 
+  let truthCellTouchedOnce = null; // Variable to store the bits of the cell touched once
+
   document.querySelectorAll("#truthTableCard .outCell").forEach((td) => {
+    // Desktop click behavior remains the same
     td.onclick = (e) => {
+      // Prevent click if it's a touch device and we are handling it via touch events
+      if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+        // For touch devices, click is only for the second "tap"
+        // The first tap is handled by touchstart to highlight
+        // If it's not the cell that was touched once, or if it is but we are not in "second tap mode"
+        // then this click should not change the value.
+        // This logic will be mostly handled by touchend now.
+        return;
+      }
+      // Original click logic for non-touch devices
       const currentTarget = e.currentTarget;
       if (!currentTarget) return;
       const bits = currentTarget.dataset.bits;
@@ -73,43 +86,155 @@ function renderTruth() {
       if (presetOpEl instanceof HTMLSelectElement) presetOpEl.value = "custom";
       renderAll();
     };
+
+    td.addEventListener('touchstart', function(e) {
+      e.preventDefault(); // Prevent mouse events from firing (like click)
+      const currentTarget = e.currentTarget;
+      if (!currentTarget) return;
+      const bits = currentTarget.dataset.bits;
+      if (!bits) return;
+
+      if (truthCellTouchedOnce === bits) {
+        // This is the second touch on the same cell
+        const o = logicState.truth.find((t) => t.bits === bits);
+        if (!o) return;
+        o.out = o.out === 0 ? 1 : o.out === 1 ? null : 0;
+        logicState.preset = "custom";
+        const presetOpEl = $("presetOp");
+        if (presetOpEl instanceof HTMLSelectElement) presetOpEl.value = "custom";
+        
+        // Remove highlight and reset state BEFORE renderAll, 
+        // so renderAll doesn't re-apply a highlight based on a stale state.
+        currentTarget.classList.remove("hl-cell"); 
+        truthCellTouchedOnce = null; 
+        renderAll(); // This will redraw the table and cells, applying correct classes
+      } else {
+        // This is the first touch or touch on a new cell
+        // Remove highlight from previously touched cell if any
+        if (truthCellTouchedOnce) {
+          const prevCell = document.querySelector(`#truthTableCard .outCell[data-bits="${truthCellTouchedOnce}"]`);
+          if (prevCell) {
+            prevCell.classList.remove("hl-cell");
+          }
+        }
+        // Highlight current cell and set it as touched once
+        currentTarget.classList.add("hl-cell");
+        truthCellTouchedOnce = bits;
+        // Also update hover effects for other related elements
+        handleCellOrTermHover(currentTarget, true); 
+      }
+    }, { passive: false }); // passive: false because we call preventDefault
+
+    // We need to ensure mouse hover still works correctly and cleans up touch highlights
+    td.onmouseenter = () => {
+        // If a cell was touch-highlighted, and mouse enters a *different* cell,
+        // the touch highlight should be removed.
+        if (truthCellTouchedOnce && truthCellTouchedOnce !== td.dataset.bits) {
+            const prevTouchedCell = document.querySelector(`#truthTableCard .outCell[data-bits="${truthCellTouchedOnce}"]`);
+            if (prevTouchedCell) {
+                prevTouchedCell.classList.remove("hl-cell");
+                handleCellOrTermHover(prevTouchedCell, false); // Clean up its related highlights
+            }
+            truthCellTouchedOnce = null;
+        }
+        handleCellOrTermHover(td, true);
+    };
+    td.onmouseleave = () => {
+        // Only remove highlight if it's not the 'truthCellTouchedOnce'
+        // Otherwise, the touch highlight should persist until a second touch or another cell is touched.
+        if (truthCellTouchedOnce !== td.dataset.bits) {
+            handleCellOrTermHover(td, false);
+        }
+    };
+
   });
 }
 
+let kmapCellTouchedOnce = null; // Variable for KMap
 function renderKMap() {
   // Wait for the symmetry diagram to be rendered before attaching event listeners
   setTimeout(() => {
     document
       .querySelectorAll("#symmetry-diagram div[data-bits]")
       .forEach((td) => {
+        // Desktop click behavior
         td.onclick = (e) => {
+          if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+            return; // Handled by touch events
+          }
           const currentTarget = e.currentTarget;
-
           if (!currentTarget) return;
-
           const bits = currentTarget.dataset.bits;
-
           if (!bits) return;
-
           const currentValueIndex = logicState.truth.findIndex((t) => t.bits === bits);
-
-          if (currentValueIndex === -1) return; // No matching bits found
-
+          if (currentValueIndex === -1) return;
           const currentValue = logicState.truth[currentValueIndex];
-
           const nextValue =
             currentValue.out === 0 ? 1 : currentValue.out === 1 ? null : 0;
-
           logicState.truth[currentValueIndex] = {
             out: nextValue,
             bits: currentValue.bits,
           };
-
           logicState.preset = "custom";
           const presetOpEl = $("presetOp");
           if (presetOpEl instanceof HTMLSelectElement)
             presetOpEl.value = "custom";
           renderAll();
+        };
+
+        td.addEventListener('touchstart', function(e) {
+          e.preventDefault();
+          const currentTarget = e.currentTarget;
+          if (!currentTarget) return;
+          const bits = currentTarget.dataset.bits;
+          if (!bits) return;
+
+          if (kmapCellTouchedOnce === bits) {
+            const currentValueIndex = logicState.truth.findIndex((t) => t.bits === bits);
+            if (currentValueIndex === -1) return;
+            const currentValue = logicState.truth[currentValueIndex];
+            const nextValue =
+              currentValue.out === 0 ? 1 : currentValue.out === 1 ? null : 0;
+            logicState.truth[currentValueIndex] = {
+              out: nextValue,
+              bits: currentValue.bits,
+            };
+            logicState.preset = "custom";
+            const presetOpEl = $("presetOp");
+            if (presetOpEl instanceof HTMLSelectElement) presetOpEl.value = "custom";
+            
+            currentTarget.classList.remove("symmetry-hl-cell");
+            kmapCellTouchedOnce = null;
+            renderAll();
+          } else {
+            if (kmapCellTouchedOnce) {
+              const prevCell = document.querySelector(`#symmetry-diagram div[data-bits="${kmapCellTouchedOnce}"]`);
+              if (prevCell) {
+                prevCell.classList.remove("symmetry-hl-cell");
+              }
+            }
+            currentTarget.classList.add("symmetry-hl-cell");
+            kmapCellTouchedOnce = bits;
+            handleCellOrTermHover(currentTarget, true);
+          }
+        }, { passive: false });
+
+        // Mouse hover for KMap
+        td.onmouseenter = () => {
+            if (kmapCellTouchedOnce && kmapCellTouchedOnce !== td.dataset.bits) {
+                const prevTouchedCell = document.querySelector(`#symmetry-diagram div[data-bits="${kmapCellTouchedOnce}"]`);
+                if (prevTouchedCell) {
+                    prevTouchedCell.classList.remove("symmetry-hl-cell");
+                    handleCellOrTermHover(prevTouchedCell, false);
+                }
+                kmapCellTouchedOnce = null;
+            }
+            handleCellOrTermHover(td, true);
+        };
+        td.onmouseleave = () => {
+            if (kmapCellTouchedOnce !== td.dataset.bits) {
+                handleCellOrTermHover(td, false);
+            }
         };
       });
   }, 0);
