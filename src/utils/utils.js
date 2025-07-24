@@ -1,4 +1,4 @@
-import { VARIABLE_NAMES } from "./index.js";
+import { VARIABLE_NAMES } from "../index.js";
 
 
 export function debounce(func, wait) {

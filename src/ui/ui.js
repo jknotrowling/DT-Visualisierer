@@ -1,4 +1,4 @@
- import { renderSymmetryDiagram } from './symmetry-diagram/ui.js';
+ import { renderSymmetryDiagram } from './symmetry/ui.js';
 
 import {
   setSvgMux,
@@ -8,14 +8,14 @@ import {
   generateMuxDiagramStructure,
   calculateMuxLayout,
   renderMuxDiagram,
-} from "./mux.js";
+} from "../logic/mux.js";
 
-import { $, debounce, applyPreset} from "./utils.js";
+import { $, debounce, applyPreset} from "../utils/utils.js";
 
-import { buildTruth } from './truth.js';
+import { buildTruth } from '../logic/truth.js';
 
-import { minimize, expand, lit, simplifiedBooleanExpansionRecursive } from './booleanForm.js';
-import { logicState, VARIABLE_NAMES, expansionState, DEFAULT_LAYOUT_CONFIG } from './index.js';
+import { minimize, expand, lit, simplifiedBooleanExpansionRecursive } from '../logic/booleanForm.js';
+import { logicState, VARIABLE_NAMES, expansionState, DEFAULT_LAYOUT_CONFIG } from '../index.js';
 
 
 function genSpanId() {
@@ -30,12 +30,16 @@ function renderAll() {
   $("varCountLbl").textContent = logicState.nVars;
   renderTruth();
   renderKMap();
-  const sortedTruth = logicState.truth
-    .slice()
-    .sort((a, b) => a.bits.localeCompare(b.bits));
+  const truthByDecimalOrder = [];
+  for (let i = 0; i < (1 << logicState.nVars); i++) {
+    const binaryLSB = i.toString(2).padStart(logicState.nVars, '0').split('').reverse().join('');
+    const truthEntry = logicState.truth.find(t => t.bits === binaryLSB);
+    truthByDecimalOrder.push(truthEntry ? truthEntry.out : 0);
+  }
+
   renderSymmetryDiagram(
     logicState.nVars,
-    sortedTruth.map((t) => t.out)
+    truthByDecimalOrder
   );
 
   renderExpr();
@@ -47,6 +51,7 @@ function renderTruth() {
   let h = '<table class="truth"><tr>';
   for (let i = 0; i < logicState.nVars; i++) h += `<th>${VARIABLE_NAMES[i]}</th>`;
   h += "<th>f</th></tr>";
+  
   logicState.truth.forEach((r) => {
     const cls = r.out === 1 ? "on" : r.out === null ? "dc" : "off";
     const dsp = r.out === null ? "-" : r.out;

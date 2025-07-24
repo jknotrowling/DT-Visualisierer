@@ -1,5 +1,5 @@
-import { logicState, VARIABLE_NAMES } from "./index.js";
-import { bin } from "./utils.js";
+import { logicState, VARIABLE_NAMES } from "../index.js";
+import { bin } from "../utils/utils.js";
 
 export function buildTruth(oldTruthArray = null, previousNVars = -1) {
   const newNVars = logicState.nVars;

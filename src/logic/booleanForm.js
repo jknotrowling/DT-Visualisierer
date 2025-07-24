@@ -1,5 +1,5 @@
-import { bin, lbl } from "./utils.js";
-import { logicState, VARIABLE_NAMES } from "./index.js";
+import { bin, lbl } from "../utils/utils.js";
+import { logicState, VARIABLE_NAMES } from "../index.js";
 
 
 export function minimize(v_count, mins, dcs = []) {

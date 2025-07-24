@@ -1,4 +1,4 @@
-import {init } from "./ui.js";
+import {init } from "./ui/ui.js";
 
 
 export const VARIABLE_NAMES = ["A", "B", "C", "D"];

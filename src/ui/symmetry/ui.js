@@ -1,7 +1,7 @@
-import { truthTableToSymmetryDiagram, decimalToOctal, getNumberOfRowsAndCols} from './symmetryUtils.js';
+import { truthTableToSymmetryDiagram, decimalToOctal, getNumberOfRowsAndCols} from '../../logic/symmetry.js';
 
 
-import { VARIABLE_NAMES } from '../index.js';
+import { VARIABLE_NAMES } from '../../index.js';
 
 
 function renderTopFrameRow(wrapper, numberOfVariables) {
@@ -132,7 +132,10 @@ export function renderSymmetryDiagram(numberOfVariables, truthTable) {
             const cell = document.createElement("div");
             cell.classList.add(diagrammRow[c].val ? "on" : (diagrammRow[c].val === null ? "dc": "off"))
             cell.classList.add("symmetry-diagram-cell", "outCell")
-            cell.setAttribute("data-bits", diagrammRow[c].index.toString(2).padStart(numberOfVariables, '0'));
+            const decimalIndex = diagrammRow[c].index;
+            const binaryMSB = decimalIndex.toString(2).padStart(numberOfVariables, '0');
+            const binaryLSB = binaryMSB.split('').reverse().join('');
+            cell.setAttribute("data-bits", binaryLSB);
             const octalIndexValue = decimalToOctal(diagrammRow[c].index);
 
             const octalIndex = document.createElement("span");

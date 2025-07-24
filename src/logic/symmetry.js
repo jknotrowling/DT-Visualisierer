@@ -67,7 +67,7 @@ export function truthTableToSymmetryDiagram(numberOfVariables, truthTable) {
     const symmetryDiagram = createEmptySymmetryDiagram(numberOfVariables);
    
     for (let i = 0; i < 2**numberOfVariables; i++) {
-        const [r, c] = mapDecimalToSymmetryDiagramField(i);
+        const [r, c] = mapDecimalToSymmetryDiagramField(i, numberOfVariables);
         if (r !== null && c !== null) {
             symmetryDiagram[r][c] = truthTable[i];
         }
