@@ -1,144 +1,525 @@
-  /* Inhalt von kit-layout.css */
-    :root{
-      --kit-blue:#003366;
-      --kit-green:#008C3D;
-      --card-bg:#ffffff;
-      --page-bg:#f8f9fb;
-      --text:#000;
-      --shadow:0 1px 6px rgba(0,0,0,.08);
-    }
+/* Inhalt von kit-layout.css */
+:root {
+  --kit-blue: #003366;
+  --kit-green: #008c3d;
+  --card-bg: #ffffff;
+  --page-bg: #f8f9fb;
+  --text: #000;
+  --shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+}
 
-    /* globale Resets */
-    *,*::before,*::after{box-sizing:border-box;}
-    body{margin:0;font-family:"Source Sans Pro",Arial,Helvetica,sans-serif;
-        background:var(--page-bg);color:var(--text);line-height:1.5;}
+/* globale Resets */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  line-height: 1.5;
+  font-family: 'Rubik', sans-serif;
+  background: radial-gradient(circle, #fff, #003366);
+  overflow: auto;
+  height: 100%;
+  scroll-behavior: smooth;
+}
 
-    /* Page-Rahmen (Anlehnung an PDF) */
-    .page{max-width:1200px;margin:2rem auto;padding:1.5rem;border:2px solid var(--kit-blue);}
+/* Page-Rahmen (Anlehnung an PDF) */
+.page {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  /* border: 2px solid var(--kit-blue); */
+}
 
-    /* Header */
-    .page-header{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
-                justify-content:space-between;margin-bottom:2rem;}
-    .logo{height:60px;width:auto;}
-    .title-group{text-align:center;flex:1;} /* Allow title group to take available space */
-    .title-group h1{font-size:1.25rem;font-weight:600;margin:0;}
-    .title-group h2{font-size:2rem;color:var(--kit-blue);margin:.25rem 0 0;}
-    .title-group h3{font-size:1.5rem;margin:.15rem 0 0;}
+/* Header Card */
+.header-card {
+  margin-bottom: 2rem;
+}
 
-    /* Card-Grid */
-    .card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
-            gap:1.5rem;}
+.header-card .inner-card {
+  background: linear-gradient(135deg, var(--card-bg) 0%, #f8f9fb 100%);
+  border: 2px solid var(--kit-blue);
+}
 
-    /* Card */
-    .card{background:var(--card-bg);border:2px solid var(--kit-blue);
-        border-radius:6px;box-shadow:var(--shadow);display:flex;flex-direction:column;}
-    .card-title{background:var(--kit-blue);color:#fff;padding:.5rem 1rem;margin:0;
-                font-size:1.1rem;font-weight:600;border-radius:4px 4px 0 0;} /* Ensure top corners are rounded with border */
-    .card-body{padding:1rem;flex:1;overflow:auto;} /* overflow:auto to handle content larger than card */
+/* Header */
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  padding: 1.5rem 1rem 1rem 1rem;
+  background: linear-gradient(90deg, rgba(0,51,102,0.05) 0%, rgba(0,140,61,0.05) 100%);
+  border-radius: 8px 8px 0 0;
+  border-bottom: 2px solid rgba(0,51,102,0.1);
+}
 
-    /* Media Queries für Mobile */
-    @media(max-width:768px){ /* Adjusted breakpoint for better responsiveness of header */
-    .page-header{justify-content:center; text-align:center;} /* Center items on smaller screens */
-    .title-group{min-width:100%; order: -1; margin-bottom:1rem;} /* Title full width and first on mobile */
-    }
+.controls-section {
+  border-top: 1px solid rgba(0,51,102,0.1);
+  background: #f8f9fb;
+}
 
-    @media(max-width:480px){
-    .logo{height:40px;}
-    .title-group h2{font-size:1.5rem;}
-    .page{margin:1rem auto; padding:1rem;}
-    .card-grid{grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1rem;} /* Smaller minmax for very small devices */
-    }
+/* Configuration Cards */
+.config-card {
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid;
+}
 
-    /* --- Ende Inhalt von kit-layout.css --- */
+.config-card-blue {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-color: #bfdbfe;
+}
 
-    /* Alte Stile, die potenziell noch benötigt werden oder später aufgeräumt werden */
-    /* body {font-family:system-ui,sans-serif;} */ /* Überschrieben und entfernt */
-    button,select{padding:4px 8px;font-size:1rem;cursor:pointer}
-    #landscapeToggleBtn {
-        width: 30px; 
-        height: 30px; 
-        padding: 2px; /* Reduced padding to give image more space */
-        vertical-align: middle; /* Align with other form elements */
-        border: 1px solid #ccc; /* Optional: adds a light border */
-        background-color: #f0f0f0; /* Optional: light background color */
-    }
-    #landscapeToggleBtn img {
-        width: 100%;
-        height: 100%;
-        display: block; /* Remove extra space below image */
-    }
-    table{border-collapse:collapse;margin:12px 0}
-    th,td{border:1px solid #888;padding:4px 6px;text-align:center}
-    th{background:#eee}
-    .truth th,.truth td,.outCell{width:42px}
-    .outCell,.kmap td{height:42px;cursor:pointer}
-    .on {background:#4caf50;color:#000;font-weight:bold} /* Textfarbe auf schwarz für besseren Kontrast */
-    .off{background:#fafafa}
-    .dc {background:#ff9800;color:#000;font-weight:bold} /* Textfarbe auf schwarz für besseren Kontrast */
+.config-card-green {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-color: #bbf7d0;
+}
 
-    /* Highlight Style for table cells */
-    .hl-cell {
-        outline:2px solid #e91e63 !important;
-        background:#ffebee !important;
-        color:#000 !important;
-    }
+.config-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
 
-    .symmetry-hl-cell {
-        border: 2px solid #e91e63 !important;
-        background:#ffebee !important;
-        color:#000 !important;
-        outline: none !important; /* Remove outline to avoid double borders */
-    }
+.config-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  margin-right: 0.75rem;
+}
 
-    /* Highlight Style for Boolean Expansion and active DNF/KMF/DMF terms (Color) */
-    /* Kontrast #F57C00 auf #FFF3E0 ist 3.05:1 - grenzwertig für normalen Text. Belassen gemäß Anforderung "Color". */
-    .hl-color {
-        color: #F57C00 !important; /* Orange */
-        background-color: #FFF3E0 !important; /* Light orange background */
-        border-radius: 3px !important;
-        padding: 0 1px; /* Slight padding for background visibility */
-    }
+.config-dot-blue {
+  background-color: #3b82f6;
+}
 
-    .kmap th.varhead{width:40px;height:36px}
-    .term{padding:2px 6px;margin:2px;border-radius:4px;cursor:pointer;display:inline-block}
-    .dnfTerm{background:#d0eaff}.cnfTerm{background:#ffe0e0}
-    .dmfTerm{background:#b2ffb2}.kmfTerm{background:#ffd59e}
-    .ov{text-decoration:overline}
-    pre{white-space:pre-wrap;word-break:break-word; margin-top: 5px;}
-    pre span { cursor: default; }
+.config-dot-green {
+  background-color: #10b981;
+}
 
-    /* Spezifische Stile für Mux-Diagramm, falls noch benötigt */
-    #muxDiagramSvg { display: block; margin: 0 auto; /* Zentrierung, falls nötig */ width: 100%; height: 100%; }
+.config-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
 
-    #muxCard {
-      grid-column: span 2;
-    }
+.config-title-blue {
+  color: #1e3a8a;
+}
 
-    #muxWrap {
-      flex-grow: 1; /* Allow muxWrap to grow */
-      display: flex; /* Use flex to make SVG fill height */
-      min-height: 300px; /* Minimum height for the container */
-    }
+.config-title-green {
+  color: #064e3b;
+}
 
-    /* Landscape Mode Adjustments */
-    .page.landscape-mode {
-      max-width: 95%; /* Use a percentage for better responsiveness, or a large fixed value like 1800px */
-      /* Consider adjusting padding if needed */
-    }
+/* Modern Select */
+.modern-select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background: white;
+  font-size: 1rem;
+  color: #374151;
+  transition: all 0.2s ease;
+}
 
-    .page.landscape-mode .card-grid {
-      grid-template-columns: repeat(5, 1fr); /* Assuming 5 cards, display them in 5 equal columns */
-      /* Adjust gap if necessary, e.g., gap: 1rem; */
-    }
+.modern-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
 
-    /* Ensure cards in landscape mode don't try to maintain a tall aspect ratio if their content is small */
-    .page.landscape-mode .card {
-      min-height: 0; /* Reset min-height if it was set elsewhere or inherited causing issues */
-    }
+/* Variable Controls */
+.variable-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
 
-    /* Specific adjustments for muxCard in landscape if it spans columns */
-    .page.landscape-mode #muxCard {
-      grid-column: span 1; /* Override previous span to make it fit in the row */
-       /* If muxCard was taking more space, ensure it also fits. 
+.var-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 2px solid #10b981;
+  border-radius: 0.5rem;
+  background: white;
+  color: #10b981;
+  font-size: 1.25rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.var-btn:hover {
+  background: #10b981;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.var-count {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #064e3b;
+  min-width: 2rem;
+  text-align: center;
+}
+
+/* Options Section */
+.options-title {
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.option-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.option-card:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.option-checkbox {
+  margin-right: 0.5rem;
+  width: 1rem;
+  height: 1rem;
+  accent-color: #3b82f6;
+}
+
+.option-label {
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+}
+
+/* Landscape Button */
+.landscape-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  padding: 0.75rem;
+  min-height: 3rem;
+}
+
+.landscape-btn:hover {
+  border-color: #3b82f6;
+  background: #f8fafc;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.landscape-btn img {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  transition: transform 0.15s ease-in-out;
+}
+
+.landscape-btn:hover img {
+  transform: rotate(90deg);
+}
+.logo {
+  height: 70px;
+  width: auto;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+  transition: transform 0.2s ease;
+}
+
+.logo:hover {
+  transform: scale(1.05);
+}
+.title-group {
+  text-align: center;
+  flex: 1;
+  padding: 0 1rem;
+} /* Allow title group to take available space */
+.title-group h1 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--kit-blue);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+.title-group h2 {
+  font-size: 2rem;
+  color: var(--kit-blue);
+  margin: 0.25rem 0 0;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.title-group h3 {
+  font-size: 1.5rem;
+  margin: 0.15rem 0 0;
+  color: var(--kit-green);
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* Card-Grid */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+/* Card */
+.card {
+  display: flex;
+  flex-direction: column;
+   padding: 3px;
+    word-break: break-word;
+    border-radius: 11px;
+    background: rgba(255, 255, 255, 0.59);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    position: initial;
+    overflow: visible;
+}
+
+.inner-card {
+  
+  background: var(--card-bg);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  overflow: visible; /* Ensure content doesn't overflow card */
+  height: 100%;
+} /* Inner card for better structure */
+
+.card-title {
+  background: var(--kit-blue);
+  color: #fff;
+  padding: 0.5rem 1rem;
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 4px 4px 0 0;
+} /* Ensure top corners are rounded with border */
+.card-body {
+  padding: 1rem;
+  flex: 1;
+  overflow: auto;
+} /* overflow:auto to handle content larger than card */
+
+/* Media Queries für Mobile */
+@media (max-width: 768px) {
+  /* Adjusted breakpoint for better responsiveness of header */
+  .page-header {
+    justify-content: center;
+    text-align: center;
+    padding: 1rem;
+  } /* Center items on smaller screens */
+  .title-group {
+    min-width: 100%;
+    order: -1;
+    margin-bottom: 1rem;
+    padding: 0;
+  } /* Title full width and first on mobile */
+  .logo {
+    height: 50px;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo {
+    height: 40px;
+  }
+  .title-group h2 {
+    font-size: 1.5rem;
+  }
+  .page {
+    margin: 1rem auto;
+    padding: 1rem;
+  }
+  .card-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+  } /* Smaller minmax for very small devices */
+}
+
+/* --- Ende Inhalt von kit-layout.css --- */
+
+/* Old button and select styles - updated for compatibility */
+button:not(.var-btn):not(.landscape-btn),
+select:not(.modern-select) {
+  padding: 4px 8px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+/* Legacy landscape button styles - now handled by new .landscape-btn */
+#landscapeToggleBtn.old-style {
+  width: 30px;
+  height: 30px;
+  padding: 2px;
+  vertical-align: middle;
+  border: 1px solid #ccc;
+  background-color: #f0f0f0;
+}
+#landscapeToggleBtn.old-style img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+table {
+  border-collapse: collapse;
+  margin: 12px 0;
+}
+th,
+td {
+  border: 1px solid #888;
+  padding: 4px 6px;
+  text-align: center;
+}
+th {
+  background: #eee;
+}
+.truth th,
+.truth td,
+.outCell {
+  /* width: 42px; */
+}
+.outCell,
+.kmap td {
+  height: 42px;
+  cursor: pointer;
+}
+.on {
+  background: #4caf50;
+  color: #000;
+  font-weight: bold;
+} /* Textfarbe auf schwarz für besseren Kontrast */
+.off {
+  background: #fafafa;
+}
+.dc {
+  background: #ff9800;
+  color: #000;
+  font-weight: bold;
+} /* Textfarbe auf schwarz für besseren Kontrast */
+
+/* Highlight Style for table cells */
+.hl-cell {
+  outline: 2px solid #e91e63 !important;
+  background: #ffebee !important;
+  color: #000 !important;
+}
+
+.symmetry-hl-cell {
+  border: 2px solid #e91e63 !important;
+  background: #ffebee !important;
+  color: #000 !important;
+  outline: none !important; /* Remove outline to avoid double borders */
+}
+
+/* Highlight Style for Boolean Expansion and active DNF/KMF/DMF terms (Color) */
+/* Kontrast #F57C00 auf #FFF3E0 ist 3.05:1 - grenzwertig für normalen Text. Belassen gemäß Anforderung "Color". */
+.hl-color {
+  color: #f57c00 !important; /* Orange */
+  background-color: #fff3e0 !important; /* Light orange background */
+  border-radius: 3px !important;
+  padding: 0 1px; /* Slight padding for background visibility */
+}
+
+.kmap th.varhead {
+  width: 40px;
+  height: 36px;
+}
+.term {
+  padding: 2px 6px;
+  margin: 2px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-block;
+}
+.dnfTerm {
+  background: #d0eaff;
+}
+.cnfTerm {
+  background: #ffe0e0;
+}
+.dmfTerm {
+  background: #b2ffb2;
+}
+.kmfTerm {
+  background: #ffd59e;
+}
+.ov {
+  text-decoration: overline;
+}
+pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin-top: 5px;
+}
+pre span {
+  cursor: default;
+}
+
+/* Spezifische Stile für Mux-Diagramm, falls noch benötigt */
+#muxDiagramSvg {
+  display: block;
+  margin: 0 auto; /* Zentrierung, falls nötig */
+  width: 100%;
+  height: 100%;
+}
+
+#muxCard {
+  grid-column: span 2;
+}
+
+#muxWrap {
+  flex-grow: 1; /* Allow muxWrap to grow */
+  display: flex; /* Use flex to make SVG fill height */
+  min-height: 300px; /* Minimum height for the container */
+}
+
+/* Landscape Mode Adjustments */
+.page.landscape-mode {
+  max-width: 95%; /* Use a percentage for better responsiveness, or a large fixed value like 1800px */
+  /* Consider adjusting padding if needed */
+}
+
+.page.landscape-mode .card-grid {
+  grid-template-columns: repeat(
+    5,
+    1fr
+  ); /* Assuming 5 cards, display them in 5 equal columns */
+  /* Adjust gap if necessary, e.g., gap: 1rem; */
+}
+
+/* Ensure cards in landscape mode don't try to maintain a tall aspect ratio if their content is small */
+.page.landscape-mode .card {
+  min-height: 0; /* Reset min-height if it was set elsewhere or inherited causing issues */
+}
+
+/* Specific adjustments for muxCard in landscape if it spans columns */
+.page.landscape-mode #muxCard {
+  grid-column: span 1; /* Override previous span to make it fit in the row */
+  /* If muxCard was taking more space, ensure it also fits. 
          Its height might need to be managed by its content or specific landscape styles. */
-    }
+}
+
+.modern-select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background-color: #fff;
+  color: #374151;
+  font-size: 1rem;
+  transition: border-color 0.2s ease-in-out;
+}

@@ -48,17 +48,31 @@ function renderAll() {
 }
 
 function renderTruth() {
-  let h = '<table class="truth"><tr>';
-  for (let i = 0; i < logicState.nVars; i++) h += `<th>${VARIABLE_NAMES[i]}</th>`;
-  h += "<th>f</th></tr>";
   
-  logicState.truth.forEach((r) => {
-    const cls = r.out === 1 ? "on" : r.out === null ? "dc" : "off";
-    const dsp = r.out === null ? "-" : r.out;
-    h += `<tr><td>${[...r.bits].join("</td><td>")}</td>
-        <td class="outCell ${cls}" data-bits="${r.bits}">${dsp}</td></tr>`;
-  });
-  h += "</table>";
+  const nVars = logicState.nVars;
+  const header = [...VARIABLE_NAMES.slice(0, nVars), 'f'];
+  const gridCols = nVars + 1;
+
+  const cellWidthClass = "min-w-[2.5rem] px-3";
+  // Use Tailwind's grid-cols-4, grid-cols-5, etc. for up to 4 variables
+  const gridColsClass = `grid-cols-${gridCols > 6 ? 6 : gridCols}`;
+  let h = `<div class="grid ${gridColsClass} gap-2 bg-white rounded-xl p-4 ">
+    ${header.map(
+      th => `<div class="${cellWidthClass} text-center font-semibold text-gray-700 bg-gray-100 rounded py-2">${th}</div>`
+    ).join('')}
+    ${logicState.truth.map(r => {
+      const cellBase = `${cellWidthClass} flex items-center justify-center text-center rounded transition cursor-pointer border font-bold`;
+      let outClass = "";
+      let outText = r.out === null ? "-" : r.out;
+      if (r.out === 1) outClass = "bg-green-400/80 text-white border-green-500 shadow "
+      else if (r.out === 0) outClass = "";
+      else outClass = "bg-yellow-200 text-yellow-800 italic border-yellow-400 ";
+      return [
+        ...[...r.bits].map(b => `<div class="${cellBase} bg-gray-50 border-gray-200">${b}</div>`),
+        `<div class="outCell ${cellBase} ${outClass}" data-bits="${r.bits}">${outText}</div>`
+      ].join('');
+    }).join('')}
+  </div>`;
   const truthWrap = document.querySelector(
     "#truthTableCard .card-body #truthWrap"
   );
