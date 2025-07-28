@@ -64,9 +64,9 @@ function renderTruth() {
       const cellBase = `${cellWidthClass} flex items-center justify-center text-center rounded transition cursor-pointer border font-bold`;
       let outClass = "";
       let outText = r.out === null ? "-" : r.out;
-      if (r.out === 1) outClass = "bg-green-400/80 text-white border-green-500 shadow "
+      if (r.out === 1) outClass = "bg-green-100 border-green-600 text-green-700"
       else if (r.out === 0) outClass = "";
-      else outClass = "bg-yellow-200 text-yellow-800 italic border-yellow-400 ";
+      else outClass = "bg-yellow-100 border-yellow-600 text-yellow-700";
       return [
         ...[...r.bits].map(b => `<div class="${cellBase} bg-gray-50 border-gray-200">${b}</div>`),
         `<div class="outCell ${cellBase} ${outClass}" data-bits="${r.bits}">${outText}</div>`
