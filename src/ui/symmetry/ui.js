@@ -64,7 +64,7 @@ function renderLeftFrameCell(row, index, numberOfVariables) {
 
 function renderRightFrameCell(row, index, numberOfVariables) {
     const rightCell = document.createElement("div");
-    rightCell.classList.add("symmetry-diagram-frame-cell", "symmetry-diagram-right-frame-cell", "text-gray-300");
+    rightCell.classList.add("symmetry-diagram-frame-cell", "symmetry-diagram-right-frame-cell");
     if(numberOfVariables < 4) return;
     rightCell.textContent = index === 2 ? VARIABLE_NAMES[3] : " ";
     if(index === 2) {

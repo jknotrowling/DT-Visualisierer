@@ -22,7 +22,8 @@ export const DEFAULT_LAYOUT_CONFIG = {
 export const logicState = {
   nVars: 3,
   truth: [],
-  preset: "xor"
+  preset: "AND",
+  customFunction: "",
 };
 
 

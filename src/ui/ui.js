@@ -10,12 +10,15 @@ import {
   renderMuxDiagram,
 } from "../logic/mux.js";
 
-import { $, debounce, applyPreset} from "../utils/utils.js";
+import { $, debounce, applyPreset, truthArrayToTruthTable} from "../utils/utils.js";
 
 import { buildTruth } from '../logic/truth.js';
 
 import { minimize, expand, lit, simplifiedBooleanExpansionRecursive } from '../logic/booleanForm.js';
 import { logicState, VARIABLE_NAMES, expansionState, DEFAULT_LAYOUT_CONFIG } from '../index.js';
+import { generateDNFfromTruthTable, parseLogicFunction } from '../logic/parser.js';
+
+
 
 
 function genSpanId() {
@@ -30,6 +33,7 @@ function renderAll() {
   $("varCountLbl").textContent = logicState.nVars;
   renderTruth();
   renderKMap();
+  renderCurrentFunctionExpression();
   const truthByDecimalOrder = [];
   for (let i = 0; i < (1 << logicState.nVars); i++) {
     const binaryLSB = i.toString(2).padStart(logicState.nVars, '0').split('').reverse().join('');
@@ -87,7 +91,9 @@ function renderTruth() {
       const o = logicState.truth.find((t) => t.bits === bits);
       if (!o) return;
       o.out = o.out === 0 ? 1 : o.out === 1 ? null : 0;
+
       logicState.preset = "custom";
+      logicState.customFunction = generateDNFfromTruthTable(logicState.truth.map(t => t.out), VARIABLE_NAMES.slice(0, logicState.nVars));
       const presetOpEl = $("presetOp");
       if (presetOpEl instanceof HTMLSelectElement) presetOpEl.value = "custom";
       renderAll();
@@ -124,6 +130,7 @@ function renderKMap() {
             bits: currentValue.bits,
           };
 
+          logicState.customFunction = generateDNFfromTruthTable(logicState.truth.map(t => t.out), VARIABLE_NAMES.slice(0, logicState.nVars));
           logicState.preset = "custom";
           const presetOpEl = $("presetOp");
           if (presetOpEl instanceof HTMLSelectElement)
@@ -151,7 +158,10 @@ function renderExpr() {
   const dmf = minimize(logicState.nVars, ones, dcs);
   const kmf = minimize(logicState.nVars, zeros, dcs);
 
-  let h = "<strong>DNF:</strong><br>";
+  let h = `<div class="config-header">
+                    <div class="config-dot config-dot-blue"></div>
+                    <span class="config-title config-title-blue">DNF</span>
+                  </div>` //"<strong>DNF:</strong><br>";
   h += dnfR.length
     ? dnfR
         .map(
@@ -161,10 +171,13 @@ function renderExpr() {
               "dnf"
             )}</span>`
         )
-        .join(" ∨ ")
+        .join(" v ")
     : "0";
 
-  h += "<hr><strong>KNF:</strong><br>";
+  h += `<hr class="mt-2"><div class="config-header">
+                    <div class="config-dot config-dot-red"></div>
+                    <span class="config-title config-title-red">KNF</span>
+                  </div>`//"<hr><strong>KNF:</strong><br>";
   h += cnfR.length
     ? cnfR
         .map(
@@ -177,7 +190,10 @@ function renderExpr() {
         .join(" ∧ ")
     : "1";
 
-  h += "<hr><strong>DMF (min):</strong><br>";
+  h += `<hr class="mt-2"><div class="config-header">
+                    <div class="config-dot config-dot-green"></div>
+                    <span class="config-title config-title-green">DMF (min)</span>
+                  </div>`//"<hr><strong>DMF (min):</strong><br>";
   h += dmf.length
     ? dmf
         .map(
@@ -189,7 +205,10 @@ function renderExpr() {
         .join(" ∨ ")
     : "0";
 
-  h += "<hr><strong>KMF (min):</strong><br>";
+  h += `<hr class="mt-2"><div class="config-header">
+                    <div class="config-dot config-dot-orange"></div>
+                    <span class="config-title config-title-orange">KMF (min)</span>
+                  </div>`//"<hr><strong>KMF (min):</strong><br>";
   h += kmf.length
     ? kmf
         .map(
@@ -825,4 +844,84 @@ export function init() {
       debouncedAdjustMuxHeight();
     };
   }
+}
+
+function renderCurrentFunctionExpression() {
+  const currentFunction = logicState.preset;
+  const nVars = logicState.nVars;
+  const currentFunctionEl = $("current-function-expression");
+  if (!currentFunctionEl) return;
+
+  // Variable names: A, B, C, D ...
+  const varNames = VARIABLE_NAMES;
+  const usedVars = varNames.slice(0, nVars);
+
+  let expr = "";
+  switch ((currentFunction || "").toUpperCase()) {
+    case "XOR":
+      expr = usedVars.join(" ⊕ ");
+      break;
+    case "AND":
+      expr = usedVars.join(" ∧ ");
+      break;
+    case "OR":
+      expr = usedVars.join(" ∨ ");
+      break;
+    case "NAND": {
+      const inner = usedVars.length > 1 ? `(${usedVars.join(" ∧ ")})` : usedVars[0];
+      expr = `<span style='text-decoration:overline'>${inner}</span>`;
+      break;
+    }
+    case "NOR": {
+      const inner = usedVars.length > 1 ? `(${usedVars.join(" ∨ ")})` : usedVars[0];
+      expr = `<span style='text-decoration:overline'>${inner}</span>`;
+      break;
+    }
+    case "XNOR":
+      expr = `<span style='text-decoration:overline'>(${usedVars.join(" ⊕ ")})</span>`;
+      break;
+    case "MAJ":
+      expr = `maj(${usedVars.join(", ")})`;
+      break;
+    case "MIN":
+      expr = `min(${usedVars.join(", ")})`;
+      break;
+    case "CUSTOM":
+      expr = `<input class="border rounded px-2 py-1" id="custom-function" placeholder="z.b. not(a) +b*c" />`;
+      break;
+    default:
+      expr = usedVars.join(", ");
+  }
+
+  currentFunctionEl.innerHTML = `f(${usedVars.join(",")})= ${expr}`;
+
+  const customFunctionInput = $("custom-function");
+  if (customFunctionInput instanceof HTMLInputElement) {
+    customFunctionInput.value = logicState.customFunction || "";
+    customFunctionInput.onchange = () => {
+      logicState.customFunction = customFunctionInput.value.trim();
+      // logicState.preset = "custom";
+      // const presetOpEl = $("presetOp");
+      // if (presetOpEl instanceof HTMLSelectElement) presetOpEl.value = "custom";
+      
+    try { const { variables, truthArray } = parseLogicFunction(logicState.customFunction)
+      logicState.nVars = variables.length;
+      
+      logicState.truth = truthArrayToTruthTable(truthArray, variables.length);
+        renderAll();
+      } catch(error) {
+        console.error("Error parsing custom function:", error);
+          customFunctionInput.classList.add("text-red-500")
+          // add litle error message
+          customFunctionInput.setCustomValidity(error.message);
+          customFunctionInput.reportValidity();
+      }
+    
+    };
+  } else {
+    console.warn("Custom function input element not found or not an input element.");
+  }
+
+ 
+  
 }

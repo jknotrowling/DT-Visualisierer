@@ -43,3 +43,8 @@ export function applyPreset(logicState) {
     }
   });
 }
+
+
+export function truthArrayToTruthTable(truthArray, nVars) {
+  return truthArray.map((out,index) => ({out, bits: index.toString(2).padStart(nVars, "0")}));
+}

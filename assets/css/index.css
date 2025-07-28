@@ -98,6 +98,14 @@ body {
   background-color: #10b981;
 }
 
+.config-dot-orange {
+  background-color: #fdba74;
+}
+
+.config-dot-red {
+  background-color: #ef4444;
+}
+
 .config-title {
   font-size: 1.125rem;
   font-weight: 600;
@@ -109,6 +117,14 @@ body {
 
 .config-title-green {
   color: #064e3b;
+}
+
+.config-title-red {
+  color: #b91c1c;
+}
+
+.config-title-orange {
+  color: #fdba74;
 }
 
 /* Modern Select */
@@ -439,11 +455,22 @@ th {
   height: 36px;
 }
 .term {
-  padding: 2px 6px;
-  margin: 2px;
-  border-radius: 4px;
+  padding: 4px 10px;
+  margin: 2px 4px;
+  border-radius: 6px;
+  background: #f3f6fa;
+  color: #1e3a8a;
+  font-weight: 500;
+  font-size: 1rem;
+  box-shadow: 0 1px 4px rgba(0,51,102,0.06);
+  border: 1px solid #dbeafe;
   cursor: pointer;
   display: inline-block;
+  
+  
+}
+.term:hover {
+  transform: scale(1.02);
 }
 .dnfTerm {
   background: #d0eaff;
