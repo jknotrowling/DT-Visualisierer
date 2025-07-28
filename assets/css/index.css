@@ -1,3 +1,17 @@
+/* not(a) als Überstrich */
+.logic-not {
+  text-decoration: overline;
+  text-decoration-thickness: 2px;
+  text-decoration-color: #1e90ff;
+}
+/* Logik-Symbole optisch hervorheben */
+.logic-symbol {
+  color: #1e90ff;
+  font-weight: bold;
+  font-family: 'Fira Mono', 'Consolas', 'Menlo', monospace;
+  font-size: 1.1em;
+  letter-spacing: 0.05em;
+}
 /* Inhalt von kit-layout.css */
 :root {
   --kit-blue: #003366;

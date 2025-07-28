@@ -1,3 +1,7 @@
+// Hilfsfunktion: Identitätsfunktion (macht nichts mehr)
+function renderLogicExpr(expr) {
+  return expr;
+}
  import { renderSymmetryDiagram } from './symmetry/ui.js';
 
 import {
@@ -16,7 +20,7 @@ import { buildTruth } from '../logic/truth.js';
 
 import { minimize, expand, lit, simplifiedBooleanExpansionRecursive } from '../logic/booleanForm.js';
 import { logicState, VARIABLE_NAMES, expansionState, DEFAULT_LAYOUT_CONFIG } from '../index.js';
-import { generateDNFfromTruthTable, parseLogicFunction } from '../logic/parser.js';
+import { parseLogicFunction } from '../logic/parser.js';
 
 
 
@@ -93,7 +97,7 @@ function renderTruth() {
       o.out = o.out === 0 ? 1 : o.out === 1 ? null : 0;
 
       logicState.preset = "custom";
-      logicState.customFunction = generateDNFfromTruthTable(logicState.truth.map(t => t.out), VARIABLE_NAMES.slice(0, logicState.nVars));
+      logicState.customFunction = ""
       const presetOpEl = $("presetOp");
       if (presetOpEl instanceof HTMLSelectElement) presetOpEl.value = "custom";
       renderAll();
@@ -130,7 +134,7 @@ function renderKMap() {
             bits: currentValue.bits,
           };
 
-          logicState.customFunction = generateDNFfromTruthTable(logicState.truth.map(t => t.out), VARIABLE_NAMES.slice(0, logicState.nVars));
+          logicState.customFunction = ""
           logicState.preset = "custom";
           const presetOpEl = $("presetOp");
           if (presetOpEl instanceof HTMLSelectElement)
@@ -887,7 +891,7 @@ function renderCurrentFunctionExpression() {
       expr = `min(${usedVars.join(", ")})`;
       break;
     case "CUSTOM":
-      expr = `<input class="border rounded px-2 py-1" id="custom-function" placeholder="z.b. not(a) +b*c" />`;
+      expr = '<input class="border rounded px-2 py-1" id="custom-function" placeholder="z.B. not(a) ∨ b∧c" />';
       break;
     default:
       expr = usedVars.join(", ");
@@ -898,26 +902,54 @@ function renderCurrentFunctionExpression() {
   const customFunctionInput = $("custom-function");
   if (customFunctionInput instanceof HTMLInputElement) {
     customFunctionInput.value = logicState.customFunction || "";
+
+    // Automatische Umwandlung von + zu ∨ und * zu ∧ beim Tippen
+    customFunctionInput.addEventListener('input', (e) => {
+      let val = customFunctionInput.value;
+      let newVal = val.replace(/\+/g, '∨').replace(/\*/g, '∧');
+      if (val !== newVal) {
+        const pos = customFunctionInput.selectionStart;
+        customFunctionInput.value = newVal;
+        // Cursor-Position anpassen
+        customFunctionInput.selectionStart = customFunctionInput.selectionEnd = pos;
+      }
+    });
+
     customFunctionInput.onchange = () => {
       logicState.customFunction = customFunctionInput.value.trim();
-      // logicState.preset = "custom";
-      // const presetOpEl = $("presetOp");
-      // if (presetOpEl instanceof HTMLSelectElement) presetOpEl.value = "custom";
-      
-    try { const { variables, truthArray } = parseLogicFunction(logicState.customFunction)
-      logicState.nVars = variables.length;
-      
-      logicState.truth = truthArrayToTruthTable(truthArray, variables.length);
+      try {
+        const { variables, truthArray } = parseLogicFunction(logicState.customFunction)
+        logicState.nVars = variables.length;
+        logicState.truth = truthArrayToTruthTable(truthArray, variables.length);
         renderAll();
       } catch(error) {
         console.error("Error parsing custom function:", error);
-          customFunctionInput.classList.add("text-red-500")
-          // add litle error message
-          customFunctionInput.setCustomValidity(error.message);
-          customFunctionInput.reportValidity();
+        customFunctionInput.classList.add("text-red-500")
+        customFunctionInput.setCustomValidity(error.message);
+        customFunctionInput.reportValidity();
       }
-    
     };
+
+    // Symbol-Buttons einfügen
+    document.querySelectorAll('.insert-symbol-btn').forEach(btn => {
+      btn.onclick = (e) => {
+        const symbol = btn.getAttribute('data-symbol');
+        const start = customFunctionInput.selectionStart;
+        const end = customFunctionInput.selectionEnd;
+        const val = customFunctionInput.value;
+        let insert = symbol;
+        // Bei not() Cursor in die Klammer setzen
+        let cursorOffset = 0;
+        if(symbol === 'not()') {
+          insert = 'not()';
+          cursorOffset = 4;
+        }
+        customFunctionInput.value = val.slice(0, start) + insert + val.slice(end);
+        customFunctionInput.focus();
+        customFunctionInput.selectionStart = customFunctionInput.selectionEnd = start + insert.length - cursorOffset;
+        customFunctionInput.dispatchEvent(new Event('change'));
+      };
+    });
   } else {
     console.warn("Custom function input element not found or not an input element.");
   }

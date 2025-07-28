@@ -1,10 +1,10 @@
-import {init } from "./ui/ui.js";
+
+import { init } from "./ui/ui.js";
+import { buildTruth } from "./logic/truth.js";
+import { applyPreset } from "./utils/utils.js";
 
 
 export const VARIABLE_NAMES = ["A", "B", "C", "D"];
-
-
-
 
 export const expansionState = {
     spanData: {},
@@ -19,12 +19,17 @@ export const DEFAULT_LAYOUT_CONFIG = {
   spacingY: 30,
 };
 
+
 export const logicState = {
   nVars: 3,
   truth: [],
   preset: "AND",
   customFunction: "",
 };
+
+// Initialisiere truth passend zum Preset
+
+applyPreset(logicState);
 
 
 
