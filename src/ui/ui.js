@@ -736,12 +736,26 @@ export function init() {
     plusBtnEl.onclick = () => {
       if (logicState.nVars < 4) {
         const oldNVars = logicState.nVars;
-        const oldTruthCopy =
-          logicState.preset === "custom" ? JSON.parse(JSON.stringify(logicState.truth)) : null;
-        logicState.nVars++;
-        buildTruth(oldTruthCopy, oldNVars);
-        applyPreset(logicState);
-        renderAll();
+        // If customFunction exists, rebuild truth table from it, otherwise use old logic
+        if (logicState.preset === "custom" && logicState.customFunction && logicState.customFunction.trim() !== "") {
+          logicState.nVars++;
+          try {
+            const { variables, truthArray } = parseLogicFunction(logicState.customFunction, logicState.nVars);
+            logicState.truth = truthArrayToTruthTable(truthArray, logicState.nVars);
+          } catch (error) {
+            console.error("Error parsing custom function:", error);
+            // fallback: build empty truth table
+            buildTruth(null, oldNVars);
+          }
+          applyPreset(logicState);
+          renderAll();
+        } else {
+          const oldTruthCopy = logicState.preset === "custom" ? JSON.parse(JSON.stringify(logicState.truth)) : null;
+          logicState.nVars++;
+          buildTruth(oldTruthCopy, oldNVars);
+          applyPreset(logicState);
+          renderAll();
+        }
       }
     };
   }
@@ -918,9 +932,9 @@ function renderCurrentFunctionExpression() {
     customFunctionInput.onchange = () => {
       logicState.customFunction = customFunctionInput.value.trim();
       try {
-        const { variables, truthArray } = parseLogicFunction(logicState.customFunction)
-        logicState.nVars = variables.length;
-        logicState.truth = truthArrayToTruthTable(truthArray, variables.length);
+        const { variables, truthArray } = parseLogicFunction(logicState.customFunction, nVars)
+        // logicState.nVars = variables.length;
+        logicState.truth = truthArrayToTruthTable(truthArray, nVars);
         renderAll();
       } catch(error) {
         console.error("Error parsing custom function:", error);

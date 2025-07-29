@@ -4,7 +4,7 @@
 
 // Unterstützt: + (OR), * (AND), not(), Klammern, Variablen a,b,c,d
 // Gibt {variables: [...], truthTable: [0,1,...]} zurück
-export function parseLogicFunction(expr) {
+export function parseLogicFunction(expr,nVars) {
   // 1. Variablen extrahieren (nur a,b,c,d, case-insensitive)
   const varSet = new Set((expr.match(/[a-d]/gi) || []).map(v => v.toUpperCase()));
   const variables = Array.from(varSet).sort();
@@ -28,18 +28,14 @@ export function parseLogicFunction(expr) {
     .replace(/[∨+]/g, '||');
   // Variablen zu Großbuchstaben (A,B,C,D)
   variables.forEach(v => {
-    const re = new RegExp(v, 'gi');
+    // Nur echte Variablen ersetzen, keine Teilstrings
+    const re = new RegExp(`\\b${v}\\b`, 'gi');
     jsExpr = jsExpr.replace(re, v);
   });
 
   // 3. Truth Table berechnen
-  const n = variables.length;
-  if(n < 2) {
-    throw new Error("Zu wenige Variablen, mindestens 2 benötigt");
-  }
-    if(n > 4) {
-    throw new Error("Nur 1-4 Variablen a,b,c,d erlaubt");
-  }
+  const n = nVars
+  
 
   const truthArray = [];
   for (let i = 0; i < (1 << n); i++) {
@@ -58,5 +54,7 @@ export function parseLogicFunction(expr) {
     }
     truthArray.push(val ? 1 : 0);
   }
+  
+
   return { variables, truthArray };
 }
