@@ -826,24 +826,24 @@ export function init() {
   }
 
   function adjustMuxCardHeight() {
-    const truthTableCard = $("truthTableCard");
-    const muxCard = $("muxCard");
-    const muxWrap = $("muxWrap");
+    // const truthTableCard = $("truthTableCard");
+    // const muxCard = $("muxCard");
+    // const muxWrap = $("muxWrap");
 
-    if (truthTableCard && muxCard && muxWrap) {
-      const isTruthTableVisible =
-        window.getComputedStyle(truthTableCard).display !== "none";
-      if (isTruthTableVisible) {
-        const referenceHeight = truthTableCard.offsetHeight;
-        if (referenceHeight > 0) {
-          muxCard.style.height = `${referenceHeight}px`;
-          // debouncedMuxRender() will be called by the landscape toggle or resize observer
-          // if a re-render is needed due to size changes.
-        }
-      } else {
-        muxCard.style.height = ""; 
-      }
-    }
+    // if (truthTableCard && muxCard && muxWrap) {
+    //   const isTruthTableVisible =
+    //     window.getComputedStyle(truthTableCard).display !== "none";
+    //   if (isTruthTableVisible) {
+    //     const referenceHeight = truthTableCard.offsetHeight;
+    //     if (referenceHeight > 0) {
+    //       muxCard.style.height = `${referenceHeight}px`;
+    //       // debouncedMuxRender() will be called by the landscape toggle or resize observer
+    //       // if a re-render is needed due to size changes.
+    //     }
+    //   } else {
+    //     muxCard.style.height = ""; 
+    //   }
+    // }
   }
 
   // Event listeners for load and resize are now using the debouncedAdjustMuxHeight 
