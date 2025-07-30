@@ -58,7 +58,7 @@ function renderAll() {
 function renderTruth() {
   
   const nVars = logicState.nVars;
-  const header = [...VARIABLE_NAMES.slice(0, nVars), 'f'];
+  const header = [...VARIABLE_NAMES.slice(0, nVars).reverse(), 'f'];
   const gridCols = nVars + 1;
 
   const cellWidthClass = "min-w-[2.5rem] px-3";
@@ -76,7 +76,7 @@ function renderTruth() {
       else if (r.out === 0) outClass = "";
       else outClass = "bg-yellow-100 border-yellow-600 text-yellow-700";
       return [
-        ...[...r.bits].map(b => `<div class="${cellBase} bg-gray-50 border-gray-200">${b}</div>`),
+        ...[...r.bits].reverse().map(b => `<div class="${cellBase} bg-gray-50 border-gray-200">${b}</div>`),
         `<div class="outCell ${cellBase} ${outClass}" data-bits="${r.bits}">${outText}</div>`
       ].join('');
     }).join('')}

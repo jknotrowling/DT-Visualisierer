@@ -1,4 +1,4 @@
-export function mapDecimalToSymmetryDiagramField(decimalIndex, numberOfVariables) {
+ function mapDecimalToSymmetryDiagramField(decimalIndex, numberOfVariables) {
 
     if(numberOfVariables > 4 || numberOfVariables < 2) {
         throw new Error("'numberOfVariables' must be an integer ∈ [2, 4]");
@@ -32,6 +32,17 @@ export function mapDecimalToSymmetryDiagramField(decimalIndex, numberOfVariables
     return [r, c];
 }
 
+function mapDecimalToSymmetryDiagramFieldMath(decimalIndex){
+    const bits =  Array.from({ length: 4 }, (_, i) => (decimalIndex >> i) & 1);
+
+    const [a0, a1, a2, a3] = bits;
+
+    return [
+        a3+a1-2*(a3*a1) + 2*a3,
+        a2+a0-2*(a2*a0) + 2*a2
+    ]
+}
+
 
 
 const TEST_CASES = [
@@ -55,7 +66,7 @@ const TEST_CASES = [
 
 
 TEST_CASES.forEach(({input, n, expected}) => {
-    const result = mapDecimalToSymmetryDiagramField(input, n);
+    const result = mapDecimalToSymmetryDiagramFieldMath(input);
     if (JSON.stringify(result) !== JSON.stringify(expected)) {
         // Colorful error output with emoji
         console.error(
