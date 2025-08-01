@@ -43,6 +43,32 @@ function mapDecimalToSymmetryDiagramFieldMath(decimalIndex){
     ]
 }
 
+/**
+ * Generalized mapping for arbitrary n-bit input to symmetry diagram coordinates.
+ * @param {number} decimalIndex - The decimal index of the truth table (0 to 2^n - 1).
+ * @param {number} n - Number of bits in the input.
+ * @returns {[number, number]} Row and column in symmetry diagram.
+ */
+function mapDecimalToSymmetryDiagramFieldN(decimalIndex, n) {
+    const bits = Array.from({ length: n }, (_, i) => (decimalIndex >> i) & 1);
+
+    const half = Math.floor(n / 2);
+    const lowerBits = bits.slice(0, half);         // column bits
+    const upperBits = bits.slice(half);            // row bits
+
+    const toDecimal = (bitArray) =>
+        bitArray.reduce((acc, bit, i) => acc + (bit << i), 0);
+
+    const toGrayCode = (binaryVal) =>
+        binaryVal ^ (binaryVal >> 1);
+
+    const colIndex = toGrayCode(toDecimal(lowerBits));
+    const rowIndex = toGrayCode(toDecimal(upperBits));
+
+    return [rowIndex, colIndex];
+}
+
+
 
 
 const TEST_CASES = [
@@ -66,7 +92,7 @@ const TEST_CASES = [
 
 
 TEST_CASES.forEach(({input, n, expected}) => {
-    const result = mapDecimalToSymmetryDiagramFieldMath(input);
+    const result = mapDecimalToSymmetryDiagramFieldN(input, n);
     if (JSON.stringify(result) !== JSON.stringify(expected)) {
         // Colorful error output with emoji
         console.error(

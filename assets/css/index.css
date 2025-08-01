@@ -309,25 +309,25 @@ body {
 .card {
   display: flex;
   flex-direction: column;
-   padding: 3px;
-    word-break: break-word;
-    border-radius: 11px;
-    background: rgba(255, 255, 255, 0.59);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    position: initial;
-    overflow: visible;
+  padding: 3px;
+  word-break: break-word;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.59);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  position: initial;
+  overflow: visible;
 }
 
-.inner-card {
-  
+.inner-card { 
   background: var(--card-bg);
   border-radius: 8px;
   box-shadow: var(--shadow);
-  overflow: visible; /* Ensure content doesn't overflow card */
+  overflow: hidden; /* Ensure content doesn't overflow card */
   height: 100%;
+
 } /* Inner card for better structure */
 
 .card-title {
@@ -518,9 +518,9 @@ pre span {
   height: 100%;
 }
 
-#muxCard {
+/* #muxCard {
   grid-column: span 2;
-}
+} */
 
 #muxWrap {
   flex-grow: 1; /* Allow muxWrap to grow */
@@ -548,11 +548,11 @@ pre span {
 }
 
 /* Specific adjustments for muxCard in landscape if it spans columns */
-.page.landscape-mode #muxCard {
+/* .page.landscape-mode #muxCard {
   grid-column: span 1; /* Override previous span to make it fit in the row */
   /* If muxCard was taking more space, ensure it also fits. 
          Its height might need to be managed by its content or specific landscape styles. */
-}
+} */
 
 .modern-select {
   width: 100%;
@@ -563,4 +563,8 @@ pre span {
   color: #374151;
   font-size: 1rem;
   transition: border-color 0.2s ease-in-out;
+}
+
+svg {
+  border: none !important;
 }

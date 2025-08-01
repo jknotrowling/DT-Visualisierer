@@ -1,6 +1,6 @@
 
 import { init } from "./ui/ui.js";
-import { buildTruth } from "./logic/truth.js";
+
 import { applyPreset } from "./utils/utils.js";
 
 
@@ -27,6 +27,17 @@ export const logicState = {
   customFunction: "",
 };
 
+export const layoutState = {
+   isLandscape: false,
+   viewToggleMappings: {
+    toggleTruthTable: {id: "truthTableCard", active: true},
+    toggleKmap: {id: "kmapCard", active: true},
+    toggleExpressions: {id: "expressionsCard", active: true},
+    toggleBooleanDev: {id: "booleanDevCard", active: true},
+    toggleMux: {id: "muxCard", active: true},
+  }
+}
+
 // Initialisiere truth passend zum Preset
 
 applyPreset(logicState);
@@ -39,7 +50,6 @@ applyPreset(logicState);
 
 // --- Initial Setup ---
 // DOMContentLoaded to ensure all elements are available, especially for querySelector.
-
 
 document.addEventListener("DOMContentLoaded", () => {
   init();

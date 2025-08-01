@@ -10,18 +10,13 @@ export function mapDecimalToSymmetryDiagramField(decimalIndex, numberOfVariables
     }
 
 
+    const bits = Array.from({ length: 4 }, (_, i) => (decimalIndex >> i) & 1);
 
-    const a0 = (decimalIndex >> 0) & 1;
-    const a1 = (decimalIndex >> 1) & 1;
-    const a2 = (decimalIndex >> 2) & 1;
-    const a3 = (decimalIndex >> 3) & 1;
+    const [a0, a1, a2, a3] = bits;
+
+    const r = (a3 ^ a1) + (2*a3);
+    const c = (a2 ^ a0) + (2*a2);
     
-
-    const r = (a3 ^ a1) + (a3 << 1);
-    const c = (a2 ^ a0) + (a2 << 1);
-    
-
-
     return [r, c];
 }
 

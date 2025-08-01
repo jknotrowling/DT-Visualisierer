@@ -6,26 +6,27 @@ Gesucht ist eine Funktion, die einen Dezimalindex aus der Wahrheitstabelle einer
 Mathematisch kann die gesuchte Abbildung wie folgt beschrieben werden:
 
 $$
-f: \{0,1\}^n \to (\mathbb{N} \cup \{0\})^2 \quad \text{mit } n \leq 4
+f: \{0,1\}^n \to \begin{cases}
+    2^{\frac{n+1}{2}} \times 2^{\frac{n-1}{2}} & \text{wenn } n \text{ ungerade} \\
+    2^{\frac{n}{2}} \times 2^{\frac{n}{2}} & \text{wenn } n \text{ gerade}
+\end{cases} \quad \text{mit } n \in \mathbb{N}, n \leq 4
 $$
 
 Die zugehörige Abbildung ist gegeben durch:
 $$
 f(\vec{X}) = \begin{pmatrix}
-    x_3 \oplus x_1 + x3 \ll 1 \\
-    x_2 \oplus x_0 + x_2 \ll 1
+    x_3 \oplus x_1 + 2x_3  \\
+    x_2 \oplus x_0 + 2x_2 
 \end{pmatrix}
 $$
-Dabei ist $\oplus$ die bitweise XOR-Operation und $\ll$ die bitweise Linksverschiebung.
-Dieses beiden logischen Ausdrücke lassen sich aritmetisch wie folgt umformen:
+Dabei ist $\oplus$ die bitweise XOR-Operation.
+Das logische XOR kann arithmetisch wie folgt dargestellt werden:
 
 $$
 a \oplus b = a + b - 2ab
 $$
 
-$$
-a \ll 1 = 2a
-$$
+
 
 Für die Abbildung ergibt sich somit:
 $$
@@ -49,13 +50,13 @@ function mapDecimalToSymmetryDiagramField(decimalIndex) {
 
     const [a0, a1, a2, a3] = bits;
 
-    const r = (a3 ^ a1) + (a3 << 1);
-    const c = (a2 ^ a0) + (a2 << 1);
+    const r = (a3 ^ a1) + (2*a3);
+    const c = (a2 ^ a0) + (2*a2);
     
     return [r, c];
 }
 ```
-Dabei sind `^` und `<<` die bitweise XOR-Operation und die bitweise Linksverschiebung in JavaScript.
+Dabei ist `^` die bitweise XOR-Operation in JavaScript.
 
 # Begründung der Korrektheit
 
@@ -65,9 +66,9 @@ $$
 \text{Gray}(a,b) = (a,a \oplus b )
 $$
 
-- $(a,a \oplus b )$ ist also ein 2-Bit CW und kann somit 4 verschiedene Zustände annehmen. Um das Ergebnis aber nun als Index $\in \{0,1,2,3\}$ darzustellen wird das höherwertige Bit mit 2 multipliziert und das niederwertige Bit addiert:
+- $(a,a \oplus b )$ ist also ein 2-Bit CW und kann somit 4 verschiedene Zustände annehmen. Um das Ergebnis aber nun als Index $\in \{0,1,2,3\}$ darzustellen sie in eine Dezimalzahl umgewandelt:
 $$
-\text{Index}(a,b) = a\oplus b + 2b
+\text{Index}(a,b) = (a\oplus b) \cdot 2^0 + 2a \cdot 2^1 = a \oplus b + 2a
 $$
 - Das gilt sowohl für die Zeilen- als auch für die Spaltenindizes, da das Symmetriediagramm symmetrisch ist und somit die gleiche Abbildung für beide Achsen verwendet werden kann.
 - Für die Berechnung der Zeilen- und Spaltenindizes nimmt nicht benachbarte Bits für r und c, damit jede Achse einen eigenen unabhängigen Gray-Code bekommt und sich die Bitänderungen sauber trennen.

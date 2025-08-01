@@ -19,7 +19,7 @@ import { $, debounce, applyPreset, truthArrayToTruthTable} from "../utils/utils.
 import { buildTruth } from '../logic/truth.js';
 
 import { minimize, expand, lit, simplifiedBooleanExpansionRecursive } from '../logic/booleanForm.js';
-import { logicState, VARIABLE_NAMES, expansionState, DEFAULT_LAYOUT_CONFIG } from '../index.js';
+import { logicState, VARIABLE_NAMES, expansionState, DEFAULT_LAYOUT_CONFIG, layoutState } from '../index.js';
 import { parseLogicFunction } from '../logic/parser.js';
 
 
@@ -35,6 +35,7 @@ function genGroupId() {
 
 function renderAll() {
   $("varCountLbl").textContent = logicState.nVars;
+  
   renderTruth();
   renderKMap();
   renderCurrentFunctionExpression();
@@ -53,6 +54,7 @@ function renderAll() {
   renderExpr();
   renderDev();
   setupAllHoverInteractions();
+  
 }
 
 function renderTruth() {
@@ -708,6 +710,138 @@ function highlightTableCells(arr, on) {
   });
 }
 
+function resetGridColsToDefault() {
+  const cardGrid = document.querySelector("#card-grid");
+  if (!cardGrid) return;
+
+
+  cardGrid.classList.remove(
+    "lg:grid-cols-1",
+    "lg:grid-cols-2",
+    "lg:grid-cols-3",
+    "lg:grid-cols-4",
+    "lg:grid-cols-5",
+    "lg:grid-cols-6",
+    "lg:grid-cols-7",
+    "lg:grid-cols-8",
+    "lg:grid-cols-9",
+  );
+
+  const viewToggleMappings = layoutState.viewToggleMappings;
+  const classesToRemove = [
+    "lg:row-span-2",
+    "lg:row-span-1",
+    "lg:col-span-1",
+    "lg:col-span-2",
+    "lg:col-span-3",
+    "lg:col-span-4",
+    
+  ];
+  Object.values(viewToggleMappings).forEach((mapping) => {
+    const el = $(mapping.id);
+    if (el) {
+      classesToRemove.forEach((cls) => el.classList.remove(cls));
+    }
+  });
+
+
+  
+
+} 
+
+function getOtherActiveCards(notThisIds) {
+  const viewToggleMappings = layoutState.viewToggleMappings;
+    const excludeIds = Array.isArray(notThisIds) ? notThisIds : [notThisIds];
+    return Object.values(viewToggleMappings)
+      .filter(v => !excludeIds.includes(v.id) && v.active)
+      .map(v => $(v.id));
+  }
+  
+
+function updateGridCols() {
+  
+  const viewToggleMappings = layoutState.viewToggleMappings;
+    const cardGrid = document.querySelector("#card-grid");
+    // resetLayoutClasses(); // Reset layout classes before applying new ones
+    const currentActiveCardCount = Object.values(viewToggleMappings).map(val => val.id)
+      .filter(id => $(id) && $(id).style.display !== "none").length;
+    const {isLandscape} = layoutState;
+  
+
+    const isTruthActive = $(viewToggleMappings.toggleTruthTable.id)?.style.display !== "none";
+    const isExprActive = $(viewToggleMappings.toggleExpressions.id)?.style.display !== "none";
+    const isMuxActive = $(viewToggleMappings.toggleMux.id)?.style.display !== "none";
+    const isSymmetryActive = $(viewToggleMappings.toggleKmap.id)?.style.display !== "none";
+    
+    console.log(layoutState);
+    
+    
+    if(!cardGrid) return;
+    resetGridColsToDefault(); // Reset to default before applying new classes
+    
+    $(viewToggleMappings.toggleMux.id).classList.add("lg:col-span-2");
+
+    switch (currentActiveCardCount) {
+        case 1:{
+          cardGrid.classList.add("lg:grid-cols-1");
+          break;
+        }
+        case 2:{
+          cardGrid.classList.add("lg:grid-cols-2");
+          $(viewToggleMappings.toggleTruthTable.id).classList.add("lg:row-span-2", "lg:col-span-1");
+          break;
+        }
+        case 3: {
+          
+          cardGrid.classList.add("lg:grid-cols-3");
+          break;
+        }
+        case 4:{
+          $(viewToggleMappings.toggleTruthTable.id).classList.add("lg:row-span-2");
+          if(!isMuxActive) {
+            $(viewToggleMappings.toggleExpressions.id).classList.add("lg:row-span-2");
+          } 
+          
+          cardGrid.classList.add("lg:grid-cols-3");
+          
+          if(isLandscape) {
+            $(viewToggleMappings.toggleExpressions.id).classList.add("lg:row-span-2");
+            // mux col span 3
+            $(viewToggleMappings.toggleMux.id).classList.add("lg:col-span-3");
+            // symmetry row span 2
+            $(viewToggleMappings.toggleKmap.id).classList.add("lg:row-span-2");
+            
+          }
+
+          break;
+        }
+        case 5: {
+          console.log("5 active cards, applying landscape layout");
+          console.log(isLandscape);
+          
+          if (isLandscape) {
+            
+            cardGrid.classList.add("lg:grid-cols-8");
+            $(viewToggleMappings.toggleTruthTable.id).classList.add("lg:row-span-2", "lg:col-span-2");
+            getOtherActiveCards([viewToggleMappings.toggleTruthTable.id]).forEach(card => {
+              card.classList.add("lg:col-span-3");
+            });
+            break;
+          }
+          
+          cardGrid.classList.add("lg:grid-cols-3");
+          
+          
+          break;
+        }
+    }
+    if(isLandscape && currentActiveCardCount > 3) {
+      $(viewToggleMappings.toggleTruthTable.id).classList.add("lg:row-span-2");
+    }
+  
+
+  }
+
 export function init() {
   //muxSvgElement = document.querySelector("#muxCard .card-body #muxDiagramSvg"); // Initialize global reference early
   setSvgMux();
@@ -715,6 +849,9 @@ export function init() {
   buildTruth();
   applyPreset(logicState);
   renderAll();
+  updateGridCols(); // Initial grid column setup
+  
+  
 
   // --- Event Listeners ---
   const minusBtnEl = $("minusBtn");
@@ -796,21 +933,44 @@ export function init() {
   }
 
   // View Toggles
-  const viewToggleMappings = {
-    toggleTruthTable: "truthTableCard",
-    toggleKmap: "kmapCard",
-    toggleExpressions: "expressionsCard",
-    toggleBooleanDev: "booleanDevCard",
-    toggleMux: "muxCard",
-  };
+  const viewToggleMappings = layoutState.viewToggleMappings
+
+  const cardGrid = document.getElementById("card-grid");
+
+  function resetLayoutClasses() {
+    if (cardGrid) {
+      cardGrid.classList.remove("lg:grid-cols-3", "lg:grid-cols-4", "lg:grid-cols-5");
+      cardGrid.classList.add("md:grid-cols-1"," lg:grid-cols-3");
+    }
+    for (const checkboxId in viewToggleMappings) {
+      const cardId = viewToggleMappings[checkboxId].id;
+      const card = $(cardId);
+      if (card) {
+        card.classList.remove("lg:row-span-2", "lg:row-span-1", "lg:row-span-3");
+        
+        card.style.display = "none"; // Hide all cards initially
+      }
+    }
+    
+
+  }
+
+  
+
+  
 
   for (const checkboxId in viewToggleMappings) {
     const checkbox = $(checkboxId);
-    const cardId = viewToggleMappings[checkboxId];
+    const cardId = viewToggleMappings[checkboxId].id;
     const card = $(cardId);
 
     if (checkbox && card) {
       checkbox.addEventListener("change", function () {
+
+        layoutState.viewToggleMappings[checkboxId].active = this.checked;
+        
+        
+
         if (this.checked) {
           card.style.display = "flex"; // Or its original display value if not flex
         } else {
@@ -820,30 +980,33 @@ export function init() {
         if (cardId === "muxCard" && this.checked) {
           debouncedMuxRender();
         }
-        adjustMuxCardHeight(); // Adjust height when any view visibility changes
+
+        updateGridCols();
+
+        // adjustMuxCardHeight(); // Adjust height when any view visibility changes
       });
     }
   }
 
   function adjustMuxCardHeight() {
-    // const truthTableCard = $("truthTableCard");
-    // const muxCard = $("muxCard");
-    // const muxWrap = $("muxWrap");
+    // // // const truthTableCard = $("truthTableCard");
+    // // // const muxCard = $("muxCard");
+    // // // const muxWrap = $("muxWrap");
 
-    // if (truthTableCard && muxCard && muxWrap) {
-    //   const isTruthTableVisible =
-    //     window.getComputedStyle(truthTableCard).display !== "none";
-    //   if (isTruthTableVisible) {
-    //     const referenceHeight = truthTableCard.offsetHeight;
-    //     if (referenceHeight > 0) {
-    //       muxCard.style.height = `${referenceHeight}px`;
-    //       // debouncedMuxRender() will be called by the landscape toggle or resize observer
-    //       // if a re-render is needed due to size changes.
-    //     }
-    //   } else {
-    //     muxCard.style.height = ""; 
-    //   }
-    // }
+    // // // if (truthTableCard && muxCard && muxWrap) {
+    // // //   const isTruthTableVisible =
+    // // //     window.getComputedStyle(truthTableCard).display !== "none";
+    // // //   if (isTruthTableVisible) {
+    // // //     const referenceHeight = truthTableCard.offsetHeight;
+    // // //     if (referenceHeight > 0) {
+    // // //       muxCard.style.height = `${referenceHeight}px`;
+    // // //       // debouncedMuxRender() will be called by the landscape toggle or resize observer
+    // // //       // if a re-render is needed due to size changes.
+    // // //     }
+    // // //   } else {
+    // // //     muxCard.style.height = ""; 
+    // // //   }
+    // // // }
   }
 
   // Event listeners for load and resize are now using the debouncedAdjustMuxHeight 
@@ -853,15 +1016,26 @@ export function init() {
 
   const landscapeToggleBtnEl = $("landscapeToggleBtn");
   const pageEl = document.querySelector(".page"); // Assuming .page is the main container to toggle class on
+  
 
-  if (landscapeToggleBtnEl && pageEl) {
+  if (landscapeToggleBtnEl && pageEl && cardGrid) {
     landscapeToggleBtnEl.onclick = () => {
       pageEl.classList.toggle("landscape-mode");
+      
+
+      
+
+      layoutState.isLandscape = !layoutState.isLandscape;
+      
+      updateGridCols();
+      
+      
       // After toggling, we might need to trigger a resize/render for elements like MUX
       debouncedMuxRender(); 
       debouncedAdjustMuxHeight();
     };
   }
+  
 }
 
 function renderCurrentFunctionExpression() {
