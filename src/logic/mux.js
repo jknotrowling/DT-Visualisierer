@@ -1,5 +1,5 @@
     
-import { logicState, DEFAULT_LAYOUT_CONFIG } from "../index.js"; // Import logicState from index.js
+import { logicState, DEFAULT_LAYOUT_CONFIG } from "../state.js"; // Import logicState from state.js
 
 
     // Store the SVG element reference

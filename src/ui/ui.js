@@ -1,9 +1,5 @@
-// Hilfsfunktion: Identitätsfunktion (macht nichts mehr)
-function renderLogicExpr(expr) {
-  return expr;
-}
- import { renderSymmetryDiagram } from './symmetry/ui.js';
-
+import { renderSymmetryDiagram } from './symmetry.js';
+import {renderCurrentFunctionExpression} from './currentFunctionExpression.js';
 import {
   setSvgMux,
   MUX_DIAGRAM_STATE,
@@ -19,7 +15,7 @@ import { $, debounce, applyPreset, truthArrayToTruthTable} from "../utils/utils.
 import { buildTruth } from '../logic/truth.js';
 
 import { minimize, expand, lit, simplifiedBooleanExpansionRecursive } from '../logic/booleanForm.js';
-import { logicState, VARIABLE_NAMES, expansionState, DEFAULT_LAYOUT_CONFIG, layoutState } from '../index.js';
+import { logicState, VARIABLE_NAMES, expansionState, DEFAULT_LAYOUT_CONFIG, layoutState } from '../state.js';
 import { parseLogicFunction } from '../logic/parser.js';
 
 
@@ -33,7 +29,7 @@ function genGroupId() {
 }
 
 
-function renderAll() {
+export function renderAll() {
   $("varCountLbl").textContent = logicState.nVars;
   
   renderTruth();
@@ -54,6 +50,7 @@ function renderAll() {
   renderExpr();
   renderDev();
   setupAllHoverInteractions();
+  
   
 }
 
@@ -1038,110 +1035,3 @@ export function init() {
   
 }
 
-function renderCurrentFunctionExpression() {
-  const currentFunction = logicState.preset;
-  const nVars = logicState.nVars;
-  const currentFunctionEl = $("current-function-expression");
-  if (!currentFunctionEl) return;
-
-  // Variable names: A, B, C, D ...
-  const varNames = VARIABLE_NAMES;
-  const usedVars = varNames.slice(0, nVars);
-
-  let expr = "";
-  switch ((currentFunction || "").toUpperCase()) {
-    case "XOR":
-      expr = usedVars.join(" ⊕ ");
-      break;
-    case "AND":
-      expr = usedVars.join(" ∧ ");
-      break;
-    case "OR":
-      expr = usedVars.join(" ∨ ");
-      break;
-    case "NAND": {
-      const inner = usedVars.length > 1 ? `(${usedVars.join(" ∧ ")})` : usedVars[0];
-      expr = `<span style='text-decoration:overline'>${inner}</span>`;
-      break;
-    }
-    case "NOR": {
-      const inner = usedVars.length > 1 ? `(${usedVars.join(" ∨ ")})` : usedVars[0];
-      expr = `<span style='text-decoration:overline'>${inner}</span>`;
-      break;
-    }
-    case "XNOR":
-      expr = `<span style='text-decoration:overline'>(${usedVars.join(" ⊕ ")})</span>`;
-      break;
-    case "MAJ":
-      expr = `maj(${usedVars.join(", ")})`;
-      break;
-    case "MIN":
-      expr = `min(${usedVars.join(", ")})`;
-      break;
-    case "CUSTOM":
-      expr = '<input class="border rounded px-2 py-1" id="custom-function" placeholder="z.B. not(a) ∨ b∧c" />';
-      break;
-    default:
-      expr = usedVars.join(", ");
-  }
-
-  currentFunctionEl.innerHTML = `f(${usedVars.join(",")})= ${expr}`;
-
-  const customFunctionInput = $("custom-function");
-  if (customFunctionInput instanceof HTMLInputElement) {
-    customFunctionInput.value = logicState.customFunction || "";
-
-    // Automatische Umwandlung von + zu ∨ und * zu ∧ beim Tippen
-    customFunctionInput.addEventListener('input', (e) => {
-      let val = customFunctionInput.value;
-      let newVal = val.replace(/\+/g, '∨').replace(/\*/g, '∧');
-      if (val !== newVal) {
-        const pos = customFunctionInput.selectionStart;
-        customFunctionInput.value = newVal;
-        // Cursor-Position anpassen
-        customFunctionInput.selectionStart = customFunctionInput.selectionEnd = pos;
-      }
-    });
-
-    customFunctionInput.onchange = () => {
-      logicState.customFunction = customFunctionInput.value.trim();
-      try {
-        const { variables, truthArray } = parseLogicFunction(logicState.customFunction, nVars)
-        // logicState.nVars = variables.length;
-        logicState.truth = truthArrayToTruthTable(truthArray, nVars);
-        renderAll();
-      } catch(error) {
-        console.error("Error parsing custom function:", error);
-        customFunctionInput.classList.add("text-red-500")
-        customFunctionInput.setCustomValidity(error.message);
-        customFunctionInput.reportValidity();
-      }
-    };
-
-    // Symbol-Buttons einfügen
-    document.querySelectorAll('.insert-symbol-btn').forEach(btn => {
-      btn.onclick = (e) => {
-        const symbol = btn.getAttribute('data-symbol');
-        const start = customFunctionInput.selectionStart;
-        const end = customFunctionInput.selectionEnd;
-        const val = customFunctionInput.value;
-        let insert = symbol;
-        // Bei not() Cursor in die Klammer setzen
-        let cursorOffset = 0;
-        if(symbol === 'not()') {
-          insert = 'not()';
-          cursorOffset = 4;
-        }
-        customFunctionInput.value = val.slice(0, start) + insert + val.slice(end);
-        customFunctionInput.focus();
-        customFunctionInput.selectionStart = customFunctionInput.selectionEnd = start + insert.length - cursorOffset;
-        customFunctionInput.dispatchEvent(new Event('change'));
-      };
-    });
-  } else {
-    console.warn("Custom function input element not found or not an input element.");
-  }
-
- 
-  
-}

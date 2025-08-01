@@ -568,3 +568,8 @@ pre span {
 svg {
   border: none !important;
 }
+
+.katex-display {
+  margin: 0 !important;
+  display: inline-block !important;
+}

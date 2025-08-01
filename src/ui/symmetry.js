@@ -1,7 +1,7 @@
-import { truthTableToSymmetryDiagram, decimalToOctal, getNumberOfRowsAndCols} from '../../logic/symmetry.js';
+import { truthTableToSymmetryDiagram, decimalToOctal, getNumberOfRowsAndCols} from '../logic/symmetry.js';
 
 
-import { VARIABLE_NAMES } from '../../index.js';
+import { VARIABLE_NAMES } from '../state.js';
 
 
 function renderTopFrameRow(wrapper, numberOfVariables) {
@@ -154,7 +154,6 @@ export function renderSymmetryDiagram(numberOfVariables, truthTable) {
     outerFlex.appendChild(centerFlex);
     symmetryDiagramBox.appendChild(outerFlex);
 }
-
 
 
 
