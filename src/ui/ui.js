@@ -16,7 +16,7 @@ import { buildTruth } from '../logic/truth.js';
 
 import { minimize, expand, lit, simplifiedBooleanExpansionRecursive } from '../logic/booleanForm.js';
 import { logicState, VARIABLE_NAMES,customFunctionState, expansionState, DEFAULT_LAYOUT_CONFIG, layoutState } from '../state.js';
-import { parseLogicFunction } from '../logic/parser.js';
+import { getMinimalExpression, parseLogicFunction } from '../logic/parser.js';
 
 
 
@@ -136,7 +136,7 @@ function renderTruth() {
       o.out = o.out === 0 ? 1 : o.out === 1 ? null : 0;
 
       logicState.preset = "custom";
-      logicState.customFunction = ""
+      customFunctionState.customFunction = getMinimalExpression();
       const presetOpEl = $("presetOp");
       if (presetOpEl instanceof HTMLSelectElement) presetOpEl.value = "custom";
       renderAll();
@@ -173,17 +173,15 @@ function renderKMap() {
             bits: currentValue.bits,
           };
 
-          logicState.customFunction = ""
+          customFunctionState.customFunction = getMinimalExpression();
           logicState.preset = "custom";
           const presetOpEl = $("presetOp");
-          if (presetOpEl instanceof HTMLSelectElement)
-            presetOpEl.value = "custom";
+          if (presetOpEl instanceof HTMLSelectElement) presetOpEl.value = "custom";
           renderAll();
         };
       });
   }, 0);
 }
-
 
 
 function renderExpr() {
@@ -268,9 +266,6 @@ function renderExpr() {
   );
   if (exprWrap) exprWrap.innerHTML = h;
 }
-
-
-
 
 
 function generateExpansionHtmlRecursive(node, ancestorGroupChain = []) {
@@ -792,92 +787,159 @@ function getOtherActiveCards(notThisIds) {
     return Object.values(viewToggleMappings)
       .filter(v => !excludeIds.includes(v.id) && v.active)
       .map(v => $(v.id));
-  }
+}
   
 
 function updateGridCols() {
-  
-  const viewToggleMappings = layoutState.viewToggleMappings;
-    const cardGrid = document.querySelector("#card-grid");
-    // resetLayoutClasses(); // Reset layout classes before applying new ones
-    const currentActiveCardCount = Object.values(viewToggleMappings).map(val => val.id)
-      .filter(id => $(id) && $(id).style.display !== "none").length;
-    const {isLandscape} = layoutState;
-  
+  const {
+    viewToggleMappings,
+    isLandscape
+  } = layoutState;
 
-    const isTruthActive = $(viewToggleMappings.toggleTruthTable.id)?.style.display !== "none";
-    const isExprActive = $(viewToggleMappings.toggleExpressions.id)?.style.display !== "none";
-    const isMuxActive = $(viewToggleMappings.toggleMux.id)?.style.display !== "none";
-    const isSymmetryActive = $(viewToggleMappings.toggleKmap.id)?.style.display !== "none";
-    
-    console.log(layoutState);
-    
-    
-    if(!cardGrid) return;
-    resetGridColsToDefault(); // Reset to default before applying new classes
-    
-    $(viewToggleMappings.toggleMux.id).classList.add("lg:col-span-2");
+  const cardGrid = document.querySelector("#card-grid");
+  if (!cardGrid) return;
 
-    switch (currentActiveCardCount) {
-        case 1:{
-          cardGrid.classList.add("lg:grid-cols-1");
-          break;
-        }
-        case 2:{
-          cardGrid.classList.add("lg:grid-cols-2");
-          $(viewToggleMappings.toggleTruthTable.id).classList.add("lg:row-span-2", "lg:col-span-1");
-          break;
-        }
-        case 3: {
-          
-          cardGrid.classList.add("lg:grid-cols-3");
-          break;
-        }
-        case 4:{
-          $(viewToggleMappings.toggleTruthTable.id).classList.add("lg:row-span-2");
-          if(!isMuxActive) {
-            $(viewToggleMappings.toggleExpressions.id).classList.add("lg:row-span-2");
-          } 
-          
-          cardGrid.classList.add("lg:grid-cols-3");
-          
-          if(isLandscape) {
-            $(viewToggleMappings.toggleExpressions.id).classList.add("lg:row-span-2");
-            // mux col span 3
-            $(viewToggleMappings.toggleMux.id).classList.add("lg:col-span-3");
-            // symmetry row span 2
-            $(viewToggleMappings.toggleKmap.id).classList.add("lg:row-span-2");
-            
-          }
+  const {
+    toggleTruthTable,
+    toggleExpressions,
+    toggleMux,
+    toggleKmap,
+    toggleBooleanDev
+  } = viewToggleMappings;
 
-          break;
-        }
-        case 5: {
-          console.log("5 active cards, applying landscape layout");
-          console.log(isLandscape);
-          
-          if (isLandscape) {
-            
-            cardGrid.classList.add("lg:grid-cols-8");
-            $(viewToggleMappings.toggleTruthTable.id).classList.add("lg:row-span-2", "lg:col-span-2");
-            getOtherActiveCards([viewToggleMappings.toggleTruthTable.id]).forEach(card => {
-              card.classList.add("lg:col-span-3");
-            });
-            break;
-          }
-          
-          cardGrid.classList.add("lg:grid-cols-3");
-          
-          
-          break;
-        }
+  resetGridColsToDefault();
+
+  const isVisible = id => $(id)?.style.display !== "none";
+
+  const activeCards = Object.values(viewToggleMappings)
+    .map(val => val.id)
+    .filter(id => isVisible(id));
+
+  const activeCount = activeCards.length;
+
+  const isTruthActive = isVisible(toggleTruthTable.id);
+  const isExprActive = isVisible(toggleExpressions.id);
+  const isMuxActive = isVisible(toggleMux.id);
+  const isKmapActive = isVisible(toggleKmap.id);
+  const isDevActive = isVisible(toggleBooleanDev.id);
+
+  const truthEl = $(toggleTruthTable.id);
+  const exprEl = $(toggleExpressions.id);
+  const muxEl = $(toggleMux.id);
+  const kmapEl = $(toggleKmap.id);
+  const devEl = $(toggleBooleanDev.id);
+
+  const GRID1 = "lg: grid-cols-1"
+  const GRID2 = "lg:grid-cols-2";
+  const GRID3 = "lg:grid-cols-3";
+  const GRID4 = "lg:grid-cols-4";
+  const GRID5 = "lg:grid-cols-5";
+  const GRID6 = "lg:grid-cols-6";
+  const GRID7 = "lg:grid-cols-7";
+  const GRID8 = "lg:grid-cols-8";
+
+  const COLS1= "lg:col-span-1";
+  const COLS2 = "lg:col-span-2";
+  const COLS3 = "lg:col-span-3";
+  const COLS4 = "lg:col-span-4";
+
+  const ROWS1 = "lg:row-span-1";
+  const ROWS2 = "lg:row-span-2";  
+  const ROWS3 = "lg:row-span-3";
+  const ROWS4 = "lg:row-span-4";
+
+
+
+  switch (activeCount) {
+    case 1: {
+      cardGrid.classList.add(GRID1);
+      break;
     }
-    if(isLandscape && currentActiveCardCount > 3) {
-      $(viewToggleMappings.toggleTruthTable.id).classList.add("lg:row-span-2");
+    case 2: {
+      cardGrid.classList.add(GRID2);
+      break;
     }
-  
+    case 3: {
+      cardGrid.classList.add(GRID3);
+      if(!isLandscape) {
+        const firstActiveEl = $(activeCards[0]);
+        firstActiveEl.classList.add(ROWS2);
+        getOtherActiveCards(activeCards[0]).forEach((el) => {
+          if (el) el.classList.add(COLS2, ROWS1);
+        });
+      }
+      break;
+    }
+    case 4: {
+      if(!isTruthActive) {
+        cardGrid.classList.add(GRID2)
+        break;
+      }
+      if(!isMuxActive)  {
+        cardGrid.classList.add(GRID3)
+         truthEl.classList.add(ROWS2);
+          exprEl.classList.add(ROWS2); 
+        break;
+      }
+      if(!isDevActive) {
+        if(isLandscape) {
+          cardGrid.classList.add(GRID3)
+          truthEl.classList.add(ROWS2);
+          exprEl.classList.add(ROWS2); 
+          break;
+        }
 
+        cardGrid.classList.add(GRID3)
+        muxEl.classList.add(COLS3);
+        break;
+      }
+      if(!isExprActive) {
+        cardGrid.classList.add(GRID3)
+        truthEl.classList.add(ROWS2);
+        muxEl.classList.add(COLS2);
+        break;
+      }
+      if(!isKmapActive) {
+
+        if(isLandscape) {
+          cardGrid.classList.add(GRID4)
+          truthEl.classList.add(ROWS2);
+          exprEl.classList.add(ROWS2); 
+          muxEl.classList.add(COLS2);
+          devEl.classList.add(COLS2);
+          break;
+        }
+
+        cardGrid.classList.add(GRID2)
+        truthEl.classList.add(ROWS2);
+        muxEl.classList.add(COLS2);
+        break;
+      }
+    }
+
+    case 5: {
+      if(isLandscape) {
+        cardGrid.classList.add(GRID8);
+        truthEl.classList.add(ROWS2, COLS2);
+       getOtherActiveCards(toggleTruthTable.id).forEach(el => el.classList.add(COLS3))
+       break;
+      }
+
+      cardGrid.classList.add(GRID3);
+      
+      muxEl.classList.add(COLS2);
+
+
+      break;
+    }
   }
+}
+
+      
+
+
+ 
+
 
 export function init() {
   //muxSvgElement = document.querySelector("#muxCard .card-body #muxDiagramSvg"); // Initialize global reference early

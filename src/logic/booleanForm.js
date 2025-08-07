@@ -89,7 +89,7 @@ export function lit(bits, type) {
       return lbl(i, neg);
     })
     .filter(Boolean)
-    .join(type === "dnf" || type === "dmf" ? "∧" : "∨");
+    .join(type === "dnf" || type === "dmf" ? " & " : "∨");
 }
 
 export const expand = (p) => {

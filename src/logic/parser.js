@@ -1,5 +1,7 @@
 import { VARIABLE_NAMES } from "../state.js";
 import { bin } from "../utils/utils.js";
+import { minimize } from "./booleanForm.js";
+import { logicState } from "../state.js";
 
 /**
  * Parses a logical function expression and generates its truth table.
@@ -221,3 +223,35 @@ export function normalizedExpressionToLatex(expr) {
   return rendered;
 }
 
+export function getMinimalExpression() {
+  // DMF: Disjunktive Normalform (Summe von Produkten)
+  // Extrahiere Minterm-Indizes wie in renderExpr() - konvertiere bits zu Dezimalzahl
+  const minterms = logicState.truth
+    .filter((r) => r.out === 1)
+    .map((r) => parseInt(r.bits, 2));
+
+  if (minterms.length === 0) return "0";
+  if (minterms.length === logicState.truth.length) return "1";
+
+  // Don't Care Terme hinzufügen (falls vorhanden)
+  const dcs = logicState.truth
+    .filter((r) => r.out === null)
+    .map((r) => parseInt(r.bits, 2));
+
+  // Verwende die minimize Funktion für Quine-McCluskey Minimierung
+  const minimizedTerms = minimize(logicState.nVars, minterms, dcs);
+
+  // Konvertiere minimierte Terme zu lesbarer DNF mit der gleichen Logik wie renderExpr()
+  const terms = minimizedTerms.map(term => {
+    return term
+      .split('')
+      .map((bit, i) => {
+        if (bit === '-') return null; // Don't care
+        return bit === '1' ? VARIABLE_NAMES[i] : `!${VARIABLE_NAMES[i]}`;
+      })
+      .filter(literal => literal !== null)
+      .join('&');
+  });
+
+  return terms.join('|');
+}
