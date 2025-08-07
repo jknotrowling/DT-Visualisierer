@@ -39,6 +39,7 @@ export function renderCurrentFunctionExpression() {
     latexToRender += `\\overline{${usedVars.join(" \\oplus ")}}`;
       break;
     case "CUSTOM":
+    
       latexToRender += normalizedExpressionToLatex(
         normalizeExpression(customFunctionState.customFunction)
       );
