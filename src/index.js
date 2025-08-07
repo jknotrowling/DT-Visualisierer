@@ -3,7 +3,7 @@ import { init } from "./ui/ui.js";
 
 import { applyPreset } from "./utils/utils.js";
 
-import { logicState } from "./state.js";
+import { logicState, customFunctionState } from "./state.js";
 
 
 applyPreset(logicState);
@@ -35,6 +35,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const value = btn.getAttribute('data-value');
       // Update logicState and trigger UI update
       logicState.preset = value;
+      
+      // Enable editing mode when custom is selected
+      if (value === 'custom') {
+        customFunctionState.isEditing = true;
+      }
+      
       if (typeof updateLogicFunction === 'function') {
         updateLogicFunction(value);
       } else if (typeof init === 'function') {
