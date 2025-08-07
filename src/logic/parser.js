@@ -1,12 +1,24 @@
 import { VARIABLE_NAMES } from "../state.js";
 import { bin } from "../utils/utils.js";
 
+/**
+ * Parses a logical function expression and generates its truth table.
+ *
+ * @param {string} expr - The logical function expression to parse (e.g., "A & B | !C").
+ * @param {number} nVars - The number of variables to consider (must be between 1 and VARIABLE_NAMES.length).
+ * @returns {number[]} An array representing the truth table for the given expression, where each entry is 0 or 1.
+ * @throws {Error} If the expression is not a non-empty string.
+ * @throws {Error} If nVars is not a valid integer within the allowed range.
+ * @throws {Error} If the expression contains invalid variables.
+ * @throws {Error} If there is an error evaluating the expression for any input combination.
+ */
+
 export function parseLogicFunction(expr, nVars) {
   if (typeof expr !== 'string' || expr.trim() === '') {
-    throw new Error('Expression must be a non-empty string.');
+    throw new Error('Der Ausdruck muss ein nicht-leerer String sein.');
   }
-  if (!Number.isInteger(nVars) || nVars < 1 || nVars > VARIABLE_NAMES.length) {
-    throw new Error(`nVars must be an integer between 1 and ${VARIABLE_NAMES.length}.`);
+  if (!Number.isInteger(nVars) || nVars < 2 || nVars > VARIABLE_NAMES.length) {
+    throw new Error(`nVars muss eine ganze Zahl zwischen 2 und ${VARIABLE_NAMES.length} sein.`);
   }
 
   const validVariables = VARIABLE_NAMES.slice(0, nVars);
@@ -17,7 +29,7 @@ export function parseLogicFunction(expr, nVars) {
   // Überprüfe, ob alle verwendeten Variablen gültig sind
   const usedVars = Array.from(new Set(normalizedExpr.match(/[A-Za-z]/g)));
   if (usedVars.some(v => !validVariables.includes(v.toUpperCase()))) {
-    throw new Error(`Expression contains invalid variables. Allowed: ${validVariables.join(', ')}`);
+    throw new Error(`Der Ausdruck enthält ungültige Variablen. Erlaubt sind: ${validVariables.join(', ')}`);
   }
 
   // Erstelle Truth-Array für alle möglichen Eingaben
@@ -38,7 +50,7 @@ export function parseLogicFunction(expr, nVars) {
     try {
       result = evaluateExpression(normalizedExpr, variableValues);
     } catch (error) {
-      throw new Error(`Error evaluating expression for input ${bits.join('')}: ${error.message}`);
+      throw new Error(`Fehler beim Auswerten des Ausdrucks für Eingabe ${bits.join('')}: ${error.message}`);
     }
     truthArray.push(result ? 1 : 0);
   }
@@ -110,8 +122,14 @@ function addImplicitConjunctions(expr) {
     // Füge & zwischen Variablen und öffnenden Klammern hinzu (aber nicht nach !)
     expr = expr.replace(/([A-Za-z])\s*\(/g, '$1&(');
     
+    // Füge & zwischen Zahlen (0 oder 1) und öffnenden Klammern hinzu
+    expr = expr.replace(/([01])\s*\(/g, '$1&(');
+    
     // Füge & zwischen schließenden Klammern und Variablen hinzu
     expr = expr.replace(/\)\s*([A-Za-z])/g, ')&$1');
+    
+    // Füge & zwischen schließenden Klammern und Zahlen (0 oder 1) hinzu
+    expr = expr.replace(/\)\s*([01])/g, ')&$1');
     
     // Füge & zwischen schließenden Klammern und not() hinzu
     expr = expr.replace(/\)\s*(not\s*\()/g, ')&$1');
@@ -125,6 +143,17 @@ function addImplicitConjunctions(expr) {
     expr = expr.replace(/([A-Za-z])\s*(!+[A-Za-z])/g, '$1&$2');
     expr = expr.replace(/(!+[A-Za-z])\s*([A-Za-z])/g, '$1&$2');
     expr = expr.replace(/(!+[A-Za-z])\s*(!+[A-Za-z])/g, '$1&$2');
+    
+    // Füge & zwischen Zahlen (0 oder 1) und Variablen hinzu (z.B. "1A", "0B")
+    expr = expr.replace(/([01])\s*([A-Za-z])/g, '$1&$2');
+    expr = expr.replace(/([01])\s*(!+[A-Za-z])/g, '$1&$2');
+    
+    // Füge & zwischen Variablen und Zahlen (0 oder 1) hinzu (z.B. "A1", "B0")
+    expr = expr.replace(/([A-Za-z])\s*([01])/g, '$1&$2');
+    expr = expr.replace(/(!+[A-Za-z])\s*([01])/g, '$1&$2');
+    
+    // Füge & zwischen aufeinanderfolgenden Zahlen (0 oder 1) hinzu (z.B. "10", "01")
+    expr = expr.replace(/([01])\s*([01])/g, '$1&$2');
     
     // Prüfe, ob sich etwas geändert hat
     changed = (oldExpr !== expr);
@@ -149,12 +178,9 @@ function evaluateExpression(expr, variableValues) {
   expr = expr.replace(/!/g, '!');
   
   // Führe die Auswertung aus
-  try {
-    return eval(expr);
-  } catch (error) {
-    console.error("Error evaluating expression:", error);
-    return false;
-  }
+  
+  return eval(expr);
+  
 }
 
 
@@ -175,7 +201,7 @@ export function normalizedExpressionToLatex(expr) {
   // Ersetze normalisierte Operatoren durch LaTeX-Symbole (Input ist bereits normalisiert)
   
   // Konjunktionen (UND) - wird gerendert als \land
-  rendered = rendered.replace(/&/g, ' \\land ');
+  rendered = rendered.replace(/&/g, ' \\;\\& \\;');
   
   // Disjunktionen (ODER) - wird gerendert als \lor
   rendered = rendered.replace(/\|/g, ' \\lor ');
@@ -194,3 +220,4 @@ export function normalizedExpressionToLatex(expr) {
   
   return rendered;
 }
+

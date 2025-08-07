@@ -179,11 +179,17 @@ body {
   cursor: pointer;
   transition: all 0.2s ease;
 }
-
-.var-btn:hover {
+.var-btn:hover:not(:disabled) {
   background: #10b981;
   color: white;
   transform: translateY(-1px);
+}
+
+.var-btn:disabled {
+  cursor: not-allowed;
+  transform: none;
+  border-color: #d1d5db;
+  opacity: 0.5;
 }
 
 .var-count {
@@ -572,4 +578,9 @@ svg {
 .katex-display {
   margin: 0 !important;
   display: inline-block !important;
+}
+
+.preset-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

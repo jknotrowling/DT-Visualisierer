@@ -15,8 +15,9 @@ import { $, debounce, applyPreset, truthArrayToTruthTable} from "../utils/utils.
 import { buildTruth } from '../logic/truth.js';
 
 import { minimize, expand, lit, simplifiedBooleanExpansionRecursive } from '../logic/booleanForm.js';
-import { logicState, VARIABLE_NAMES, expansionState, DEFAULT_LAYOUT_CONFIG, layoutState } from '../state.js';
+import { logicState, VARIABLE_NAMES,customFunctionState, expansionState, DEFAULT_LAYOUT_CONFIG, layoutState } from '../state.js';
 import { parseLogicFunction } from '../logic/parser.js';
+
 
 
 
@@ -28,6 +29,39 @@ function genGroupId() {
   return `expGroup-${expansionState.groupIdCounter++}`;
 }
 
+function disabledButtonsOnEditingCustomFunction() {
+  const minusBtnEl = $("minusBtn");
+  const plusBtnEl = $("plusBtn");
+  console.log("Is edditing",customFunctionState.isEditing)
+  if (minusBtnEl && plusBtnEl) {
+    const disableMinus = customFunctionState.isEditing || logicState.nVars <= 2;
+    const disablePlus = customFunctionState.isEditing || logicState.nVars >= 4;
+
+    console.log("Setting button states", { disableMinus, disablePlus });
+
+    if (disableMinus) {
+        minusBtnEl.setAttribute("disabled", "");
+    } else {
+        minusBtnEl.removeAttribute("disabled");
+    }
+
+    if (disablePlus) {
+        plusBtnEl.setAttribute("disabled", "");
+    } else {
+        plusBtnEl.removeAttribute("disabled");
+    }
+}
+  const presetBtns = document.querySelectorAll(".preset-btn");
+  presetBtns.forEach((btn) => {
+    if (customFunctionState.isEditing) {
+      btn.setAttribute("disabled", "");
+    } else {
+      btn.removeAttribute("disabled");
+    }
+  });
+
+}
+
 
 export function renderAll() {
   $("varCountLbl").textContent = logicState.nVars;
@@ -35,6 +69,7 @@ export function renderAll() {
   renderTruth();
   renderKMap();
   renderCurrentFunctionExpression();
+  disabledButtonsOnEditingCustomFunction();
   const truthByDecimalOrder = [];
   for (let i = 0; i < (1 << logicState.nVars); i++) {
     const binaryLSB = i.toString(2).padStart(logicState.nVars, '0').split('').reverse().join('');
@@ -50,6 +85,11 @@ export function renderAll() {
   renderExpr();
   renderDev();
   setupAllHoverInteractions();
+
+
+
+
+
   
   
 }
@@ -893,15 +933,7 @@ export function init() {
       }
     };
   }
-  const presetOpEl = $("presetOp");
-  if (presetOpEl instanceof HTMLSelectElement) {
-    presetOpEl.onchange = () => {
-      logicState.preset = presetOpEl.value;
-      applyPreset(logicState);
-      renderAll();
-    };
-  }
-
+  
   const expansionOrderInputEl = $("expansionOrderInput");
   if (expansionOrderInputEl) {
     expansionOrderInputEl.onchange = () => {
@@ -933,28 +965,6 @@ export function init() {
   const viewToggleMappings = layoutState.viewToggleMappings
 
   const cardGrid = document.getElementById("card-grid");
-
-  function resetLayoutClasses() {
-    if (cardGrid) {
-      cardGrid.classList.remove("lg:grid-cols-3", "lg:grid-cols-4", "lg:grid-cols-5");
-      cardGrid.classList.add("md:grid-cols-1"," lg:grid-cols-3");
-    }
-    for (const checkboxId in viewToggleMappings) {
-      const cardId = viewToggleMappings[checkboxId].id;
-      const card = $(cardId);
-      if (card) {
-        card.classList.remove("lg:row-span-2", "lg:row-span-1", "lg:row-span-3");
-        
-        card.style.display = "none"; // Hide all cards initially
-      }
-    }
-    
-
-  }
-
-  
-
-  
 
   for (const checkboxId in viewToggleMappings) {
     const checkbox = $(checkboxId);

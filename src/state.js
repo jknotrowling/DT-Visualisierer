@@ -24,7 +24,7 @@ export const logicState = {
 export const customFunctionState = {
   isEditing: false,
   isValid: true,
-  customFunction: "!(A)&!(C|D | B ^ A ^ C)|A",  // entered custum function by user
+  customFunction: "0", 
 };
 
 export const layoutState = {
@@ -37,3 +37,32 @@ export const layoutState = {
     toggleMux: {id: "muxCard", active: true},
   }
 }
+
+export function loadStateFromLocalStorage() {
+  const savedState = localStorage.getItem("dt-visualizer-state");
+  if (savedState) {
+    try {
+      const parsedState = JSON.parse(savedState);
+      Object.assign(logicState, parsedState.logicState);
+      Object.assign(customFunctionState, parsedState.customFunctionState);
+      Object.assign(layoutState, parsedState.layoutState);
+    } catch (error) {
+      console.error("Fehler beim Laden des Zustands aus dem Local Storage:", error);
+    }
+  }
+}
+
+export function saveStateToLocalStorage() {
+  const stateToSave = {
+    logicState: logicState,
+    customFunctionState: customFunctionState,
+    layoutState: layoutState,
+  };
+  try {
+    localStorage.setItem("dt-visualizer-state", JSON.stringify(stateToSave));
+  } catch (error) {
+    console.error("Fehler beim Speichern des Zustands im Local Storage:", error);
+  }
+}
+
+

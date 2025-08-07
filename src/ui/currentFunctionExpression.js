@@ -1,5 +1,5 @@
 import { customFunctionState, VARIABLE_NAMES, logicState} from '../state.js';
-import {$} from '../utils/utils.js'
+import {$, truthArrayToTruthTable} from '../utils/utils.js'
 import { normalizedExpressionToLatex, parseLogicFunction, normalizeExpression } from '../logic/parser.js';
 import {renderAll} from './ui.js';
 
@@ -22,13 +22,13 @@ export function renderCurrentFunctionExpression() {
         latexToRender += usedVars.join(" \\oplus ");
       break;
     case "AND":
-      latexToRender += usedVars.join(" \\land ");
+      latexToRender += usedVars.join(" \\;\\&\\;");
       break;
     case "OR":
       latexToRender += usedVars.join(" \\lor ");
       break;
     case "NAND": {
-      latexToRender += `\\overline{${usedVars.join(" \\land ")}}`;
+      latexToRender += `\\overline{${usedVars.join(" \\;\\&\\; ")}}`;
       break;
     }
     case "NOR": {
@@ -55,7 +55,7 @@ if(currentFunction.toUpperCase() === "CUSTOM") {
                 class="text-lg border rounded-lg p-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold w-10 h-10 flex items-center justify-center"
                 id="edit-custom-function-btn"
             >
-                ✎
+                <i class="fas fa-edit"></i>
             </button>
         </div>
     `;
@@ -67,7 +67,7 @@ if(currentFunction.toUpperCase() === "CUSTOM") {
                 class="text-lg border rounded-lg p-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold w-10 h-10 flex items-center justify-center"
                 id="edit-custom-function-btn"
             >
-                ✔
+                <i class="fas fa-check"></i>
             </button>
         </div>
     `;
@@ -101,20 +101,24 @@ if(currentFunction.toUpperCase() === "CUSTOM") {
         editButton.onclick = () => {
             if(customFunctionState.isEditing) {
                 customFunctionState.isEditing = false;
-                editButton.textContent = "✎";
+                editButton.innerHTML = '<i class="fas fa-edit"></i>';
                 const customFunctionInput = $("custom-function")
                 const inputValue = customFunctionInput.value.trim();
 
                 try {
                     // Validate and parse the custom function
-                    const parsedFunction = parseLogicFunction(inputValue, logicState.nVars);
+                    const truthArray = parseLogicFunction(inputValue, logicState.nVars);
                     customFunctionState.customFunction = inputValue;
                     customFunctionState.isValid = true; // Set to true if parsing is successful
                     
-                    // Clear any previous error styling
-                    customFunctionInput.style.borderColor = '';
-                    customFunctionInput.style.backgroundColor = '';
-                    customFunctionInput.title = '';
+                    customFunctionInput.setCustomValidity(""); // Clear any previous error
+                    customFunctionInput.reportValidity(); // Report validity to update UI
+                    
+                    const truthTable = truthArrayToTruthTable(truthArray, logicState.nVars);
+
+                    logicState.truth = truthTable; // Update the logic state with the new truth table
+                    logicState.preset = "custom"; // Set preset to custom
+                    // Update the logic state with the new truth table
 
                 } catch(error) {
                     // Show error on input
@@ -127,13 +131,13 @@ if(currentFunction.toUpperCase() === "CUSTOM") {
                     
                     // Keep editing mode active
                     customFunctionState.isEditing = true;
-                    editButton.textContent = "✔";
+                    editButton.innerHTML = '<i class="fas fa-check"></i>';
                     return; // Don't proceed to renderAll()
                 }
 
             } else {
                 customFunctionState.isEditing = true;
-                editButton.textContent = "✔"; // Change to check icon
+                editButton.innerHTML = '<i class="fas fa-check"></i>'; // Change to check icon
             }
             renderAll();
             

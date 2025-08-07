@@ -17,8 +17,7 @@ $$
 f(\vec{X}) = \begin{pmatrix}
     x_3 \oplus x_1 + 2x_3  \\
     x_2 \oplus x_0 + 2x_2 
-\end{pmatrix}
-$$
+\end{pmatrix}$$
 Dabei ist $\oplus$ die bitweise XOR-Operation.
 Das logische XOR kann arithmetisch wie folgt dargestellt werden:
 
