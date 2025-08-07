@@ -24,6 +24,12 @@ Open `index.html` in your browser to start the application. All logic and UI com
 - `assets/` – Images, logos, and CSS files
 - `tests/` – Test scripts
 
+## Documentation
+
+- `doc/` – Documentation files
+  - `customFunctionSyntax.md` – Syntax for custom functions
+  - `symmetryMapperFunction.md` – Explanation of the symmetry mapper function
+
 ## Requirements
 
 No installation is required. The application runs entirely in the browser.
