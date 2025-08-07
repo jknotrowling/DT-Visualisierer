@@ -1105,5 +1105,84 @@ export function init() {
     };
   }
   
+  // Initialize collapse functionality
+  initializeCollapseToggle();
+}
+
+// Collapse functionality for display options
+function initializeCollapseToggle() {
+  const collapseToggle = $("collapseToggle");
+  const displayOptionsContent = $("displayOptionsContent");
+  const collapseIcon = $("collapseIcon");
+  
+  if (!collapseToggle || !displayOptionsContent || !collapseIcon) {
+    console.warn("Collapse elements not found");
+    return;
+  }
+
+  // Set initial state (expanded by default)
+  layoutState.displayOptionsExpanded = layoutState.displayOptionsExpanded !== false; // Default to true
+  updateCollapseState();
+
+  collapseToggle.addEventListener("click", toggleDisplayOptions);
+}
+
+function toggleDisplayOptions() {
+  layoutState.displayOptionsExpanded = !layoutState.displayOptionsExpanded;
+  updateCollapseState();
+}
+
+function updateCollapseState() {
+  const displayOptionsContent = $("displayOptionsContent");
+  const collapseIcon = $("collapseIcon");
+  
+  if (!displayOptionsContent || !collapseIcon) return;
+
+  if (layoutState.displayOptionsExpanded) {
+    // First set display and get the natural height
+    displayOptionsContent.style.display = "block";
+    displayOptionsContent.style.overflow = "hidden"; // Ensure smooth animation
+    displayOptionsContent.style.maxHeight = "none";
+    const naturalHeight = displayOptionsContent.scrollHeight;
+    
+    // Reset for animation
+    displayOptionsContent.style.maxHeight = "0";
+    displayOptionsContent.style.opacity = "0";
+    
+    // Force reflow
+    displayOptionsContent.offsetHeight;
+    
+    // Animate to natural height
+    displayOptionsContent.style.maxHeight = naturalHeight + "px";
+    displayOptionsContent.style.opacity = "1";
+    displayOptionsContent.style.paddingTop = "1rem";
+    displayOptionsContent.style.paddingBottom = "0";
+    collapseIcon.style.transform = "translateY(-50%) rotate(180deg)";
+    collapseIcon.setAttribute("aria-expanded", "true");
+    
+    // After animation completes, remove constraints to allow natural sizing
+    setTimeout(() => {
+      if (layoutState.displayOptionsExpanded) {
+        displayOptionsContent.style.maxHeight = "none";
+        displayOptionsContent.style.overflow = "visible";
+      }
+    }, 300);
+  } else {
+    // Get current height for smooth collapse
+    displayOptionsContent.style.overflow = "hidden"; // Ensure smooth animation
+    const currentHeight = displayOptionsContent.scrollHeight;
+    displayOptionsContent.style.maxHeight = currentHeight + "px";
+    
+    // Force reflow
+    displayOptionsContent.offsetHeight;
+    
+    // Animate to collapsed
+    displayOptionsContent.style.maxHeight = "0";
+    displayOptionsContent.style.opacity = "0";
+    displayOptionsContent.style.paddingTop = "0";
+    displayOptionsContent.style.paddingBottom = "0";
+    collapseIcon.style.transform = "translateY(-50%) rotate(0deg)";
+    collapseIcon.setAttribute("aria-expanded", "false");
+  }
 }
 

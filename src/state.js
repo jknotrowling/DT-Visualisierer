@@ -29,6 +29,7 @@ export const customFunctionState = {
 
 export const layoutState = {
    isLandscape: false,
+   displayOptionsExpanded: false,
    viewToggleMappings: {
     toggleTruthTable: {id: "truthTableCard", active: true},
     toggleKmap: {id: "kmapCard", active: true},
