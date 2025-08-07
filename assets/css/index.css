@@ -208,6 +208,68 @@ body {
   color: #374151;
 }
 
+/* Collapse functionality */
+#collapseToggle {
+  user-select: none;
+  position: relative;
+}
+
+#collapseToggle:focus {
+  outline: none;
+}
+
+#collapseIcon {
+  position: absolute;
+  right: 0.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: transform 0.3s ease-in-out;
+}
+
+#displayOptionsContent {
+  will-change: max-height, opacity, padding;
+  overflow: hidden;
+  transition: max-height 0.3s ease-in-out, 
+              opacity 0.3s ease-in-out, 
+              padding 0.3s ease-in-out;
+}
+
+.options-title.mb-0 {
+  margin-bottom: 0;
+}
+
+/* Current Function Expression Scrolling */
+#current-function {
+  max-width: 100%;
+}
+
+#current-function > div {
+  max-width: 100%;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(59, 130, 246, 0.3) transparent;
+}
+
+#current-function > div::-webkit-scrollbar {
+  height: 6px;
+}
+
+#current-function > div::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#current-function > div::-webkit-scrollbar-thumb {
+  background-color: rgba(59, 130, 246, 0.3);
+  border-radius: 3px;
+}
+
+#current-function > div::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(59, 130, 246, 0.5);
+}
+
+#current-function-expression {
+  min-width: max-content;
+}
+
 .option-card {
   background: white;
   border: 1px solid #e5e7eb;

@@ -63,7 +63,7 @@ if(currentFunction.toUpperCase() === "CUSTOM") {
     } else {
         currentFunctionEl.innerHTML = `
         <div class="flex justify-between items-center gap-4">
-            <input value="${customFunctionState.customFunction}" type="text" id="custom-function" class="flex-1 p-2 border rounded-lg bg-white text-gray-800 font-mono" placeholder="Enter custom function" />
+            <input value="${customFunctionState.customFunction}" type="text" id="custom-function" class="w-full flex-1 p-2 border rounded-lg bg-white text-gray-800 font-mono"/>
             <button
                 class="text-lg border rounded-lg p-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold w-10 h-10 flex items-center justify-center"
                 id="edit-custom-function-btn"

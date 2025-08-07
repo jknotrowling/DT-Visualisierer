@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP" crossorigin="anonymous">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js" integrity="sha384-cMkvdD8LoxVzGF/RPUKAcvmm49FQ0oxwDF3BGKtDXcEc+T1b2N+teh/OJfpU0jr6" crossorigin="anonymous"></script>
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css">
   <link rel="stylesheet" href="assets/css/symmetry.css">
   <link rel="stylesheet" href="assets/css/index.css">
 
@@ -76,48 +77,62 @@
                 </div>
               </div>
             </div>
-
-            <div id="current-function" class="mb-6 p-6 rounded-xl shadow-lg bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 border border-blue-200 flex flex-col items-center justify-center gap-1.5">
-  <span class="block text-base font-medium text-blue-800 tracking-wide mb-1">Aktuelle Logikfunktion</span>
-  <span id="current-function-expression" class="flex justify-center text-3xl font-mono font-bold text-gray-800 bg-white/80 px-4 py-2 rounded-lg shadow border border-blue-100"></span>
-</div>
-
-
             <!-- Display Options Section -->
             <div>
-              <h4 class="options-title">Darstellungsoptionen</h4>
-              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                <div class="option-card">
-                  <input type="checkbox" id="toggleTruthTable" checked class="option-checkbox">
-                  <label for="toggleTruthTable" class="option-label">Wahrheitstabelle</label>
-                </div>
-                <div class="option-card">
-                  <input type="checkbox" id="toggleKmap" checked class="option-checkbox">
-                  <label for="toggleKmap" class="option-label">Symmetriediagramm</label>
-                </div>
-                <div class="option-card">
-                  <input type="checkbox" id="toggleExpressions" checked class="option-checkbox">
-                  <label for="toggleExpressions" class="option-label">Min-/Maxterme</label>
-                </div>
-                <div class="option-card">
-                  <input type="checkbox" id="toggleBooleanDev" checked class="option-checkbox">
-                  <label for="toggleBooleanDev" class="option-label">Boolesche Entwicklung</label>
-                </div>
-                <div class="option-card">
-                  <input type="checkbox" id="toggleMux" checked class="option-checkbox">
-                  <label for="toggleMux" class="option-label">Multiplexer</label>
-                </div>
-                <div>
-                  <button id="landscapeToggleBtn" aria-label="Toggle Landscape Mode" class="landscape-btn">
-                    <img class="mr-2" src="assets/rotate.png" alt="Toggle Landscape Mode">
-                    <span>Landscape</span>
-                  </button>
+              <div id="collapseToggle" class="flex items-center justify-between cursor-pointer py-2 px-1 rounded-lg  hover:bg-gray-50" role="button" aria-expanded="false" tabindex="0">
+                <h4 class="options-title mb-0">Darstellungsoptionen</h4>
+                <svg id="collapseIcon" class="w-5 h-5 text-gray-500 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </div>
+              <div id="displayOptionsContent" class="transition-all duration-300 ease-in-out" style="transform-origin: top; max-height: 0; opacity: 0; padding-top: 0;">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <div class="option-card">
+                    <input type="checkbox" id="toggleTruthTable" checked class="option-checkbox">
+                    <label for="toggleTruthTable" class="option-label">Wahrheitstabelle</label>
+                  </div>
+                  <div class="option-card">
+                    <input type="checkbox" id="toggleKmap" checked class="option-checkbox">
+                    <label for="toggleKmap" class="option-label">Symmetriediagramm</label>
+                  </div>
+                  <div class="option-card">
+                    <input type="checkbox" id="toggleExpressions" checked class="option-checkbox">
+                    <label for="toggleExpressions" class="option-label">Min-/Maxterme</label>
+                  </div>
+                  <div class="option-card">
+                    <input type="checkbox" id="toggleBooleanDev" checked class="option-checkbox">
+                    <label for="toggleBooleanDev" class="option-label">Boolesche Entwicklung</label>
+                  </div>
+                  <div class="option-card">
+                    <input type="checkbox" id="toggleMux" checked class="option-checkbox">
+                    <label for="toggleMux" class="option-label">Multiplexer</label>
+                  </div>
+                  <div>
+                    <button id="landscapeToggleBtn" aria-label="Toggle Landscape Mode" class="landscape-btn">
+                      <img class="mr-2" src="assets/rotate.png" alt="Toggle Landscape Mode">
+                      <span>Landscape</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
         </div>
         </div>
     </div>
+
+
+    <section class="card mb-6" id="current-function-card">
+      <div class="inner-card ">
+         
+  
+   <h4 class="text-3xl font-bold text-gray-700 pt-4 px-2 text-center">Aktuelle Logikfunktion</h4>
+    <div class="card-body">
+      <div class="w-full overflow-x-auto">
+      <span id="current-function-expression" class="flex justify-center text-3xl font-mono font-bold text-gray-800 whitespace-nowrap min-w-0"></span>
+    </div>
+    </div>
+    </div>
+    </section>
 
     <main id="card-grid" class="grid md:grid-cols-1 lg:grid-cols-3 gap-6 w-full">
 
