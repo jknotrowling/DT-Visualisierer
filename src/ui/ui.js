@@ -175,8 +175,7 @@ function renderKMap() {
 
           customFunctionState.customFunction = getMinimalExpression();
           logicState.preset = "custom";
-          const presetOpEl = $("presetOp");
-          if (presetOpEl instanceof HTMLSelectElement) presetOpEl.value = "custom";
+          
           renderAll();
         };
       });

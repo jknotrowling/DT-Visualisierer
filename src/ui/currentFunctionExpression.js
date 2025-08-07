@@ -51,7 +51,7 @@ if(currentFunction.toUpperCase() === "CUSTOM") {
     if(!customFunctionState.isEditing) {
         currentFunctionEl.innerHTML = `
         <div class="flex justify-between items-center gap-4">
-            <div id="katex-display-preset">${latexToRender}</div> 
+            <div id="katex-display-preset"></div> 
             <button
                 class="text-lg border rounded-lg p-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold w-10 h-10 flex items-center justify-center"
                 id="edit-custom-function-btn"
@@ -63,6 +63,7 @@ if(currentFunction.toUpperCase() === "CUSTOM") {
     } else {
         currentFunctionEl.innerHTML = `
         <div class="flex justify-between items-center gap-4">
+        <div id="katex-display-preset-edit"></div> 
             <input value="${customFunctionState.customFunction}" type="text" id="custom-function" class="w-full flex-1 p-2 border rounded-lg bg-white text-gray-800 font-mono"/>
             <button
                 class="text-lg border rounded-lg p-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold w-10 h-10 flex items-center justify-center"
@@ -77,22 +78,15 @@ if(currentFunction.toUpperCase() === "CUSTOM") {
     currentFunctionEl.innerHTML = `<div id="katex-display-preset">${latexToRender}</div>`;
 }   
   
-  
 
     if (typeof katex !== 'undefined') {
         const container = currentFunctionEl.querySelector('#katex-display-preset');
+        const container2 = currentFunctionEl.querySelector("#katex-display-preset-edit")
         if (container) {
-            try {
-                katex.render(latexToRender, container, {
-                    throwOnError: false,
-                    displayMode: true
-                });
-            } catch (error) {
-                console.error('KaTeX rendering error:', error);
-                container.textContent = latexToRender;
-            }
-        } else {
-            console.error('Container for KaTeX rendering not found');
+                katex.render(latexToRender, container, {throwOnError: false,displayMode: true});
+        } 
+        if(container2) {
+            katex.render(`f(${usedVars.join(", ")}) = `, container2, {throwOnError: false,displayMode: true});
         }
     }
 
@@ -144,6 +138,8 @@ if(currentFunction.toUpperCase() === "CUSTOM") {
             
 }
 
+}
+}
 
-}
-}
+
+
