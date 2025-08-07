@@ -4,86 +4,177 @@
   <meta charset="UTF-8">
   <title>Logik-Visualizer</title>
 
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js" integrity="sha384-cMkvdD8LoxVzGF/RPUKAcvmm49FQ0oxwDF3BGKtDXcEc+T1b2N+teh/OJfpU0jr6" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
   <link rel="stylesheet" href="assets/css/symmetry.css">
   <link rel="stylesheet" href="assets/css/index.css">
 
+  
 </head>
 <body>
   <div class="page">
-    <header class="page-header">
-      <img src="assets/KIT_logo.svg" alt="KIT Logo" class="logo kit" role="img">
-      <div class="title-group">
-        <h1>Institut für Technik der Informationsverarbeitung</h1>
-        <h2>Digitaltechnik</h2>
-        <h3>Logik-Visualisierer</h3>
-      </div>
-      <img src="assets/ITIV_logo.svg" alt="ITIV Logo" class="logo itiv" role="img">
-    </header>
+    <div class="card mb-6">
+        <div class="inner-card">
+          <header class="page-header">
+            <img src="assets/KIT_logo.svg" alt="KIT Logo" class="logo kit" role="img">
+            <div class="title-group">
+              <h1>Institut für Technik der Informationsverarbeitung</h1>
+              <h2>Digitaltechnik</h2>
+              <h3>Logik-Visualisierer</h3>
+            </div>
+            <img src="assets/ITIV_logo.svg" alt="ITIV Logo" class="logo itiv" role="img">
+          </header>
+          <div class="controls-section p-6">
+            <!-- Configuration Section -->
+            <div class="mb-6">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="config-card config-card-blue">
+                  <div class="config-header">
+                    <div class="config-dot config-dot-blue"></div>
+                    <span class="config-title config-title-blue">Logikfunktion</span>
+                  </div>
+                    <div class="flex flex-wrap gap-2 mt-2" role="group" aria-label="Logikgatter-Preset auswählen">
+                    <button type="button" class="preset-btn active px-4 py-2 rounded-lg bg-gray-700 border border-gray-700 shadow-md text-white font-bold transition text-lg" 
+                    data-value="and">
+                      <span class="inline-block align-middle">AND</span>
+                    </button>
+                    <button type="button" class="preset-btn px-4 py-2 rounded-lg bg-white border border-gray-300 shadow-sm text-gray-700 font-semibold transition text-lg"
+                     data-value="or">
+                      <span class="inline-block align-middle">OR</span>
+                    </button>
+                    <button type="button" class="preset-btn px-4 py-2 rounded-lg bg-white border border-gray-300 shadow-sm text-gray-700 font-semibold transition text-lg" 
+                    data-value="xor">
+                      <span class="inline-block align-middle">XOR</span>
+                    </button>
+                    <button type="button" class="preset-btn px-4 py-2 rounded-lg bg-white border border-gray-300 shadow-sm text-gray-700 font-semibold transition text-lg" 
+                    data-value="nand">
+                      <span class="inline-block align-middle">NAND</span>
+                    </button>
+                    <button type="button" class="preset-btn px-4 py-2 rounded-lg bg-white border border-gray-300 shadow-sm text-gray-700 font-semibold transition text-lg"
+                     data-value="nor">
+                      <span class="inline-block align-middle">NOR</span>
+                    </button>
+                    <button type="button" class="preset-btn px-4 py-2 rounded-lg bg-white border border-gray-300 shadow-sm text-gray-700 font-semibold transition text-lg" 
+                    data-value="xnor">
+                      <span class="inline-block align-middle">XNOR</span>
+                    </button>
+                    <button type="button" class="preset-btn px-4 py-2 rounded-lg bg-white border border-gray-300 shadow-sm text-gray-700 font-semibold transition text-lg" 
+                    data-value="custom">
+                      <span class="inline-block align-middle">Custom</span>
+                    </button>
+                    </div>
+                </div>
+                
+                <div class="config-card config-card-green">
+                  <div class="config-header">
+                    <div class="config-dot config-dot-green"></div>
+                    <span class="config-title config-title-green">Anzahl Variablen</span>
+                  </div>
+                  <div class="variable-controls">
+                    <button id="minusBtn" aria-label="Anzahl der Variablen verringern" class="var-btn">−</button>
+                    <span id="varCountLbl" class="var-count"></span>
+                    <button id="plusBtn" aria-label="Anzahl der Variablen erhöhen" class="var-btn">+</button>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-    <div style="margin-bottom: 1.5rem; padding: 1rem; background: var(--card-bg); border:2px solid var(--kit-blue); border-radius:6px; box-shadow:var(--shadow); text-align: center;">
-        <select id="presetOp" aria-label="Logikgatter-Preset auswählen">
-        <option value="custom">custom</option>
-        <option value="and">AND</option>
-        <option value="or">OR</option>
-        <option value="xor" selected>XOR</option>
-        <option value="nand">NAND</option>
-        <option value="nor">NOR</option>
-        <option value="xnor">XNOR</option>
-        </select>
-        &nbsp;&nbsp;
-        Variablen:
-        <button id="minusBtn" aria-label="Anzahl der Variablen verringern">−</button>
-        <span id="varCountLbl">3</span>
-        <button id="plusBtn" aria-label="Anzahl der Variablen erhöhen">+</button>
-        &nbsp;&nbsp;
-        <input type="checkbox" id="toggleTruthTable" checked> <label for="toggleTruthTable">Wahrheitstabelle</label>
-        <input type="checkbox" id="toggleKmap" checked> <label for="toggleKmap">Symmetriediagramm</label>
-        <input type="checkbox" id="toggleExpressions" checked> <label for="toggleExpressions">Min-/Maxterme</label>
-        <input type="checkbox" id="toggleBooleanDev" checked> <label for="toggleBooleanDev">Boolesche Entwicklung</label>
-        <input type="checkbox" id="toggleMux" checked> <label for="toggleMux">Multiplexer</label>
-        &nbsp;&nbsp;
-        <button id="landscapeToggleBtn" aria-label="Toggle Landscape Mode"><img src="assets/rotate.png" alt="Toggle Landscape Mode"></button>
+            <div id="current-function" class="mb-6 p-6 rounded-xl shadow-lg bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 border border-blue-200 flex flex-col items-center justify-center gap-1.5">
+  <span class="block text-base font-medium text-blue-800 tracking-wide mb-1">Aktuelle Logikfunktion</span>
+  <span id="current-function-expression" class="overflow-y-auto  w-full flex justify-center text-3xl font-mono font-bold text-gray-800 px-4 py-2 rounded-lg "></span>
+</div>
+
+
+            <!-- Display Options Section -->
+            <div>
+              <h4 class="options-title">Darstellungsoptionen</h4>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div class="option-card">
+                  <input type="checkbox" id="toggleTruthTable" checked class="option-checkbox">
+                  <label for="toggleTruthTable" class="option-label">Wahrheitstabelle</label>
+                </div>
+                <div class="option-card">
+                  <input type="checkbox" id="toggleKmap" checked class="option-checkbox">
+                  <label for="toggleKmap" class="option-label">Symmetriediagramm</label>
+                </div>
+                <div class="option-card">
+                  <input type="checkbox" id="toggleExpressions" checked class="option-checkbox">
+                  <label for="toggleExpressions" class="option-label">Min-/Maxterme</label>
+                </div>
+                <div class="option-card">
+                  <input type="checkbox" id="toggleBooleanDev" checked class="option-checkbox">
+                  <label for="toggleBooleanDev" class="option-label">Boolesche Entwicklung</label>
+                </div>
+                <div class="option-card">
+                  <input type="checkbox" id="toggleMux" checked class="option-checkbox">
+                  <label for="toggleMux" class="option-label">Multiplexer</label>
+                </div>
+                <div>
+                  <button id="landscapeToggleBtn" aria-label="Toggle Landscape Mode" class="landscape-btn">
+                    <img class="mr-2" src="assets/rotate.png" alt="Toggle Landscape Mode">
+                    <span>Landscape</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+        </div>
+        </div>
     </div>
 
-    <main class="card-grid">
+    <main id="card-grid" class="grid md:grid-cols-1 lg:grid-cols-3 gap-6 w-full">
+
       <section class="card" id="truthTableCard">
-        <h4 class="card-title">Wahrheitstabelle</h4>
+       <div class="inner-card"> 
+        <h4 class="text-3xl font-bold text-gray-700 pt-4 px-2 text-center">Wahrheitstabelle</h4>
         <div class="card-body">
           <div id="truthWrap"></div>
-        </div>
+        </div></div>
       </section>
 
       <section class="card" id="kmapCard">
-        <h4 class="card-title">Symmetriediagramm</h4>
-        <div class="card-body">
-          <div id="symmetry-diagram"></div>
+        <div class="inner-card">
+          <h4 class="text-3xl font-bold text-gray-700 pt-4 px-2 text-center">Symmetriediagramm</h4>
+          <div class="p-6 h-full flex flex-col">
+            <div id="symmetry-diagram"></div>
+          </div>
         </div>
       </section>
 
       <section class="card" id="expressionsCard">
-        <h4 class="card-title">DNF/KNF &amp; DMF/KMF</h4>
-        <div class="card-body">
-          <div id="exprWrap"></div>
+        <div class="inner-card">
+          <h4 class="text-3xl font-bold text-gray-700 pt-4 px-2 text-center">DNF/KNF &amp; DMF/KMF</h4>
+          <div class="card-body">
+        <div id="exprWrap"></div>
+          </div>
         </div>
       </section>
 
       <section class="card" id="booleanDevCard">
-        <h4 class="card-title">Boolesche Entwicklung</h4>
-        <div class="card-body">
-          <div style="margin-bottom: 10px;">
-            <label for="expansionOrderInput">Entwicklungsreihenfolge:</label>
-            <input type="text" id="expansionOrderInput" placeholder="z.B. cba" style="width: 100px; margin-left: 5px;" aria-label="Entwicklungsreihenfolge für Boolesche Entwicklung eingeben">
+        <div class="inner-card">
+          <h4 class="text-3xl font-bold text-gray-700 pt-4 px-2 text-center">Boolesche Entwicklung</h4>
+          <div class="card-body">
+        <div style="margin-bottom: 10px;">
+          <label for="expansionOrderInput">Entwicklungsreihenfolge:</label>
+          <input type="text" id="expansionOrderInput" placeholder="z.B. cba" style="width: 100px; margin-left: 5px;" aria-label="Entwicklungsreihenfolge für Boolesche Entwicklung eingeben">
+        </div>
+        <div id="devWrap"></div>
           </div>
-          <div id="devWrap"></div>
         </div>
       </section>
 
       <section class="card" id="muxCard">
-        <h4 class="card-title">Multiplexer Realisierung</h4>
-        <div class="card-body" style="display: flex; flex-direction: column;">
-          <div id="muxWrap">
-            <svg id="muxDiagramSvg" style="border:1px solid #ccc;"></svg> <!-- Removed fixed height -->
+        <div class="inner-card">
+          <h4 class="text-3xl font-bold text-gray-700 pt-4 px-2 text-center">Multiplexer Realisierung</h4>
+          <div class="card-body" style="display: flex; flex-direction: column;">
+        <div id="muxWrap">
+          <svg id="muxDiagramSvg" style="border:1px solid #ccc;"></svg>
+        </div>
           </div>
         </div>
       </section>

@@ -1,4 +1,4 @@
-import { VARIABLE_NAMES } from "../index.js";
+import { VARIABLE_NAMES } from "../state.js";
 
 
 export function debounce(func, wait) {
@@ -20,9 +20,10 @@ export const lbl = (i, neg) => (neg ? `<span class="ov">${VARIABLE_NAMES[i]}</sp
 
 export function applyPreset(logicState) {
   if (logicState.preset === "custom") return;
+  const preset = logicState.preset.toLowerCase();
   logicState.truth.forEach((r) => {
     const ones = [...r.bits].filter((b) => b === "1").length;
-    switch (logicState.preset) {
+    switch (preset) {
       case "and":
         r.out = ones === logicState.nVars ? 1 : 0;
         break;
@@ -42,4 +43,9 @@ export function applyPreset(logicState) {
         r.out = ones & 1 ? 0 : 1;
     }
   });
+}
+
+
+export function truthArrayToTruthTable(truthArray, nVars) {
+  return truthArray.map((out,index) => ({out, bits: index.toString(2).padStart(nVars, "0")}));
 }

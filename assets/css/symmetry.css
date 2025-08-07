@@ -17,8 +17,8 @@
 }
 
 .symmetry-diagram-cell {
-        width: 42px;
-        height: 42px;
+        width: 54;
+        height: 54px;
         text-align: center;
         display: flex;
         justify-content: center;
@@ -44,8 +44,8 @@
 
 
 .symmetry-diagram-frame-cell {
-        width: 42px;
-        height: 42px;
+        width: 54px;
+        height: 54px;
         text-align: center;
         display: flex;
         justify-content: center;
@@ -85,22 +85,22 @@
 
 
 .symmetry-diagram-frame-top-label-cell {
-    border-bottom: 2px solid black;
+    border-bottom: 2px solid #d1d5db;
     /* Remove margin that breaks layout */
 }
 
 .symmetry-diagram-frame-left-label-cell {
-    border-right: 2px solid black;
+    border-right: 2px solid #d1d5db;
     /* Remove margin that breaks layout */
 }
 
 .symmetry-diagram-frame-bottom-label-cell {
-    border-top: 2px solid black;
+    border-top: 2px solid #d1d5db;
     /* Remove margin that breaks layout */
 }
 
 .symmetry-diagram-frame-right-label-cell {
-    border-left: 2px solid black;
+    border-left: 2px solid #d1d5db;
     /* Remove margin that breaks layout */
 }
 

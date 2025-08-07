@@ -1,4 +1,4 @@
-import { logicState, VARIABLE_NAMES } from "../index.js";
+import { logicState, VARIABLE_NAMES } from "../state.js";
 import { bin } from "../utils/utils.js";
 
 export function buildTruth(oldTruthArray = null, previousNVars = -1) {

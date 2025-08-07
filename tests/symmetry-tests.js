@@ -1,36 +1,15 @@
-export function mapDecimalToSymmetryDiagramField(decimalIndex, numberOfVariables) {
 
-    if(numberOfVariables > 4 || numberOfVariables < 2) {
-        throw new Error("'numberOfVariables' must be an integer ∈ [2, 4]");
-    }
+function mapDecimalToSymmetryDiagramField(decimalIndex){
+    const bits =  Array.from({ length: 4 }, (_, i) => (decimalIndex >> i) & 1);
 
-    if (decimalIndex < 0 || decimalIndex > (2**numberOfVariables)-1 || !Number.isInteger(decimalIndex)) {
-        throw new Error(`'decimalIndex' must be an integer ∈ [0, ${(2**numberOfVariables)-1}]`);
-    }
+    const [a0, a1, a2, a3] = bits;
 
-    const a0 = (decimalIndex >> 0) & 1;
-    const a1 = (decimalIndex >> 1) & 1;
-    const a2 = numberOfVariables > 2 ? (decimalIndex >> 2) & 1 : 0;
-    const a3 = numberOfVariables > 3 ? (decimalIndex >> 3) & 1 : 0;
-    
-    let r, c;
-    
-    if (numberOfVariables === 2) {
-        // For 2 variables: simple 2x2 mapping
-        r = a1;
-        c = a0;
-    } else if (numberOfVariables === 3) {
-        // For 3 variables: 2x4 mapping
-        r = a2;
-        c = (a1 << 1) | a0;
-    } else { // numberOfVariables === 4
-        // For 4 variables: 4x4 Gray code mapping
-        r = (a3 ^ a1) + (a3 << 1);
-        c = (a2 ^ a0) + (a2 << 1);
-    }
-    
-    return [r, c];
+    return [
+        a3+a1-2*(a3*a1) + 2*a3,
+        a2+a0-2*(a2*a0) + 2*a2
+    ]
 }
+
 
 
 

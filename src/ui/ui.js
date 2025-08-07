@@ -1,5 +1,5 @@
- import { renderSymmetryDiagram } from './symmetry/ui.js';
-
+import { renderSymmetryDiagram } from './symmetry.js';
+import {renderCurrentFunctionExpression} from './currentFunctionExpression.js';
 import {
   setSvgMux,
   MUX_DIAGRAM_STATE,
@@ -10,12 +10,16 @@ import {
   renderMuxDiagram,
 } from "../logic/mux.js";
 
-import { $, debounce, applyPreset} from "../utils/utils.js";
+import { $, debounce, applyPreset, truthArrayToTruthTable} from "../utils/utils.js";
 
 import { buildTruth } from '../logic/truth.js';
 
 import { minimize, expand, lit, simplifiedBooleanExpansionRecursive } from '../logic/booleanForm.js';
-import { logicState, VARIABLE_NAMES, expansionState, DEFAULT_LAYOUT_CONFIG } from '../index.js';
+import { logicState, VARIABLE_NAMES,customFunctionState, expansionState, DEFAULT_LAYOUT_CONFIG, layoutState } from '../state.js';
+import { parseLogicFunction } from '../logic/parser.js';
+
+
+
 
 
 function genSpanId() {
@@ -25,11 +29,47 @@ function genGroupId() {
   return `expGroup-${expansionState.groupIdCounter++}`;
 }
 
+function disabledButtonsOnEditingCustomFunction() {
+  const minusBtnEl = $("minusBtn");
+  const plusBtnEl = $("plusBtn");
+  console.log("Is edditing",customFunctionState.isEditing)
+  if (minusBtnEl && plusBtnEl) {
+    const disableMinus = customFunctionState.isEditing || logicState.nVars <= 2;
+    const disablePlus = customFunctionState.isEditing || logicState.nVars >= 4;
 
-function renderAll() {
+    console.log("Setting button states", { disableMinus, disablePlus });
+
+    if (disableMinus) {
+        minusBtnEl.setAttribute("disabled", "");
+    } else {
+        minusBtnEl.removeAttribute("disabled");
+    }
+
+    if (disablePlus) {
+        plusBtnEl.setAttribute("disabled", "");
+    } else {
+        plusBtnEl.removeAttribute("disabled");
+    }
+}
+  const presetBtns = document.querySelectorAll(".preset-btn");
+  presetBtns.forEach((btn) => {
+    if (customFunctionState.isEditing) {
+      btn.setAttribute("disabled", "");
+    } else {
+      btn.removeAttribute("disabled");
+    }
+  });
+
+}
+
+
+export function renderAll() {
   $("varCountLbl").textContent = logicState.nVars;
+  
   renderTruth();
   renderKMap();
+  renderCurrentFunctionExpression();
+  disabledButtonsOnEditingCustomFunction();
   const truthByDecimalOrder = [];
   for (let i = 0; i < (1 << logicState.nVars); i++) {
     const binaryLSB = i.toString(2).padStart(logicState.nVars, '0').split('').reverse().join('');
@@ -45,20 +85,41 @@ function renderAll() {
   renderExpr();
   renderDev();
   setupAllHoverInteractions();
+
+
+
+
+
+  
+  
 }
 
 function renderTruth() {
-  let h = '<table class="truth"><tr>';
-  for (let i = 0; i < logicState.nVars; i++) h += `<th>${VARIABLE_NAMES[i]}</th>`;
-  h += "<th>f</th></tr>";
   
-  logicState.truth.forEach((r) => {
-    const cls = r.out === 1 ? "on" : r.out === null ? "dc" : "off";
-    const dsp = r.out === null ? "-" : r.out;
-    h += `<tr><td>${[...r.bits].join("</td><td>")}</td>
-        <td class="outCell ${cls}" data-bits="${r.bits}">${dsp}</td></tr>`;
-  });
-  h += "</table>";
+  const nVars = logicState.nVars;
+  const header = [...VARIABLE_NAMES.slice(0, nVars).reverse(), 'f'];
+  const gridCols = nVars + 1;
+
+  const cellWidthClass = "min-w-[2.5rem] px-3";
+  // Use Tailwind's grid-cols-4, grid-cols-5, etc. for up to 4 variables
+  const gridColsClass = `grid-cols-${gridCols > 6 ? 6 : gridCols}`;
+  let h = `<div class="grid ${gridColsClass} gap-2 bg-white rounded-xl p-4 ">
+    ${header.map(
+      th => `<div class="${cellWidthClass} text-center font-semibold text-gray-700 bg-gray-100 rounded py-2">${th}</div>`
+    ).join('')}
+    ${logicState.truth.map(r => {
+      const cellBase = `${cellWidthClass} flex items-center justify-center text-center rounded transition cursor-pointer border font-bold`;
+      let outClass = "";
+      let outText = r.out === null ? "-" : r.out;
+      if (r.out === 1) outClass = "bg-green-100 border-green-600 text-green-700"
+      else if (r.out === 0) outClass = "";
+      else outClass = "bg-yellow-100 border-yellow-600 text-yellow-700";
+      return [
+        ...[...r.bits].reverse().map(b => `<div class="${cellBase} bg-gray-50 border-gray-200">${b}</div>`),
+        `<div class="outCell ${cellBase} ${outClass}" data-bits="${r.bits}">${outText}</div>`
+      ].join('');
+    }).join('')}
+  </div>`;
   const truthWrap = document.querySelector(
     "#truthTableCard .card-body #truthWrap"
   );
@@ -73,7 +134,9 @@ function renderTruth() {
       const o = logicState.truth.find((t) => t.bits === bits);
       if (!o) return;
       o.out = o.out === 0 ? 1 : o.out === 1 ? null : 0;
+
       logicState.preset = "custom";
+      logicState.customFunction = ""
       const presetOpEl = $("presetOp");
       if (presetOpEl instanceof HTMLSelectElement) presetOpEl.value = "custom";
       renderAll();
@@ -110,6 +173,7 @@ function renderKMap() {
             bits: currentValue.bits,
           };
 
+          logicState.customFunction = ""
           logicState.preset = "custom";
           const presetOpEl = $("presetOp");
           if (presetOpEl instanceof HTMLSelectElement)
@@ -137,7 +201,10 @@ function renderExpr() {
   const dmf = minimize(logicState.nVars, ones, dcs);
   const kmf = minimize(logicState.nVars, zeros, dcs);
 
-  let h = "<strong>DNF:</strong><br>";
+  let h = `<div class="config-header">
+                    <div class="config-dot config-dot-blue"></div>
+                    <span class="config-title config-title-blue">DNF</span>
+                  </div>` //"<strong>DNF:</strong><br>";
   h += dnfR.length
     ? dnfR
         .map(
@@ -147,10 +214,13 @@ function renderExpr() {
               "dnf"
             )}</span>`
         )
-        .join(" ∨ ")
+        .join(" v ")
     : "0";
 
-  h += "<hr><strong>KNF:</strong><br>";
+  h += `<hr class="mt-2"><div class="config-header">
+                    <div class="config-dot config-dot-red"></div>
+                    <span class="config-title config-title-red">KNF</span>
+                  </div>`//"<hr><strong>KNF:</strong><br>";
   h += cnfR.length
     ? cnfR
         .map(
@@ -163,7 +233,10 @@ function renderExpr() {
         .join(" ∧ ")
     : "1";
 
-  h += "<hr><strong>DMF (min):</strong><br>";
+  h += `<hr class="mt-2"><div class="config-header">
+                    <div class="config-dot config-dot-green"></div>
+                    <span class="config-title config-title-green">DMF (min)</span>
+                  </div>`//"<hr><strong>DMF (min):</strong><br>";
   h += dmf.length
     ? dmf
         .map(
@@ -175,7 +248,10 @@ function renderExpr() {
         .join(" ∨ ")
     : "0";
 
-  h += "<hr><strong>KMF (min):</strong><br>";
+  h += `<hr class="mt-2"><div class="config-header">
+                    <div class="config-dot config-dot-orange"></div>
+                    <span class="config-title config-title-orange">KMF (min)</span>
+                  </div>`//"<hr><strong>KMF (min):</strong><br>";
   h += kmf.length
     ? kmf
         .map(
@@ -671,6 +747,138 @@ function highlightTableCells(arr, on) {
   });
 }
 
+function resetGridColsToDefault() {
+  const cardGrid = document.querySelector("#card-grid");
+  if (!cardGrid) return;
+
+
+  cardGrid.classList.remove(
+    "lg:grid-cols-1",
+    "lg:grid-cols-2",
+    "lg:grid-cols-3",
+    "lg:grid-cols-4",
+    "lg:grid-cols-5",
+    "lg:grid-cols-6",
+    "lg:grid-cols-7",
+    "lg:grid-cols-8",
+    "lg:grid-cols-9",
+  );
+
+  const viewToggleMappings = layoutState.viewToggleMappings;
+  const classesToRemove = [
+    "lg:row-span-2",
+    "lg:row-span-1",
+    "lg:col-span-1",
+    "lg:col-span-2",
+    "lg:col-span-3",
+    "lg:col-span-4",
+    
+  ];
+  Object.values(viewToggleMappings).forEach((mapping) => {
+    const el = $(mapping.id);
+    if (el) {
+      classesToRemove.forEach((cls) => el.classList.remove(cls));
+    }
+  });
+
+
+  
+
+} 
+
+function getOtherActiveCards(notThisIds) {
+  const viewToggleMappings = layoutState.viewToggleMappings;
+    const excludeIds = Array.isArray(notThisIds) ? notThisIds : [notThisIds];
+    return Object.values(viewToggleMappings)
+      .filter(v => !excludeIds.includes(v.id) && v.active)
+      .map(v => $(v.id));
+  }
+  
+
+function updateGridCols() {
+  
+  const viewToggleMappings = layoutState.viewToggleMappings;
+    const cardGrid = document.querySelector("#card-grid");
+    // resetLayoutClasses(); // Reset layout classes before applying new ones
+    const currentActiveCardCount = Object.values(viewToggleMappings).map(val => val.id)
+      .filter(id => $(id) && $(id).style.display !== "none").length;
+    const {isLandscape} = layoutState;
+  
+
+    const isTruthActive = $(viewToggleMappings.toggleTruthTable.id)?.style.display !== "none";
+    const isExprActive = $(viewToggleMappings.toggleExpressions.id)?.style.display !== "none";
+    const isMuxActive = $(viewToggleMappings.toggleMux.id)?.style.display !== "none";
+    const isSymmetryActive = $(viewToggleMappings.toggleKmap.id)?.style.display !== "none";
+    
+    console.log(layoutState);
+    
+    
+    if(!cardGrid) return;
+    resetGridColsToDefault(); // Reset to default before applying new classes
+    
+    $(viewToggleMappings.toggleMux.id).classList.add("lg:col-span-2");
+
+    switch (currentActiveCardCount) {
+        case 1:{
+          cardGrid.classList.add("lg:grid-cols-1");
+          break;
+        }
+        case 2:{
+          cardGrid.classList.add("lg:grid-cols-2");
+          $(viewToggleMappings.toggleTruthTable.id).classList.add("lg:row-span-2", "lg:col-span-1");
+          break;
+        }
+        case 3: {
+          
+          cardGrid.classList.add("lg:grid-cols-3");
+          break;
+        }
+        case 4:{
+          $(viewToggleMappings.toggleTruthTable.id).classList.add("lg:row-span-2");
+          if(!isMuxActive) {
+            $(viewToggleMappings.toggleExpressions.id).classList.add("lg:row-span-2");
+          } 
+          
+          cardGrid.classList.add("lg:grid-cols-3");
+          
+          if(isLandscape) {
+            $(viewToggleMappings.toggleExpressions.id).classList.add("lg:row-span-2");
+            // mux col span 3
+            $(viewToggleMappings.toggleMux.id).classList.add("lg:col-span-3");
+            // symmetry row span 2
+            $(viewToggleMappings.toggleKmap.id).classList.add("lg:row-span-2");
+            
+          }
+
+          break;
+        }
+        case 5: {
+          console.log("5 active cards, applying landscape layout");
+          console.log(isLandscape);
+          
+          if (isLandscape) {
+            
+            cardGrid.classList.add("lg:grid-cols-8");
+            $(viewToggleMappings.toggleTruthTable.id).classList.add("lg:row-span-2", "lg:col-span-2");
+            getOtherActiveCards([viewToggleMappings.toggleTruthTable.id]).forEach(card => {
+              card.classList.add("lg:col-span-3");
+            });
+            break;
+          }
+          
+          cardGrid.classList.add("lg:grid-cols-3");
+          
+          
+          break;
+        }
+    }
+    if(isLandscape && currentActiveCardCount > 3) {
+      $(viewToggleMappings.toggleTruthTable.id).classList.add("lg:row-span-2");
+    }
+  
+
+  }
+
 export function init() {
   //muxSvgElement = document.querySelector("#muxCard .card-body #muxDiagramSvg"); // Initialize global reference early
   setSvgMux();
@@ -678,6 +886,9 @@ export function init() {
   buildTruth();
   applyPreset(logicState);
   renderAll();
+  updateGridCols(); // Initial grid column setup
+  
+  
 
   // --- Event Listeners ---
   const minusBtnEl = $("minusBtn");
@@ -699,24 +910,30 @@ export function init() {
     plusBtnEl.onclick = () => {
       if (logicState.nVars < 4) {
         const oldNVars = logicState.nVars;
-        const oldTruthCopy =
-          logicState.preset === "custom" ? JSON.parse(JSON.stringify(logicState.truth)) : null;
-        logicState.nVars++;
-        buildTruth(oldTruthCopy, oldNVars);
-        applyPreset(logicState);
-        renderAll();
+        // If customFunction exists, rebuild truth table from it, otherwise use old logic
+        if (logicState.preset === "custom" && logicState.customFunction && logicState.customFunction.trim() !== "") {
+          logicState.nVars++;
+          try {
+            const { variables, truthArray } = parseLogicFunction(logicState.customFunction, logicState.nVars);
+            logicState.truth = truthArrayToTruthTable(truthArray, logicState.nVars);
+          } catch (error) {
+            console.error("Error parsing custom function:", error);
+            // fallback: build empty truth table
+            buildTruth(null, oldNVars);
+          }
+          applyPreset(logicState);
+          renderAll();
+        } else {
+          const oldTruthCopy = logicState.preset === "custom" ? JSON.parse(JSON.stringify(logicState.truth)) : null;
+          logicState.nVars++;
+          buildTruth(oldTruthCopy, oldNVars);
+          applyPreset(logicState);
+          renderAll();
+        }
       }
     };
   }
-  const presetOpEl = $("presetOp");
-  if (presetOpEl instanceof HTMLSelectElement) {
-    presetOpEl.onchange = () => {
-      logicState.preset = presetOpEl.value;
-      applyPreset(logicState);
-      renderAll();
-    };
-  }
-
+  
   const expansionOrderInputEl = $("expansionOrderInput");
   if (expansionOrderInputEl) {
     expansionOrderInputEl.onchange = () => {
@@ -745,21 +962,22 @@ export function init() {
   }
 
   // View Toggles
-  const viewToggleMappings = {
-    toggleTruthTable: "truthTableCard",
-    toggleKmap: "kmapCard",
-    toggleExpressions: "expressionsCard",
-    toggleBooleanDev: "booleanDevCard",
-    toggleMux: "muxCard",
-  };
+  const viewToggleMappings = layoutState.viewToggleMappings
+
+  const cardGrid = document.getElementById("card-grid");
 
   for (const checkboxId in viewToggleMappings) {
     const checkbox = $(checkboxId);
-    const cardId = viewToggleMappings[checkboxId];
+    const cardId = viewToggleMappings[checkboxId].id;
     const card = $(cardId);
 
     if (checkbox && card) {
       checkbox.addEventListener("change", function () {
+
+        layoutState.viewToggleMappings[checkboxId].active = this.checked;
+        
+        
+
         if (this.checked) {
           card.style.display = "flex"; // Or its original display value if not flex
         } else {
@@ -769,30 +987,33 @@ export function init() {
         if (cardId === "muxCard" && this.checked) {
           debouncedMuxRender();
         }
-        adjustMuxCardHeight(); // Adjust height when any view visibility changes
+
+        updateGridCols();
+
+        // adjustMuxCardHeight(); // Adjust height when any view visibility changes
       });
     }
   }
 
   function adjustMuxCardHeight() {
-    const truthTableCard = $("truthTableCard");
-    const muxCard = $("muxCard");
-    const muxWrap = $("muxWrap");
+    // // // const truthTableCard = $("truthTableCard");
+    // // // const muxCard = $("muxCard");
+    // // // const muxWrap = $("muxWrap");
 
-    if (truthTableCard && muxCard && muxWrap) {
-      const isTruthTableVisible =
-        window.getComputedStyle(truthTableCard).display !== "none";
-      if (isTruthTableVisible) {
-        const referenceHeight = truthTableCard.offsetHeight;
-        if (referenceHeight > 0) {
-          muxCard.style.height = `${referenceHeight}px`;
-          // debouncedMuxRender() will be called by the landscape toggle or resize observer
-          // if a re-render is needed due to size changes.
-        }
-      } else {
-        muxCard.style.height = ""; 
-      }
-    }
+    // // // if (truthTableCard && muxCard && muxWrap) {
+    // // //   const isTruthTableVisible =
+    // // //     window.getComputedStyle(truthTableCard).display !== "none";
+    // // //   if (isTruthTableVisible) {
+    // // //     const referenceHeight = truthTableCard.offsetHeight;
+    // // //     if (referenceHeight > 0) {
+    // // //       muxCard.style.height = `${referenceHeight}px`;
+    // // //       // debouncedMuxRender() will be called by the landscape toggle or resize observer
+    // // //       // if a re-render is needed due to size changes.
+    // // //     }
+    // // //   } else {
+    // // //     muxCard.style.height = ""; 
+    // // //   }
+    // // // }
   }
 
   // Event listeners for load and resize are now using the debouncedAdjustMuxHeight 
@@ -802,13 +1023,25 @@ export function init() {
 
   const landscapeToggleBtnEl = $("landscapeToggleBtn");
   const pageEl = document.querySelector(".page"); // Assuming .page is the main container to toggle class on
+  
 
-  if (landscapeToggleBtnEl && pageEl) {
+  if (landscapeToggleBtnEl && pageEl && cardGrid) {
     landscapeToggleBtnEl.onclick = () => {
       pageEl.classList.toggle("landscape-mode");
+      
+
+      
+
+      layoutState.isLandscape = !layoutState.isLandscape;
+      
+      updateGridCols();
+      
+      
       // After toggling, we might need to trigger a resize/render for elements like MUX
       debouncedMuxRender(); 
       debouncedAdjustMuxHeight();
     };
   }
+  
 }
+
