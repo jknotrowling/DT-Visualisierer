@@ -28,6 +28,28 @@
 *::after {
   box-sizing: border-box;
 }
+* {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Ausnahmen für Eingabefelder und editierbare Inhalte */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+textarea,
+[contenteditable="true"],
+.custom-function-input {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
 body {
   margin: 0;
   line-height: 1.5;

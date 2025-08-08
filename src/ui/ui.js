@@ -10,13 +10,19 @@ import {
   renderMuxDiagram,
 } from "../logic/mux.js";
 
-import { $, debounce, applyPreset, truthArrayToTruthTable} from "../utils/utils.js";
+import { $, debounce, applyPreset, truthArrayToTruthTable, zeroTruthTable} from "../utils/utils.js";
+import { 
+  setupTouchFriendlyTruthTable, 
+  setupTouchFriendlySymmetryDiagram, 
+  setupTouchFriendlyExpressionTerms 
+} from "../utils/touchUtils.js";
 
 import { buildTruth } from '../logic/truth.js';
 
 import { minimize, expand, lit, simplifiedBooleanExpansionRecursive } from '../logic/booleanForm.js';
 import { logicState, VARIABLE_NAMES,customFunctionState, expansionState, DEFAULT_LAYOUT_CONFIG, layoutState } from '../state.js';
 import { getMinimalExpression, parseLogicFunction } from '../logic/parser.js';
+
 
 
 
@@ -125,61 +131,58 @@ function renderTruth() {
   );
   if (truthWrap) truthWrap.innerHTML = h;
 
-  document.querySelectorAll("#truthTableCard .outCell").forEach((td) => {
-    td.onclick = (e) => {
-      const currentTarget = e.currentTarget;
-      if (!currentTarget) return;
-      const bits = currentTarget.dataset.bits;
-      if (!bits) return;
-      const o = logicState.truth.find((t) => t.bits === bits);
-      if (!o) return;
-      o.out = o.out === 0 ? 1 : o.out === 1 ? null : 0;
+  // Setup touch-friendly interactions for truth table cells
+  const truthTableClickHandler = (e) => {
+    const currentTarget = e.currentTarget;
+    if (!currentTarget) return;
+    const bits = currentTarget.dataset.bits;
+    if (!bits) return;
+    const o = logicState.truth.find((t) => t.bits === bits);
+    if (!o) return;
+    o.out = o.out === 0 ? 1 : o.out === 1 ? null : 0;
 
-      logicState.preset = "custom";
-      customFunctionState.customFunction = getMinimalExpression();
-      const presetOpEl = $("presetOp");
-      if (presetOpEl instanceof HTMLSelectElement) presetOpEl.value = "custom";
-      renderAll();
-    };
-  });
+    logicState.preset = "custom";
+    customFunctionState.customFunction = getMinimalExpression();
+    const presetOpEl = $("presetOp");
+    if (presetOpEl instanceof HTMLSelectElement) presetOpEl.value = "custom";
+    renderAll();
+  };
+
+  setupTouchFriendlyTruthTable(handleCellOrTermHover, truthTableClickHandler);
 }
 
 function renderKMap() {
-  // Wait for the symmetry diagram to be rendered before attaching event listeners
-  setTimeout(() => {
-    document
-      .querySelectorAll("#symmetry-diagram div[data-bits]")
-      .forEach((td) => {
-        td.onclick = (e) => {
-          const currentTarget = e.currentTarget;
+  // Setup touch-friendly interactions for symmetry diagram cells
+  const symmetryDiagramClickHandler = (e) => {
+    const currentTarget = e.currentTarget;
 
-          if (!currentTarget) return;
+    if (!currentTarget) return;
 
-          const bits = currentTarget.dataset.bits;
+    const bits = currentTarget.dataset.bits;
 
-          if (!bits) return;
+    if (!bits) return;
 
-          const currentValueIndex = logicState.truth.findIndex((t) => t.bits === bits);
+    const currentValueIndex = logicState.truth.findIndex((t) => t.bits === bits);
 
-          if (currentValueIndex === -1) return; // No matching bits found
+    if (currentValueIndex === -1) return; // No matching bits found
 
-          const currentValue = logicState.truth[currentValueIndex];
+    const currentValue = logicState.truth[currentValueIndex];
 
-          const nextValue =
-            currentValue.out === 0 ? 1 : currentValue.out === 1 ? null : 0;
+    const nextValue =
+      currentValue.out === 0 ? 1 : currentValue.out === 1 ? null : 0;
 
-          logicState.truth[currentValueIndex] = {
-            out: nextValue,
-            bits: currentValue.bits,
-          };
+    logicState.truth[currentValueIndex] = {
+      out: nextValue,
+      bits: currentValue.bits,
+    };
 
-          customFunctionState.customFunction = getMinimalExpression();
-          logicState.preset = "custom";
-          
-          renderAll();
-        };
-      });
-  }, 0);
+    customFunctionState.customFunction = getMinimalExpression();
+    logicState.preset = "custom";
+    
+    renderAll();
+  };
+
+  setupTouchFriendlySymmetryDiagram(handleCellOrTermHover, symmetryDiagramClickHandler);
 }
 
 
@@ -227,7 +230,7 @@ function renderExpr() {
               "cnf"
             )})</span>`
         )
-        .join(" ∧ ")
+        .join(" & ")
     : "1";
 
   h += `<hr class="mt-2"><div class="config-header">
@@ -238,7 +241,7 @@ function renderExpr() {
     ? dmf
         .map(
           (p) =>
-            `<span class="term dmf bg-green-200 hover:bg-green-400" data-cover="${expand(p).join(
+            `<span class="term dmf bg-green-200 " data-cover="${expand(p).join(
               "|"
             )}">${lit(p, "dmf")}</span>`
         )
@@ -253,11 +256,11 @@ function renderExpr() {
     ? kmf
         .map(
           (p) =>
-            `<span class="term cmf bg-orange-200 hover:bg-orange-400" data-cover="${expand(p).join(
+            `<span class="term cmf bg-orange-200 " data-cover="${expand(p).join(
               "|"
             )}">(${lit(p, "kmf")})</span>`
         )
-        .join(" ∧ ")
+        .join(" & ")
     : "1";
 
   const exprWrap = document.querySelector(
@@ -490,23 +493,8 @@ function renderDev() {
 }
 
 function setupAllHoverInteractions() {
-  document.querySelectorAll("#truthTableCard .outCell").forEach((el) => {
-    el.onmouseenter = () => handleCellOrTermHover(el, true);
-    el.onmouseleave = () => handleCellOrTermHover(el, false);
-  });
-  setTimeout(() => {
-    document
-      .querySelectorAll("#symmetry-diagram div[data-bits]")
-      .forEach((el) => {
-        console.log("Applying hover handlers to symmetry diagram cells");
-        el.onmouseenter = () => handleCellOrTermHover(el, true);
-        el.onmouseleave = () => handleCellOrTermHover(el, false);
-      });
-  });
-  document.querySelectorAll("#expressionsCard .term").forEach((el) => {
-    el.onmouseenter = () => handleCellOrTermHover(el, true);
-    el.onmouseleave = () => handleCellOrTermHover(el, false);
-  });
+  // Expression terms - only need hover interactions
+  setupTouchFriendlyExpressionTerms(handleCellOrTermHover);
 }
 
 function handleCellOrTermHover(hoveredElement, isOn) {
@@ -543,7 +531,7 @@ function handleCellOrTermHover(hoveredElement, isOn) {
   } else if (hoveredElement.dataset.cover) {
     mintermsToHighlightInTables = hoveredElement.dataset.cover.split("|");
     termCoversMintermsForExpansionLookup = mintermsToHighlightInTables;
-    hoveredElement.classList.toggle("hl-dmf-cell", isOn);
+    hoveredElement.classList.toggle("hl-cmf-cell", isOn);
   }
 
   if (mintermsToHighlightInTables.length > 0) {
@@ -982,6 +970,7 @@ export function init() {
           logicState.preset === "custom" ? JSON.parse(JSON.stringify(logicState.truth)) : null;
         logicState.nVars--;
         customFunctionState.customFunction = "0";
+        if(logicState.preset === "custom") logicState.truth = zeroTruthTable(logicState.nVars);
         buildTruth(oldTruthCopy, oldNVars);
         applyPreset(logicState);
         renderAll();
@@ -995,12 +984,14 @@ export function init() {
     plusBtnEl.onclick = () => {
       if (logicState.nVars < 4) {
         const oldNVars = logicState.nVars;
+        customFunctionState.customFunction = "0";
+        if(logicState.preset === "custom") logicState.truth = zeroTruthTable(logicState.nVars+1);
         // If customFunction exists, rebuild truth table from it, otherwise use old logic
         if (logicState.preset === "custom" && logicState.customFunction && logicState.customFunction.trim() !== "") {
           logicState.nVars++;
           try {
             const { variables, truthArray } = parseLogicFunction(logicState.customFunction, logicState.nVars);
-            customFunctionState.customFunction = "0";
+            
             logicState.truth = truthArrayToTruthTable(truthArray, logicState.nVars);
           } catch (error) {
             console.error("Error parsing custom function:", error);
@@ -1037,11 +1028,7 @@ export function init() {
       // Update logicState and trigger UI update
       logicState.preset = value;
       
-      // Enable editing mode when custom is selected
-      if (value === 'custom') {
-        customFunctionState.isEditing = true;
-      }
-      
+     
       if (typeof updateLogicFunction === 'function') {
         updateLogicFunction(value);
       } else if (typeof init === 'function') {
