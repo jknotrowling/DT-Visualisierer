@@ -5,7 +5,10 @@
   <title>Logik-Visualizer</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
+  <meta name="description" content="Logik-Visualisierer für digitale Schaltfunktionen am ITIV, KIT. Visualisiert Logikfunktionen, Wahrheitstabellen, Symmetriediagramme und Boolesche Entwicklungen.">
+  <meta name="keywords" content="Logik, Visualisierung, Digitaltechnik, ITIV, KIT, Wahrheitstabelle, Symmetriediagramm, Boolesche Entwicklung">
+  <meta name="author" content="Institut für Technik der Informationsverarbeitung, KIT">
+  <link rel="icon" href="/assets/favicon.ico">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP" crossorigin="anonymous">
@@ -19,17 +22,17 @@
 </head>
 <body>
   <div class="page">
-    <div class="card mb-6">
+    <header class="card mb-6">
         <div class="inner-card">
-          <header class="page-header">
-            <img src="assets/KIT_logo.svg" alt="KIT Logo" class="logo kit" role="img">
+          <div class="page-header">
+            <img onclick="window.open('https://www.kit.edu')" src="assets/KIT_logo.svg" alt="KIT Logo" class="logo kit" role="img">
             <div class="title-group">
               <h1>Institut für Technik der Informationsverarbeitung</h1>
               <h2>Digitaltechnik</h2>
               <h3>Logik-Visualisierer</h3>
             </div>
-            <img src="assets/ITIV_logo.svg" alt="ITIV Logo" class="logo itiv" role="img">
-          </header>
+            <img onclick="window.open('https://www.itiv.kit.edu')" src="assets/ITIV_logo.svg" alt="ITIV Logo" class="logo itiv" role="img">
+          </div>
           <div class="controls-section p-6">
             <!-- Configuration Section -->
             <div class="mb-6">
@@ -118,7 +121,7 @@
             </div>
         </div>
         </div>
-    </div>
+      </header>
 
 
     <section class="card mb-6" id="current-function-card">
@@ -166,9 +169,11 @@
         <div class="inner-card">
           <h4 class="text-3xl font-bold text-gray-700 pt-4 px-2 text-center">Boolesche Entwicklung</h4>
           <div class="card-body">
-        <div style="margin-bottom: 10px;">
+        <div class="mb-4">
           <label for="expansionOrderInput">Entwicklungsreihenfolge:</label>
-          <input type="text" id="expansionOrderInput" placeholder="z.B. cba" style="width: 100px; margin-left: 5px;" aria-label="Entwicklungsreihenfolge für Boolesche Entwicklung eingeben">
+          <input type="text" id="expansionOrderInput" placeholder="z.B. cba" 
+          class="w-32 p-1 border border-gray-300 rounded-lg"
+          aria-label="Entwicklungsreihenfolge für Boolesche Entwicklung eingeben">
         </div>
         <div id="devWrap"></div>
           </div>
@@ -186,6 +191,46 @@
         </div>
       </section>
     </main>
+
+    <footer class="card mt-6" id="footer-card">
+      <div class="inner-card ">
+         
+  <div class="card-body bg-gray-50 py-6">
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-gray-600 text-sm w-full items-center">
+    
+    <!-- Linker Textblock -->
+    <div class="md:text-left text-center">
+      <p>
+        KIT – Universität des Landes Baden-Württemberg<br>
+        Nationales Großforschungszentrum in der Helmholtz-Gemeinschaft
+      </p>
+    </div>
+    
+    <!-- Mittlerer Textblock -->
+    <div class="text-center">
+      <p>
+        Leitung: Prof. Dr.-Ing. Dr. h.c. Jürgen Becker<br>
+        Übungsleitung: M.Sc. Annina Gutermann
+      </p>
+    </div>
+    
+    <!-- Rechter Textblock -->
+    <div class="md:text-right text-center">
+      <a href="https://www.kit.edu" class="text-black font-mono text-lg md:text-3xl hover:underline">
+        www.kit.edu
+      </a>
+    </div>
+    
+  </div>
+</div>
+
+
+    </div>
+    </div>
+  </footer>
+
+
+
   </div>
 
   <script src="src/index.js" defer type="module">

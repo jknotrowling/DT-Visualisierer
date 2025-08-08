@@ -15,7 +15,7 @@ export function renderCurrentFunctionExpression() {
   const usedVars = VARIABLE_NAMES.slice(0, nVars);
   
 
-  let latexToRender = `f(${usedVars.join(", ")}) = `;
+  let latexToRender = `f(${usedVars.reverse().join(", ")}) = `;
 
   switch ((currentFunction || "").toUpperCase()) {
     case "XOR":
@@ -86,7 +86,7 @@ if(currentFunction.toUpperCase() === "CUSTOM") {
                 katex.render(latexToRender, container, {throwOnError: false,displayMode: true});
         } 
         if(container2) {
-            katex.render(`f(${usedVars.join(", ")}) = `, container2, {throwOnError: false,displayMode: true});
+            katex.render(`f(${usedVars.reverse().join(", ")}) = `, container2, {throwOnError: false,displayMode: true});
         }
     }
 

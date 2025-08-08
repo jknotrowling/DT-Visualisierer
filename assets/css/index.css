@@ -489,6 +489,7 @@ th {
 .truth td,
 .outCell {
   /* width: 42px; */
+  padding: 0.25rem;
 }
 .outCell,
 .kmap td {
@@ -509,25 +510,54 @@ th {
   font-weight: bold;
 } /* Textfarbe auf schwarz für besseren Kontrast */
 
-/* Highlight Style for table cells */
-.hl-cell {
-  outline: 2px solid #e91e63 !important;
-  background: #ffebee !important;
-  color: #000 !important;
+
+
+.hl-cell-on {
+  background-color:oklch(87.1% 0.15 154.449) !important; 
+  color : #000 !important; 
+  border  : 2px solid oklch(52.7% 0.154 150.069) !important; 
+  /* transform: scale(1.04); */
 }
 
-.symmetry-hl-cell {
-  border: 2px solid #e91e63 !important;
-  background: #ffebee !important;
-  color: #000 !important;
-  outline: none !important; /* Remove outline to avoid double borders */
+.hl-cell-off {
+  background-color: oklch(70.4% 0.04 256.788) !important; 
+  color : #000 !important;
+  border  : 2px solid oklch(37.2% 0.044 257.287) !important; 
+  /* transform: scale(1.04);  */
 }
+
+.hl-cell-dc {
+  background-color: oklch(85.2% 0.199 91.936) !important; 
+  color : #000 !important; 
+  border  : 2px solid oklch(55.4% 0.135 66.442) !important; 
+  /* transform: scale(1.04);  */
+}
+
+.hl-dnf-cell {
+  background-color: oklch(70.7% 0.165 254.624) !important;
+}
+
+.hl-cnf-cell {
+  background-color: oklch(70.4% 0.191 22.216) !important;
+}
+
+.hl-cmf-cell {
+  background-color: oklch(79.2% 0.209 151.711) !important;
+}
+
+.hl-cmf-cell{
+  background-color: oklch(75% 0.183 55.934) 
+}
+
+
+
+
 
 /* Highlight Style for Boolean Expansion and active DNF/KMF/DMF terms (Color) */
 /* Kontrast #F57C00 auf #FFF3E0 ist 3.05:1 - grenzwertig für normalen Text. Belassen gemäß Anforderung "Color". */
 .hl-color {
   color: #f57c00 !important; /* Orange */
-  background-color: #fff3e0 !important; /* Light orange background */
+  background-color: #fff3e0 !important; 
   border-radius: 3px !important;
   padding: 0 1px; /* Slight padding for background visibility */
 }
@@ -551,21 +581,10 @@ th {
   
   
 }
-.term:hover {
+/* .term:hover {
   transform: scale(1.02);
-}
-.dnfTerm {
-  background: #d0eaff;
-}
-.cnfTerm {
-  background: #ffe0e0;
-}
-.dmfTerm {
-  background: #b2ffb2;
-}
-.kmfTerm {
-  background: #ffd59e;
-}
+} */
+
 .ov {
   text-decoration: overline;
 }
@@ -620,7 +639,7 @@ pre span {
   grid-column: span 1; /* Override previous span to make it fit in the row */
   /* If muxCard was taking more space, ensure it also fits. 
          Its height might need to be managed by its content or specific landscape styles. */
-} */
+}
 
 .modern-select {
   width: 100%;
@@ -640,6 +659,140 @@ svg {
 .katex-display {
   margin: 0 !important;
   display: inline-block !important;
+}
+
+/* Custom Function Styles */
+.custom-function-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-height: 60px;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 51, 102, 0.1);
+  transition: all 0.3s ease;
+}
+
+.custom-function-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  position: relative;
+  overflow: hidden;
+}
+
+.custom-button-container {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-function-edit-area {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 0.75rem;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+.custom-function-edit-area[style*="flex"] {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.katex-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 48px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.katex-container[style*="none"] {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+.katex-container-edit {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.custom-function-input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  color: #374151;
+  font-family: 'Fira Mono', 'Consolas', 'Menlo', monospace;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+  min-height: 48px;
+}
+
+.custom-function-input:focus {
+  border-color: var(--kit-blue);
+  box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.1);
+}
+
+.custom-function-input:invalid {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.custom-edit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  color: #6b7280;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.custom-edit-btn:hover {
+  background: #f9fafb;
+  border-color: var(--kit-blue);
+  color: var(--kit-blue);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.custom-edit-btn:active {
+  transform: translateY(0);
+}
+
+.custom-edit-btn-save {
+  background: var(--kit-green);
+  border-color: var(--kit-green);
+  color: white;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.custom-edit-btn-save:hover {
+  background: #006b2d;
+  border-color: #006b2d;
+  color: white;
 }
 
 .preset-btn:disabled {
