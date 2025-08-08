@@ -68,6 +68,21 @@ function disabledButtonsOnEditingCustomFunction() {
 
 }
 
+function updatePresetButtonStates() {
+  const presetBtns = document.querySelectorAll('.preset-btn');
+  presetBtns.forEach(btn => {
+    const value = btn.getAttribute('data-value');
+    if (value === logicState.preset.toLowerCase()) {
+      // Add active styles to the current preset button
+      btn.classList.add('active', 'bg-gray-700', 'border-gray-700', 'shadow-md', 'text-white', 'font-bold');
+      btn.classList.remove('bg-white', 'border-gray-300', 'shadow-sm', 'text-gray-700', 'font-semibold');
+    } else {
+      // Remove active styles from all other buttons
+      btn.classList.remove('active', 'bg-gray-700', 'border-gray-700', 'shadow-md', 'text-white', 'font-bold');
+      btn.classList.add('bg-white', 'border-gray-300', 'shadow-sm', 'text-gray-700', 'font-semibold');
+    }
+  });
+}
 
 export function renderAll() {
   $("varCountLbl").textContent = logicState.nVars;
@@ -76,6 +91,7 @@ export function renderAll() {
   renderKMap();
   renderCurrentFunctionExpression();
   disabledButtonsOnEditingCustomFunction();
+  updatePresetButtonStates();
   const truthByDecimalOrder = [];
   for (let i = 0; i < (1 << logicState.nVars); i++) {
     const binaryLSB = i.toString(2).padStart(logicState.nVars, '0').split('').reverse().join('');
@@ -950,8 +966,8 @@ function updateGridCols() {
 
 
 export function init() {
-  //muxSvgElement = document.querySelector("#muxCard .card-body #muxDiagramSvg"); // Initialize global reference early
-  setSvgMux();
+  
+  setSvgMux();// Initialize global reference
 
   buildTruth();
   applyPreset(logicState);
@@ -970,7 +986,7 @@ export function init() {
           logicState.preset === "custom" ? JSON.parse(JSON.stringify(logicState.truth)) : null;
         logicState.nVars--;
         customFunctionState.customFunction = "0";
-        if(logicState.preset === "custom") logicState.truth = zeroTruthTable(logicState.nVars);
+        if(logicState.preset === "custom") logicState.preset = "AND";
         buildTruth(oldTruthCopy, oldNVars);
         applyPreset(logicState);
         renderAll();
@@ -989,24 +1005,15 @@ export function init() {
         // If customFunction exists, rebuild truth table from it, otherwise use old logic
         if (logicState.preset === "custom" && logicState.customFunction && logicState.customFunction.trim() !== "") {
           logicState.nVars++;
-          try {
-            const { variables, truthArray } = parseLogicFunction(logicState.customFunction, logicState.nVars);
-            
-            logicState.truth = truthArrayToTruthTable(truthArray, logicState.nVars);
-          } catch (error) {
-            console.error("Error parsing custom function:", error);
-            // fallback: build empty truth table
-            buildTruth(null, oldNVars);
-          }
-          applyPreset(logicState);
-          renderAll();
+          logicState.preset = "AND";
+          
         } else {
           const oldTruthCopy = logicState.preset === "custom" ? JSON.parse(JSON.stringify(logicState.truth)) : null;
           logicState.nVars++;
           buildTruth(oldTruthCopy, oldNVars);
-          applyPreset(logicState);
-          renderAll();
         }
+        applyPreset(logicState);
+        renderAll();
       }
     };
   }
