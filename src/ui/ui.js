@@ -206,7 +206,7 @@ function renderExpr() {
     ? dnfR
         .map(
           (r) =>
-            `<span class="term dnfTerm" data-bits="${r.bits}">${lit(
+            `<span class="term dnf bg-blue-200" data-bits="${r.bits}">${lit(
               r.bits,
               "dnf"
             )}</span>`
@@ -222,7 +222,7 @@ function renderExpr() {
     ? cnfR
         .map(
           (r) =>
-            `<span class="term cnfTerm" data-bits="${r.bits}">(${lit(
+            `<span class="term cnf bg-red-200" data-bits="${r.bits}">(${lit(
               r.bits,
               "cnf"
             )})</span>`
@@ -232,13 +232,13 @@ function renderExpr() {
 
   h += `<hr class="mt-2"><div class="config-header">
                     <div class="config-dot config-dot-green"></div>
-                    <span class="config-title config-title-green">DMF (min)</span>
+                    <span class="config-title config-title-green">DMF</span>
                   </div>`//"<hr><strong>DMF (min):</strong><br>";
   h += dmf.length
     ? dmf
         .map(
           (p) =>
-            `<span class="term dmfTerm" data-cover="${expand(p).join(
+            `<span class="term dmf bg-green-200 hover:bg-green-400" data-cover="${expand(p).join(
               "|"
             )}">${lit(p, "dmf")}</span>`
         )
@@ -247,13 +247,13 @@ function renderExpr() {
 
   h += `<hr class="mt-2"><div class="config-header">
                     <div class="config-dot config-dot-orange"></div>
-                    <span class="config-title config-title-orange">KMF (min)</span>
+                    <span class="config-title config-title-orange">KMF</span>
                   </div>`//"<hr><strong>KMF (min):</strong><br>";
   h += kmf.length
     ? kmf
         .map(
           (p) =>
-            `<span class="term kmfTerm" data-cover="${expand(p).join(
+            `<span class="term cmf bg-orange-200 hover:bg-orange-400" data-cover="${expand(p).join(
               "|"
             )}">(${lit(p, "kmf")})</span>`
         )
@@ -519,29 +519,29 @@ function handleCellOrTermHover(hoveredElement, isOn) {
     singleMintermForExpansionLookup = hoveredElement.dataset.bits;
 
     document
-      .querySelectorAll("#expressionsCard .dmfTerm[data-cover]")
+      .querySelectorAll("#expressionsCard .dmf[data-cover]")
       .forEach((termEl) => {
         const coveredByTerm = termEl.dataset.cover
           ? termEl.dataset.cover.split("|")
           : [];
         if (coveredByTerm.includes(singleMintermForExpansionLookup)) {
-          termEl.classList.toggle("hl-color", isOn);
+          termEl.classList.toggle("hl-dmf-cell", isOn);
         }
       });
     document
-      .querySelectorAll("#expressionsCard .kmfTerm[data-cover]")
+      .querySelectorAll("#expressionsCard .cmf[data-cover]")
       .forEach((termEl) => {
         const coveredByTerm = termEl.dataset.cover
           ? termEl.dataset.cover.split("|")
           : [];
         if (coveredByTerm.includes(singleMintermForExpansionLookup)) {
-          termEl.classList.toggle("hl-color", isOn);
+          termEl.classList.toggle("hl-cmf-cell", isOn);
         }
       });
   } else if (hoveredElement.dataset.cover) {
     mintermsToHighlightInTables = hoveredElement.dataset.cover.split("|");
     termCoversMintermsForExpansionLookup = mintermsToHighlightInTables;
-    hoveredElement.classList.toggle("hl-color", isOn);
+    hoveredElement.classList.toggle("hl-dmf-cell", isOn);
   }
 
   if (mintermsToHighlightInTables.length > 0) {
@@ -730,14 +730,33 @@ function handleExpansionSpanHover(spanElement, isOn, highlightClass) {
 
 function highlightTableCells(arr, on) {
   arr.forEach((b) => {
+
+    const valueAtField = logicState.truth.find((t) => t.bits === b);
+
+    let classSuffix = valueAtField?.out === null ? "dc" : valueAtField?.out === 1 ? "on" : "off";
+
     // Highlight cells in truth table (inside card-body)
     document
-      .querySelectorAll(`.card-body [data-bits="${b}"]`)
-      .forEach((n) => n.classList.toggle("hl-cell", on));
+      .querySelectorAll(`#truthWrap [data-bits="${b}"]`)
+      .forEach((n) => n.classList.toggle(`hl-cell-${classSuffix}`, on));
     // Highlight cells in symmetry diagram (not inside card-body)
     document
       .querySelectorAll(`#symmetry-diagram [data-bits="${b}"]`)
-      .forEach((n) => n.classList.toggle("symmetry-hl-cell", on));
+      .forEach((n) => n.classList.toggle(`hl-cell-${classSuffix}`, on));
+
+     // Highlight DNF Cells
+    document
+      .querySelectorAll(`#expressionsCard .dnf[data-bits="${b}"]`)
+      .forEach((n) => n.classList.toggle(`hl-dnf-cell`, on));
+    // Highlight CNF Cells
+    document.querySelectorAll(`#expressionsCard .cnf[data-bits="${b}"]`)
+      .forEach((n) => n.classList.toggle(`hl-cnf-cell`, on));
+    // Highlight DMF Cells
+    document.querySelectorAll(`#expressionsCard .dmf[data-cover="${b}"]`)
+      .forEach((n) => n.classList.toggle(`hl-dmf-cell`, on));
+    // Highlight KMF Cells
+    document.querySelectorAll(`#expressionsCard .kmf[data-cover="${b}"]`)
+      .forEach((n) => n.classList.toggle(`hl-kmf-cell`, on));
   });
 }
 
@@ -994,6 +1013,36 @@ export function init() {
       }
     };
   }
+  
+  // Preset button logic
+  const presetBtns = document.querySelectorAll('.preset-btn');
+  presetBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      // Remove 'active' class from all buttons
+      presetBtns.forEach(b => {
+        b.classList.remove('active', 'bg-gray-700', 'border-gray-700', 'shadow-md', 'text-white', 'font-bold');
+        b.classList.add('bg-white', 'border-gray-300', 'shadow-sm', 'text-gray-700', 'font-semibold');
+      });
+      // Add 'active' class to clicked button
+      btn.classList.add('active', 'bg-gray-700', 'border-gray-700', 'shadow-md', 'text-white', 'font-bold');
+      btn.classList.remove('bg-white', 'border-gray-300', 'shadow-sm', 'text-gray-700', 'font-semibold');
+      // Get selected value
+      const value = btn.getAttribute('data-value');
+      // Update logicState and trigger UI update
+      logicState.preset = value;
+      
+      // Enable editing mode when custom is selected
+      if (value === 'custom') {
+        customFunctionState.isEditing = true;
+      }
+      
+      if (typeof updateLogicFunction === 'function') {
+        updateLogicFunction(value);
+      } else if (typeof init === 'function') {
+        init(); // fallback: re-init UI
+      }
+    });
+  });
   
   const expansionOrderInputEl = $("expansionOrderInput");
   if (expansionOrderInputEl) {

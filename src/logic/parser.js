@@ -109,10 +109,45 @@ export function normalizeExpression(expr) {
     }
   });
 
+  // Vereinfache mehrfache Negationen
+  normalized = simplifyNegations(normalized);
+
   // Füge implizite Konjunktionen hinzu (z.B. AB -> A&B)
   normalized = addImplicitConjunctions(normalized);
 
   return normalized;
+}
+
+function simplifyNegations(expr) {
+  let simplified = expr;
+  let changed = true;
+  
+  while (changed) {
+    let oldExpr = simplified;
+    
+    // Schritt 1: Entferne alle Klammern und zähle Negationen für einfache Variablen
+    // Behandle Muster wie !(!(!(!(B)))) -> B (4 Negationen = gerade)
+    simplified = simplified.replace(/(!*)\((!*[A-Za-z])\)/g, (match, outerNeg, innerContent) => {
+      // Kombiniere äußere und innere Negationen
+      const totalNegations = outerNeg.length + (innerContent.match(/^!*/)[0].length);
+      const variable = innerContent.replace(/^!*/, '');
+      
+      // Gerade Anzahl von Negationen = keine Negation, ungerade = eine Negation
+      return totalNegations % 2 === 0 ? variable : `!${variable}`;
+    });
+    
+    // Schritt 2: Behandle aufeinanderfolgende Negationen: !!...! -> ! oder ''
+    simplified = simplified.replace(/!{2,}/g, match => {
+      return match.length % 2 === 0 ? '' : '!';
+    });
+    
+    // Schritt 3: Entferne überflüssige Klammern um einzelne (möglicherweise negierte) Variablen
+    simplified = simplified.replace(/\((!*[A-Za-z])\)/g, '$1');
+    
+    changed = (oldExpr !== simplified);
+  }
+  
+  return simplified;
 }
 
 function addImplicitConjunctions(expr) {
