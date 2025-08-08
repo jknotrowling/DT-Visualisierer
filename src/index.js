@@ -17,10 +17,7 @@ applyPreset(logicState);
 // --- Initial Setup ---
 // DOMContentLoaded to ensure all elements are available, especially for querySelector.
 
-document.addEventListener("DOMContentLoaded", () => {
-  init();
-  
-});
+document.addEventListener("DOMContentLoaded", init);
 
 
 

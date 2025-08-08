@@ -36,6 +36,8 @@ body {
   overflow: auto;
   height: 100%;
   scroll-behavior: smooth;
+  overflow-x: hidden; /* Verhindert vertikales Scrollen */
+
 }
 
 /* Page-Rahmen (Anlehnung an PDF) */
@@ -43,6 +45,9 @@ body {
   max-width: 1200px;
   margin: 2rem auto;
   padding: 1.5rem;
+  display: grid;
+  place-items: center;
+  overflow-x: hidden; /* Verhindert vertikales Scrollen */
   /* border: 2px solid var(--kit-blue); */
 }
 
@@ -367,11 +372,11 @@ body {
 }
 
 /* Card-Grid */
-.card-grid {
+/* .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 1.5rem;
-}
+} */
 
 /* Card */
 .card {
@@ -421,6 +426,7 @@ body {
     text-align: center;
     padding: 1rem;
   } /* Center items on smaller screens */
+  
   .title-group {
     min-width: 100%;
     order: -1;
@@ -432,22 +438,7 @@ body {
   }
 }
 
-@media (max-width: 480px) {
-  .logo {
-    height: 40px;
-  }
-  .title-group h2 {
-    font-size: 1.5rem;
-  }
-  .page {
-    margin: 1rem auto;
-    padding: 1rem;
-  }
-  .card-grid {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1rem;
-  } /* Smaller minmax for very small devices */
-}
+
 
 /* --- Ende Inhalt von kit-layout.css --- */
 
@@ -621,25 +612,8 @@ pre span {
   /* Consider adjusting padding if needed */
 }
 
-.page.landscape-mode .card-grid {
-  grid-template-columns: repeat(
-    5,
-    1fr
-  ); /* Assuming 5 cards, display them in 5 equal columns */
-  /* Adjust gap if necessary, e.g., gap: 1rem; */
-}
 
-/* Ensure cards in landscape mode don't try to maintain a tall aspect ratio if their content is small */
-.page.landscape-mode .card {
-  min-height: 0; /* Reset min-height if it was set elsewhere or inherited causing issues */
-}
 
-/* Specific adjustments for muxCard in landscape if it spans columns */
-/* .page.landscape-mode #muxCard {
-  grid-column: span 1; /* Override previous span to make it fit in the row */
-  /* If muxCard was taking more space, ensure it also fits. 
-         Its height might need to be managed by its content or specific landscape styles. */
-}
 
 .modern-select {
   width: 100%;

@@ -21,7 +21,10 @@
   
 </head>
 <body>
-  <div class="page">
+  <div class="page ">
+
+   <div class="w-full mx-auto overflow-x-hidden">
+     <!-- Header with Title, Settings-->
     <header class="card mb-6">
         <div class="inner-card">
           <div class="page-header">
@@ -123,6 +126,7 @@
         </div>
       </header>
 
+      <!-- Current Function Card -->
 
     <section class="card mb-6" id="current-function-card">
       <div class="inner-card ">
@@ -131,15 +135,16 @@
    <h4 class="text-3xl font-bold text-gray-700 pt-4 px-2 text-center">Aktuelle Logikfunktion</h4>
     <div class="card-body">
       <div class="w-full overflow-x-auto">
-      <span id="current-function-expression" class="flex justify-center text-3xl font-mono font-bold text-gray-800 whitespace-nowrap min-w-0"></span>
+      <span id="current-function-expression" class="flex justify-center lg:text-3xl font-mono font-bold text-gray-800 whitespace-nowrap min-w-0"></span>
     </div>
     </div>
     </div>
     </section>
 
-    <main id="card-grid" class="grid md:grid-cols-1 lg:grid-cols-3 gap-6 w-full">
 
-      <section class="card" id="truthTableCard">
+    <main id="card-grid" class="md:justify-center md:text-center grid grid-cols-1 lg:grid-cols-3 gap-6 w-full mx-auto overflow-x-hidden">
+
+      <section class="card col-span-1" id="truthTableCard">
        <div class="inner-card"> 
         <h4 class="text-3xl font-bold text-gray-700 pt-4 px-2 text-center">Wahrheitstabelle</h4>
         <div class="card-body">
@@ -147,7 +152,7 @@
         </div></div>
       </section>
 
-      <section class="card" id="kmapCard">
+      <section class="card col-span-1" id="kmapCard">
         <div class="inner-card">
           <h4 class="text-3xl font-bold text-gray-700 pt-4 px-2 text-center">Symmetriediagramm</h4>
           <div class="p-6 h-full flex flex-col">
@@ -156,7 +161,7 @@
         </div>
       </section>
 
-      <section class="card" id="expressionsCard">
+      <section class="card col-span-1" id="expressionsCard">
         <div class="inner-card">
           <h4 class="text-3xl font-bold text-gray-700 pt-4 px-2 text-center">DNF/KNF &amp; DMF/KMF</h4>
           <div class="card-body">
@@ -165,7 +170,7 @@
         </div>
       </section>
 
-      <section class="card" id="booleanDevCard">
+      <section class="card col-span-1" id="booleanDevCard">
         <div class="inner-card">
           <h4 class="text-3xl font-bold text-gray-700 pt-4 px-2 text-center">Boolesche Entwicklung</h4>
           <div class="card-body">
@@ -180,7 +185,7 @@
         </div>
       </section>
 
-      <section class="card" id="muxCard">
+      <section class="card col-span-1" id="muxCard">
         <div class="inner-card">
           <h4 class="text-3xl font-bold text-gray-700 pt-4 px-2 text-center">Multiplexer Realisierung</h4>
           <div class="card-body" style="display: flex; flex-direction: column;">
@@ -225,9 +230,10 @@
 </div>
 
 
-    </div>
-    </div>
+      </div>
+      
   </footer>
+   </div>
 
 
 

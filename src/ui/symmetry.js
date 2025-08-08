@@ -12,7 +12,7 @@ function renderTopFrameRow(wrapper, numberOfVariables) {
         const cell = document.createElement("div");
         cell.classList.add("symmetry-diagram-frame-cell", "symmetry-diagram-top-frame-cell");
         if(i=== 0) {
-            cell.classList.add("symmetry-diagram-left-frame-cell");
+            cell.classList.add("symmetry-diagram-left-frame-cell", "mr-2");
         }
         cell.textContent = i === 2 ? VARIABLE_NAMES[0] : " "
         if(i === 2) {
@@ -32,11 +32,12 @@ function renderBottomFrameRow(wrapper, numberOfVariables) {
     const {cols} = getNumberOfRowsAndCols(numberOfVariables);
     if(numberOfVariables < 3) return;
     for (let i = 0; i < cols+2; i++) {
+
         const cell = document.createElement("div");
         cell.classList.add("symmetry-diagram-frame-cell");
         cell.textContent = i === 3 ? VARIABLE_NAMES[2] : " ";
         if(i === 0) {
-            cell.classList.add("symmetry-diagram-left-frame-cell");
+            cell.classList.add("symmetry-diagram-left-frame-cell", "mr-3");
         }
         if(i === 3) {
             cell.classList.add("symmetry-diagram-frame-bottom-label-cell");
@@ -52,6 +53,9 @@ function renderBottomFrameRow(wrapper, numberOfVariables) {
 function renderLeftFrameCell(row, index, numberOfVariables) {
     const leftCell = document.createElement("div");
     leftCell.classList.add("symmetry-diagram-frame-cell", "symmetry-diagram-left-frame-cell",);
+
+  
+
     leftCell.textContent = index === 1 ? VARIABLE_NAMES[1] : " ";
     if(index === 1) {
         leftCell.classList.add("symmetry-diagram-frame-left-label-cell");
@@ -106,6 +110,7 @@ export function renderSymmetryDiagram(numberOfVariables, truthTable) {
     for (let r = 0; r < symmetryDiagram.length; r++) {
         const diagrammRow = symmetryDiagram[r];
         const row = document.createElement("div");
+        
         row.className = "flex items-center gap-[2px] mb-[2px]";
 
         renderLeftFrameCell(row, r, numberOfVariables);

@@ -14,6 +14,7 @@
 .symmetry-diagram-row {
     display: flex;
     align-items: center; 
+    margin-bottom: 2px;
 }
 
 .symmetry-diagram-cell {
@@ -57,19 +58,21 @@
         margin: 0; /* Ensure no margins */
         position: relative;
         box-sizing: border-box;
-        /* border: 1px solid black;  */
-          /* background-color: lightgray; */
+        
+        
          
 }
 
 
 
 .symmetry-diagram-left-frame-cell {
-    margin-right: 5px;
+    margin-right: 5px; 
 }
 .symmetry-diagram-right-frame-cell {
     margin-left: 5px;
 }
+
+
 
 
 
@@ -86,22 +89,22 @@
 
 .symmetry-diagram-frame-top-label-cell {
     border-bottom: 2px solid #d1d5db;
-    /* Remove margin that breaks layout */
+    
 }
 
 .symmetry-diagram-frame-left-label-cell {
     border-right: 2px solid #d1d5db;
-    /* Remove margin that breaks layout */
+    
 }
 
 .symmetry-diagram-frame-bottom-label-cell {
     border-top: 2px solid #d1d5db;
-    /* Remove margin that breaks layout */
+    
 }
 
 .symmetry-diagram-frame-right-label-cell {
     border-left: 2px solid #d1d5db;
-    /* Remove margin that breaks layout */
+    
 }
 
 .octal-index {

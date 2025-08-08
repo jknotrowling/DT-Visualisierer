@@ -981,12 +981,15 @@ export function init() {
         const oldTruthCopy =
           logicState.preset === "custom" ? JSON.parse(JSON.stringify(logicState.truth)) : null;
         logicState.nVars--;
+        customFunctionState.customFunction = "0";
         buildTruth(oldTruthCopy, oldNVars);
         applyPreset(logicState);
         renderAll();
+        
       }
     };
   }
+
   const plusBtnEl = $("plusBtn");
   if (plusBtnEl) {
     plusBtnEl.onclick = () => {
@@ -997,6 +1000,7 @@ export function init() {
           logicState.nVars++;
           try {
             const { variables, truthArray } = parseLogicFunction(logicState.customFunction, logicState.nVars);
+            customFunctionState.customFunction = "0";
             logicState.truth = truthArrayToTruthTable(truthArray, logicState.nVars);
           } catch (error) {
             console.error("Error parsing custom function:", error);
