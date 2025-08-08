@@ -518,8 +518,10 @@ function handleCellOrTermHover(hoveredElement, isOn) {
     mintermsToHighlightInTables = [hoveredElement.dataset.bits];
     singleMintermForExpansionLookup = hoveredElement.dataset.bits;
 
+    console.log("Hovering over", hoveredElement);
+
     document
-      .querySelectorAll("#expressionsCard .dmf[data-cover]")
+      .querySelectorAll("#expressionsCard .dmf")
       .forEach((termEl) => {
         const coveredByTerm = termEl.dataset.cover
           ? termEl.dataset.cover.split("|")
@@ -528,8 +530,8 @@ function handleCellOrTermHover(hoveredElement, isOn) {
           termEl.classList.toggle("hl-dmf-cell", isOn);
         }
       });
-    document
-      .querySelectorAll("#expressionsCard .cmf[data-cover]")
+
+    document.querySelectorAll("#expressionsCard .cmf")
       .forEach((termEl) => {
         const coveredByTerm = termEl.dataset.cover
           ? termEl.dataset.cover.split("|")

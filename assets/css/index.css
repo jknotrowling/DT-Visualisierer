@@ -541,12 +541,12 @@ th {
   background-color: oklch(70.4% 0.191 22.216) !important;
 }
 
-.hl-cmf-cell {
+.hl-dmf-cell {
   background-color: oklch(79.2% 0.209 151.711) !important;
 }
 
 .hl-cmf-cell{
-  background-color: oklch(75% 0.183 55.934) 
+  background-color: oklch(75% 0.183 55.934) !important; 
 }
 
 
