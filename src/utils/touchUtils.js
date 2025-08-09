@@ -110,6 +110,14 @@ export function addTouchFriendlyInteraction(element, hoverHandler, clickHandler)
 
 
 export function setupTouchFriendlyTruthTable(hoverHandler, clickHandler) {
+  // Clean up existing event listeners first
+  document.querySelectorAll("#truthTableCard .outCell").forEach((el) => {
+    // Clone the element to remove all event listeners
+    const newEl = el.cloneNode(true);
+    el.parentNode.replaceChild(newEl, el);
+  });
+
+  // Add new event listeners to cleaned elements
   document.querySelectorAll("#truthTableCard .outCell").forEach((el) => {
     addTouchFriendlyInteraction(el, hoverHandler, clickHandler);
   });
@@ -117,6 +125,13 @@ export function setupTouchFriendlyTruthTable(hoverHandler, clickHandler) {
 
 
 export function setupTouchFriendlySymmetryDiagram(hoverHandler, clickHandler) {
+  // Clean up existing event listeners first
+  document.querySelectorAll("#symmetry-diagram div[data-bits]").forEach((el) => {
+    // Clone the element to remove all event listeners
+    const newEl = el.cloneNode(true);
+    el.parentNode.replaceChild(newEl, el);
+  });
+
   setTimeout(() => {
     document.querySelectorAll("#symmetry-diagram div[data-bits]").forEach((el) => {
       addTouchFriendlyInteraction(el, hoverHandler, clickHandler);
@@ -126,6 +141,14 @@ export function setupTouchFriendlySymmetryDiagram(hoverHandler, clickHandler) {
 
 
 export function setupTouchFriendlyExpressionTerms(hoverHandler) {
+  // Clean up existing event listeners first
+  document.querySelectorAll("#expressionsCard .term").forEach((el) => {
+    // Clone the element to remove all event listeners
+    const newEl = el.cloneNode(true);
+    el.parentNode.replaceChild(newEl, el);
+  });
+
+  // Add new event listeners to cleaned elements
   document.querySelectorAll("#expressionsCard .term").forEach((el) => {
     if (isTouchDevice()) {
       addTouchFriendlyInteraction(el, hoverHandler, () => {}); 

@@ -449,6 +449,12 @@ function renderDev() {
   const devWrap = document.querySelector("#booleanDevCard .card-body #devWrap");
   if (devWrap) devWrap.innerHTML = singleInstanceHtml;
 
+  // Clean up old event listeners before adding new ones
+  document.querySelectorAll('[data-span-id]').forEach(el => {
+    el.onmouseenter = null;
+    el.onmouseleave = null;
+  });
+
   for (const spanId in expansionState.spanData) {
     const spanElement = document.getElementById(spanId); // getElementById is fine as IDs are unique
     if (spanElement) {
@@ -1020,7 +1026,13 @@ export function init() {
     };
   }
   
-  // Preset button logic
+  // Preset button logic with debouncing to prevent multiple rapid calls
+  const debouncedPresetChange = debounce((value) => {
+    logicState.preset = value;
+    applyPreset(logicState);
+    renderAll();
+  }, 150);
+
   const presetBtns = document.querySelectorAll('.preset-btn');
   presetBtns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1034,15 +1046,9 @@ export function init() {
       btn.classList.remove('bg-white', 'border-gray-300', 'shadow-sm', 'text-gray-700', 'font-semibold');
       // Get selected value
       const value = btn.getAttribute('data-value');
-      // Update logicState and trigger UI update
-      logicState.preset = value;
       
-     
-      if (typeof updateLogicFunction === 'function') {
-        updateLogicFunction(value);
-      } else if (typeof init === 'function') {
-        init(); // fallback: re-init UI
-      }
+      // Use debounced function to prevent rapid successive calls
+      debouncedPresetChange(value);
     });
   });
   

@@ -53,26 +53,32 @@ if(currentFunction.toUpperCase() === "CUSTOM") {
         <div class="flex justify-between items-center gap-4">
             <div id="katex-display-preset"></div> 
             <button
-                class="text-lg border rounded-lg p-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold w-10 h-10 flex items-center justify-center"
-                id="edit-custom-function-btn"
+            class="flex items-center gap-2 border rounded-lg px-4 font-semibold shadow transition-all duration-150"
+            id="edit-custom-function-btn"
+            title="Edit custom function"
             >
-                <i class="fas fa-edit"></i>
+            <i class="fas fa-edit"></i>
+            <span>Edit</span>
             </button>
-        </div>
-    `;
+        </div>`;
     } else {
+        console.log("Editing custom function");
         currentFunctionEl.innerHTML = `
         <div class="flex justify-between items-center gap-4">
-        <div id="katex-display-preset-edit"></div> 
-            <input value="${customFunctionState.customFunction}" type="text" id="custom-function" class="w-full flex-1 p-2 border rounded-lg bg-white text-gray-800 font-mono"/>
+            <div id="katex-display-preset-edit"></div> 
+            <form id="custom-function-form" class="flex-1">
+            <input autofocus value="${customFunctionState.customFunction}" type="text" id="custom-function" class="outline-none py-1 px-2 w-full border rounded-lg bg-white text-gray-800 font-mono transition-transform"/>
+            </form>
             <button
-                class="text-lg border rounded-lg p-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold w-10 h-10 flex items-center justify-center"
-                id="edit-custom-function-btn"
+            class="flex items-center gap-2 border rounded-lg px-4 font-semibold shadow transition-all duration-150"
+            id="edit-custom-function-btn"
+            title="Save custom function"
             >
-                <i class="fas fa-check"></i>
+            <i class="fas fa-check"></i>
+            <span>Save</span>
             </button>
         </div>
-    `;
+        `;
     }
 } else {
     currentFunctionEl.innerHTML = `<div id="katex-display-preset">${latexToRender}</div>`;
@@ -94,51 +100,88 @@ if(currentFunction.toUpperCase() === "CUSTOM") {
     const editButton = $("edit-custom-function-btn");
     if (editButton) {
         editButton.onclick = () => {
-            if(customFunctionState.isEditing) {
+            if(submitEditCustomFunction(editButton)) {
+            renderAll();  
+            }
+        };
+    }
+    
+    // Set cursor position at the end of the input text when editing
+    const customFunctionInput = $("custom-function");
+    if (customFunctionInput && customFunctionState.isEditing) {
+        setTimeout(() => {
+            customFunctionInput.focus();
+            customFunctionInput.setSelectionRange(customFunctionInput.value.length, customFunctionInput.value.length);
+        }, 0);
+        
+        // Clear custom validity when user starts typing
+        customFunctionInput.addEventListener('input', () => {
+            customFunctionInput.setCustomValidity('');
+        });
+    }
+    
+    const customFunctionForm = $("custom-function-form");
+    if (customFunctionForm) {
+        customFunctionForm.onsubmit = (e) => {
+            e.preventDefault(); // Prevent form submission
+            if(submitEditCustomFunction(editButton)) {
+                renderAll(); // Re-render the UI after editing
+            }
+            
+        };
+    }
+}
+
+
+function submitEditCustomFunction(editButton) {
+    if(customFunctionState.isEditing) {
                 customFunctionState.isEditing = false;
                 editButton.innerHTML = '<i class="fas fa-edit"></i>';
                 const customFunctionInput = $("custom-function")
+                if(!customFunctionInput) return;
+                
                 const inputValue = customFunctionInput.value.trim();
 
+                // Clear any previous custom validity error first
+                customFunctionInput.setCustomValidity('');
+
                 try {
+                    
                     // Validate and parse the custom function
                     const truthArray = parseLogicFunction(inputValue, logicState.nVars);
                     customFunctionState.customFunction = inputValue;
-                    customFunctionState.isValid = true; // Set to true if parsing is successful
                     
-                    customFunctionInput.setCustomValidity(""); // Clear any previous error
-                    customFunctionInput.reportValidity(); // Report validity to update UI
+                    
+                     // Clear any previous error
+                     // Report validity to update UI
                     
                     const truthTable = truthArrayToTruthTable(truthArray, logicState.nVars);
 
                     logicState.truth = truthTable; // Update the logic state with the new truth table
                     logicState.preset = "custom"; // Set preset to custom
                     // Update the logic state with the new truth table
+                    return true; // Indicate success
 
                 } catch(error) {
                     // Show error on input
                     console.error('Custom function parsing error:', error);
-                    customFunctionState.isValid = false;
+                    
                     
                     // Style the input to show error
-                    customFunctionInput.setCustomValidity(error.message);
+                    customFunctionInput.setCustomValidity(error)
                     customFunctionInput.reportValidity();
                     
                     // Keep editing mode active
                     customFunctionState.isEditing = true;
                     editButton.innerHTML = '<i class="fas fa-check"></i>';
-                    return; // Don't proceed to renderAll()
+                    return false; // Don't proceed to renderAll()
                 }
 
             } else {
                 customFunctionState.isEditing = true;
                 editButton.innerHTML = '<i class="fas fa-check"></i>'; // Change to check icon
+                return true;
             }
-            renderAll();
-            
-}
-
-}
 }
 
 
