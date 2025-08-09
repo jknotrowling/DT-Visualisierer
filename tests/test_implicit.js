@@ -1,4 +1,4 @@
-import { parseLogicFunction, normalizeExpression } from './src/logic/parser.js';
+import { parseLogicFunction, normalizeExpression } from '../src/logic/parser.js';
 
 const testExpression = '!(!A&!C|!A&B)(!A&!C|!A&B)';
 

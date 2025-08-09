@@ -55,6 +55,7 @@ export function decimalToOctal(decimal) {
 
 
 export function truthTableToSymmetryDiagram(numberOfVariables, truthTable) {
+    console.log(truthTable, truthTable.length, 2**numberOfVariables);
     if (!Array.isArray(truthTable) || truthTable.length !== 2**numberOfVariables) {
        throw new Error(`Truth table must be an array of ${2**numberOfVariables} elements.`);
     }

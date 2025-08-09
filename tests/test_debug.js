@@ -1,4 +1,4 @@
-import { parseLogicFunction, normalizeExpression } from './src/logic/parser.js';
+import { parseLogicFunction, normalizeExpression } from '../src/logic/parser.js';
 
 console.log('=== Umfassende Tests nach der Korrektur ===\n');
 

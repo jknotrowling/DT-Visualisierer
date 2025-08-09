@@ -2,7 +2,12 @@ import { truthTableToSymmetryDiagram, decimalToOctal, getNumberOfRowsAndCols} fr
 
 
 import { VARIABLE_NAMES } from '../state.js';
-
+import { logicState } from '../state.js';
+import { setupTouchFriendlySymmetryDiagram } from './touch.js';
+import { handleCellOrTermHover } from './hover.js';
+import { getMinimalExpression } from '../logic/parser.js';
+import { customFunctionState } from '../state.js';
+import { renderAll } from './ui.js';
 
 function renderTopFrameRow(wrapper, numberOfVariables) {
     const topRow = document.createElement("div");
@@ -79,10 +84,15 @@ function renderRightFrameCell(row, index, numberOfVariables) {
     row.appendChild(rightCell);
 }
 
+export function renderSymmetryDiagram() {
+    const numberOfVariables = logicState.nVars;
+    const truthTable = [];
+    for (let i = 0; i < (1 << logicState.nVars); i++) {
+        const binaryLSB = i.toString(2).padStart(logicState.nVars, '0').split('').reverse().join('');
+        const truthEntry = logicState.truth.find(t => t.bits === binaryLSB);
+        truthTable.push(truthEntry ? truthEntry.out : 0);
+    }
 
-
-
-export function renderSymmetryDiagram(numberOfVariables, truthTable) {
 
     if(numberOfVariables < 2 || numberOfVariables > 4) {
         throw new Error("'numberOfVariables' must be an integer ∈ [2, 4]");
@@ -91,6 +101,7 @@ export function renderSymmetryDiagram(numberOfVariables, truthTable) {
 
     const symmetryDiagramBox = document.getElementById("symmetry-diagram");
     symmetryDiagramBox.innerHTML = "";
+    console.log(truthTable)
     const symmetryDiagram = truthTableToSymmetryDiagram(numberOfVariables, truthTable.map((el, i) => ({ val: el, index: i })));
 
     // Outer flex wrapper
@@ -159,6 +170,47 @@ export function renderSymmetryDiagram(numberOfVariables, truthTable) {
     outerFlex.appendChild(centerFlex);
     symmetryDiagramBox.appendChild(outerFlex);
 }
+
+
+export function setupSymmetryDiagramClickHandler() {
+    const symmetryDiagramClickHandler = (e) => {
+        const currentTarget = e.currentTarget;
+
+        if (!currentTarget) return;
+
+        const bits = currentTarget.dataset.bits;
+
+        if (!bits) return;
+
+        const currentValueIndex = logicState.truth.findIndex(
+        (t) => t.bits === bits
+        );
+
+        if (currentValueIndex === -1) return; // No matching bits found
+
+        const currentValue = logicState.truth[currentValueIndex];
+
+        const nextValue =
+        currentValue.out === 0 ? 1 : currentValue.out === 1 ? null : 0;
+
+        logicState.truth[currentValueIndex] = {
+        out: nextValue,
+        bits: currentValue.bits,
+        };
+
+        customFunctionState.customFunction = getMinimalExpression();
+        logicState.preset = "custom";
+
+        renderAll();
+    };
+
+    setupTouchFriendlySymmetryDiagram(
+        handleCellOrTermHover,
+        symmetryDiagramClickHandler
+    );
+}
+
+
 
 
 

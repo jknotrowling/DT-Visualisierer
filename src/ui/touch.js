@@ -37,6 +37,7 @@ export function addTouchFriendlyInteraction(element, hoverHandler, clickHandler)
       }, 50); 
     });
     
+    
     element.addEventListener('touchend', (e) => {
       e.preventDefault();
       const touchDuration = Date.now() - touchStartTime;
@@ -101,7 +102,8 @@ export function addTouchFriendlyInteraction(element, hoverHandler, clickHandler)
     });
     
   } else {
-   
+   // remove all previous event listeners
+    
     element.addEventListener('mouseenter', () => hoverHandler(element, true));
     element.addEventListener('mouseleave', () => hoverHandler(element, false));
     element.addEventListener('click', clickHandler);
