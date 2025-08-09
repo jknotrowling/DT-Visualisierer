@@ -129,7 +129,9 @@ function renderTruth() {
     ${header.map(
       th => `<div class="${cellWidthClass} text-center font-semibold text-gray-700 bg-gray-100 rounded py-2">${th}</div>`
     ).join('')}
-    ${logicState.truth.map(r => {
+    ${logicState.truth.sort(
+      (a, b) => parseInt(a.bits.split("").reverse().join(""), 2) - parseInt(b.bits.split("").reverse().join(""), 2)
+    ).map(r => {
       const cellBase = `${cellWidthClass} flex items-center justify-center text-center rounded transition cursor-pointer border font-bold`;
       let outClass = "";
       let outText = r.out === null ? "-" : r.out;
