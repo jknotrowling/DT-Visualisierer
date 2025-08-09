@@ -135,8 +135,7 @@ if(currentFunction.toUpperCase() === "CUSTOM") {
 
 function submitEditCustomFunction(editButton) {
     if(customFunctionState.isEditing) {
-                customFunctionState.isEditing = false;
-                editButton.innerHTML = '<i class="fas fa-edit"></i>';
+               
                 const customFunctionInput = $("custom-function")
                 if(!customFunctionInput) return;
                 
@@ -160,6 +159,8 @@ function submitEditCustomFunction(editButton) {
                     logicState.truth = truthTable; // Update the logic state with the new truth table
                     logicState.preset = "custom"; // Set preset to custom
                     // Update the logic state with the new truth table
+                    customFunctionState.isEditing = false;
+                    editButton.innerHTML = '<i class="fas fa-edit"></i>';
                     return true; // Indicate success
 
                 } catch(error) {
@@ -172,8 +173,7 @@ function submitEditCustomFunction(editButton) {
                     customFunctionInput.reportValidity();
                     
                     // Keep editing mode active
-                    customFunctionState.isEditing = true;
-                    editButton.innerHTML = '<i class="fas fa-check"></i>';
+                    
                     return false; // Don't proceed to renderAll()
                 }
 

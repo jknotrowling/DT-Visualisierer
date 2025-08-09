@@ -25,14 +25,8 @@ export function parseLogicFunction(expr, nVars) {
 
   const validVariables = VARIABLE_NAMES.slice(0, nVars);
 
-  // Normalisiere den Ausdruck
+  // Normalisiere den Ausdruck (enthält bereits Variablen- und Zahlenvalidierung)
   let normalizedExpr = normalizeExpression(expr);
-
-  // Überprüfe, ob alle verwendeten Variablen gültig sind
-  const usedVars = Array.from(new Set(normalizedExpr.match(/[A-Za-z]/g)));
-  if (usedVars.some(v => !validVariables.includes(v.toUpperCase()))) {
-    throw new Error(`Der Ausdruck enthält ungültige Variablen. Erlaubt sind: ${validVariables.join(', ')}`);
-  }
 
   // Erstelle Truth-Array für alle möglichen Eingaben
   const truthArray = [];
@@ -52,7 +46,7 @@ export function parseLogicFunction(expr, nVars) {
     try {
       result = evaluateExpression(normalizedExpr, variableValues);
     } catch (error) {
-      throw new Error(`Fehler beim Auswerten des Ausdrucks für Eingabe ${bits.join('')}: ${error.message}`);
+      throw new Error(`Dieser Ausdruck ist ungültig: ${expr}`);
     }
     truthArray.push(result ? 1 : 0);
   }
@@ -61,14 +55,25 @@ export function parseLogicFunction(expr, nVars) {
 }
 
 export function normalizeExpression(expr) {
-  const validKonjunktions = ["*", "&", "∧"];
-  const validDisjunktions = ["+", "|", "∨"];
+  const validKonjunktions = ["*", "&", "∧", "and"];
+  const validDisjunktions = ["+", "|", "∨", "or"];
   const validNegations = ["not", "¬", "!", "~"];
   const validXOR = ["⊕", "xor"];
-  const validImplications = ["→", "⇒"];
-  const validEquivalences = ["↔", "≡"];
+  // const validImplications = ["→", "⇒"];
+  // const validEquivalences = ["↔", "≡"];
 
   let normalized = expr.trim();
+  
+  // Erst die Operatoren normalisieren, bevor wir Variablen validieren
+  
+  // Ersetze alle XOR-Operatoren durch ^ (zuerst, da "XOR" Buchstaben enthält)
+  validXOR.forEach(op => {
+    if (op.toLowerCase() === 'xor') {
+      normalized = normalized.replace(/\bXOR\b/gi, '^');
+    } else {
+      normalized = normalized.replaceAll(op, '^');
+    }
+  });
   
   // Ersetze alle Konjunktions-Operatoren durch &
   validKonjunktions.forEach(op => {
@@ -80,25 +85,6 @@ export function normalizeExpression(expr) {
     normalized = normalized.replaceAll(op, '|');
   });
 
-  // Ersetze alle XOR-Operatoren durch ^
-  validXOR.forEach(op => {
-    if (op.toLowerCase() === 'xor') {
-      normalized = normalized.replace(/\bXOR\b/gi, '^');
-    } else {
-      normalized = normalized.replaceAll(op, '^');
-    }
-  });
-
-  // Ersetze Implikationen durch entsprechende logische Ausdrücke (!A | B)
-  validImplications.forEach(op => {
-    normalized = normalized.replaceAll(op, '->');
-  });
-
-  // Ersetze Äquivalenzen durch entsprechende logische Ausdrücke ((A & B) | (!A & !B))
-  validEquivalences.forEach(op => {
-    normalized = normalized.replaceAll(op, '<->');
-  });
-
   // Ersetze not() Funktionen durch ! (verbessert)
   normalized = normalized.replace(/not\s*\(\s*([^)]+)\s*\)/g, '!($1)');
 
@@ -108,6 +94,24 @@ export function normalizeExpression(expr) {
       normalized = normalized.replaceAll(op, '!');
     }
   });
+  
+  // JETZT validieren wir Zahlen und Variablen nach der Operator-Normalisierung
+  
+  // Validiere Zahlen: Nur 0 und 1 sind erlaubt
+  const invalidNumbers = normalized.match(/\b[2-9]\d*\b/g);
+  if (invalidNumbers) {
+    throw new Error(`Ungültige Zahlen gefunden: ${invalidNumbers.join(', ')}. Nur 0 und 1 sind erlaubt.`);
+  }
+  
+  // Validiere Variablen: Nur die aus VARIABLE_NAMES sind erlaubt
+  const usedVariables = normalized.match(/[A-Za-z]/g);
+  if (usedVariables) {
+    const invalidVariables = usedVariables.filter(v => !VARIABLE_NAMES.includes(v.toUpperCase()));
+    if (invalidVariables.length > 0) {
+      const uniqueInvalidVars = [...new Set(invalidVariables.map(v => v.toUpperCase()))];
+      throw new Error(`Ungültige Variablen gefunden: ${uniqueInvalidVars.join(', ')}. Erlaubt sind nur: ${VARIABLE_NAMES.join(', ')}`);
+    }
+  }
 
   // Vereinfache mehrfache Negationen
   normalized = simplifyNegations(normalized);
@@ -167,6 +171,9 @@ function addImplicitConjunctions(expr) {
     
     // Füge & zwischen schließenden Klammern und Zahlen (0 oder 1) hinzu
     expr = expr.replace(/\)\s*([01])/g, ')&$1');
+    
+    // Füge & zwischen schließenden und öffnenden Klammern hinzu (wichtig für )()!)
+    expr = expr.replace(/\)\s*\(/g, ')&(');
     
     // Füge & zwischen schließenden Klammern und not() hinzu
     expr = expr.replace(/\)\s*(not\s*\()/g, ')&$1');
