@@ -15,14 +15,20 @@ npx serve
 ```
 
 ## 📚 Dokumentation
-Die vollständige Dokumentation des Projekts befindet sich im `doc`-Verzeichnis:
 
-- [Projektübersicht](doc/01_Projektübersicht.md)
-- [Technologie-Stack](doc/02_Technologie-Stack.md)
-- [Architektur](doc/03_Architektur.md)
-    - [Boolesche Algorithmen](doc/031_Bool-Algorythmen.md)
-    - [Symmetriediagramm Algorithmen](doc/032_Symmetriediagramm-Algorythmen.md)
-    - [Parser Algorithmen](doc/033_Parser-Algorythmen.md)
-        - [Benutzerdefinierte Funktionen Syntax](doc/0331_Benutzerdefinierte-Funktionen-Syntax.md)
-- [Installation](doc/04_Installation.md)
+### 🏗️ Projektgrundlagen
+| Dokument | Beschreibung |
+|----------|-------------|
+| **[📋 Projektübersicht](doc/01_Projektübersicht.md)** | Ziele, Zielgruppe und Kernfunktionen des Projekts |
+| **[🛠️ Technologie-Stack](doc/02_Technologie-Stack.md)** | Verwendete Technologien und Build-System |
+| **[🏛️ Architektur](doc/03_Architektur.md)** | Systemarchitektur und Projektstruktur |
+| **[📦 Installation](doc/04_Installation.md)** | Installationsanleitung und Setup |
 
+### 🧮 Algorithmen und Implementierung
+| Dokument | Beschreibung |
+|----------|-------------|
+| **[🔢 Boolesche Algorithmen](doc/031_Bool-Algorythmen.md)** | Implementierung der Booleschen Algebra |
+| **[🔄 Symmetriediagramm-Algorithmen](doc/032_Symmetriediagramm-Algorythmen.md)** | Algorithmen für Symmetrieanalyse |
+| **[⚙️ Parser-Algorithmen](doc/033_Parser-Algorythmen.md)** | Ausdrucksparser und Syntax-Analyse |
+| **[📝 Benutzerdefinierte Funktionen](doc/0331_Benutzerdefinierte-Funktionen-Syntax.md)** | Syntax für eigene Funktionsdefinitionen |
+---
