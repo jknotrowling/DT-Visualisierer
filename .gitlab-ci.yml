@@ -1,0 +1,30 @@
+image: node:18
+
+stages:
+  - build
+  - deploy
+
+cache:
+  paths:
+    - node_modules/
+
+build_job:
+  stage: build
+  script:
+    - npm install
+    - npm run build
+  artifacts:
+    paths:
+      - dist
+
+pages:
+  stage: deploy
+  dependencies:
+    - build_job
+  script:
+    - echo "Deploying to GitLab Pages"
+  artifacts:
+    paths:
+      - dist
+  only:
+    - main  # Oder dein Hauptbranch, z.B. master
