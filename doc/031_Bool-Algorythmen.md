@@ -88,7 +88,7 @@ Der erste Schritt gruppiert alle Terme (einschließlich Don't-Care-Terme) nach d
   });
 ```
 
-**Warum gruppieren?** Terme können nur dann kombiniert werden, wenn sie sich in genau einem Bit unterscheiden. Durch die Gruppierung nach 1-Bit-Anzahl müssen nur benachbarte Gruppen verglichen werden.
+Terme können nur dann kombiniert werden, wenn sie sich in genau einem Bit unterscheiden. Durch die Gruppierung nach 1-Bit-Anzahl müssen nur benachbarte Gruppen verglichen werden.
 
 ### Phase 2: Kombinationsphase (Iterative Reduktion)
 
@@ -311,7 +311,7 @@ Wenn beide Zweige denselben konstanten Wert haben, wird die Variable komplett we
 
 #### 4. Don't-Care-Optimierung
 ```javascript
-if (expNode1.type === "constant" && expNode0.type === "constant") {
+
 
 // Sonderfall für don't care "/"
 if (branchOne.type === "constant" && branchZero.type === "constant") {
@@ -338,13 +338,10 @@ if (branchOne.type === "constant" && branchZero.type === "constant") {
     };
   }
 }
-}
+
 ```
 Don't-Care-Werte ("/") können beliebig gesetzt werden. Wenn ein Zweig einen festen Wert hat, wird dieser verwendet.
 
-
-
-Ein Don't-Care-Zweig ("/") wird durch den definierten Wert des anderen Zweigs ersetzt.
 
 #### 5. Standard-Fall: Verzweigungsknoten erstellen
 ```javascript
