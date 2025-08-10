@@ -1,9 +1,16 @@
-export const VARIABLE_NAMES = ["A", "B", "C", "D", "E", "F", "G", "H"];
+export const VARIABLE_NAMES = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P"];
 
+export const logicState = {
+  nVars: 3,
+  truth: [],
+  preset: "AND",
+  
+}; 
 export const expansionState = {
     spanData: {},
     spanIdCounter: 0,
     groupIdCounter: 0,
+    order: VARIABLE_NAMES.slice(0, logicState.nVars).join("").toLocaleLowerCase(),
 };
 
 export const DEFAULT_LAYOUT_CONFIG = {
@@ -14,12 +21,7 @@ export const DEFAULT_LAYOUT_CONFIG = {
 };
 
 
-export const logicState = {
-  nVars: 3,
-  truth: [],
-  preset: "AND",
-  
-};
+
 
 export const customFunctionState = {
   isEditing: false,

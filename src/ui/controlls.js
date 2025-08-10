@@ -67,10 +67,12 @@ export function setUpNVarsPlusMinusButtonEvents() {
           logicState.nVars--;
           customFunctionState.customFunction = "0";
           if(logicState.preset === "custom") logicState.preset = "AND";
+
+         
+
           buildTruth(oldTruthCopy, oldNVars);
           applyPreset(logicState);
           renderAll();
-          
         }
       };
     }
@@ -83,7 +85,7 @@ export function setUpNVarsPlusMinusButtonEvents() {
           customFunctionState.customFunction = "0";
           logicState.nVars++;
           if (logicState.preset === "custom") {
-            
+          
             logicState.preset = "AND";
             
           } else {
@@ -96,8 +98,6 @@ export function setUpNVarsPlusMinusButtonEvents() {
       };
     }
 }
-
-
 
 
 export function setUpPresetButtonEvents() {

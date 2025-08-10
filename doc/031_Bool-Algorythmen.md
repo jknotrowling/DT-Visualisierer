@@ -228,7 +228,7 @@ Jetzt wird bestimmt, welche Primimplikanten tatsächlich benötigt werden:
 
 - **Zeitkomplexität**: Die Laufzeit des Quine-McCluskey-Algorithmus ist im schlimmsten Fall:
 $$
-T(n) \in \mathcal{O}(n^3 \cdot 3^n \cdot \log n)
+T(n) \in \mathcal{O}(n^2 \cdot 3^n \cdot \log n)
 $$
 
 

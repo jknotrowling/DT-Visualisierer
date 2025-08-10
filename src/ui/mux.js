@@ -2,6 +2,8 @@ import {
   shannonExpansion,
 } from "../logic/bool.js";
 
+import { debounce } from "../utils/utils.js";
+
 import { handleExpansionSpanHover } from "./hover.js";
 import {
   generateMuxDiagramStructure,
@@ -135,6 +137,9 @@ export function generateExpansionHtmlRecursive(node, ancestorGroupChain = []) {
 
 
 export function renderDev() {
+  // based on expansionOrderInputEl
+  
+  
   expansionState.spanIdCounter = 0;
   expansionState.groupIdCounter = 0;
   for (const key in expansionState.spanData)
@@ -173,6 +178,7 @@ export function renderDev() {
     customOrderNames = defaultOrderUpper;
   }
 
+  console.log(customOrderNames)
   const rootExpansionNode = shannonExpansion(
     "".padStart(logicState.nVars, "0"),
     0,
@@ -209,15 +215,15 @@ export function renderDev() {
   let activeMuxConfig = JSON.parse(JSON.stringify(DEFAULT_MUX_CONFIG));
   let activeLayoutConfig = JSON.parse(JSON.stringify(DEFAULT_LAYOUT_CONFIG));
 
-  if (logicState.nVars === 4) {
-    activeMuxConfig.inputHeight = 30;
-    activeMuxConfig.outputHeight = 15;
-    activeMuxConfig.width = 55;
-    activeMuxConfig.varFontSize = 12;
-    activeMuxConfig.labelFontSize = 9;
-    activeLayoutConfig.spacingY = 20;
-    activeLayoutConfig.spacingX = 65;
-  }
+  // if (logicState.nVars === 4) {
+  //   activeMuxConfig.inputHeight = 30;
+  //   activeMuxConfig.outputHeight = 15;
+  //   activeMuxConfig.width = 55;
+  //   activeMuxConfig.varFontSize = 12;
+  //   activeMuxConfig.labelFontSize = 9;
+  //   activeLayoutConfig.spacingY = 20;
+  //   activeLayoutConfig.spacingX = 65;
+  // }
   MUX_DIAGRAM_STATE.currentActiveMuxConfig = activeMuxConfig;
 
   if (rootExpansionNode && MUX_DIAGRAM_STATE.muxSvgElement) {
@@ -258,9 +264,13 @@ export function renderDev() {
 
 export function renderMUX() {
     const expansionOrderInputEl = $("expansionOrderInput");
+    console.log("Rendering MUX diagram with current state...", !!expansionOrderInputEl);
   if (expansionOrderInputEl) {
     expansionOrderInputEl.onchange = () => {
+      expansionState.order = expansionOrderInputEl.value.trim().toLowerCase();
+      console.log("Expansion order input changed, re-rendering MUX diagram...");
       renderDev(); // This will also re-render MUX
+
     };
   }
 

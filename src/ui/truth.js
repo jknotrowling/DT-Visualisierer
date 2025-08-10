@@ -14,7 +14,7 @@ export function renderTruth() {
 
   const cellWidthClass = "min-w-[2.5rem] px-3";
   
-  const gridColsClass = `grid-cols-${gridCols > 6 ? 6 : gridCols}`;
+  const gridColsClass = `grid-cols-${gridCols}`;
   let h = `<div class="grid ${gridColsClass} gap-2 bg-white rounded-xl p-4 ">
     ${header
       .map(

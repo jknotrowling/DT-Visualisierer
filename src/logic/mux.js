@@ -1,5 +1,5 @@
     
-import { logicState, DEFAULT_LAYOUT_CONFIG } from "../state.js"; // Import logicState from state.js
+import { logicState, DEFAULT_LAYOUT_CONFIG, VARIABLE_NAMES, expansionState } from "../state.js"; // Import logicState from state.js
 
 
     // Store the SVG element reference
@@ -7,9 +7,9 @@ import { logicState, DEFAULT_LAYOUT_CONFIG } from "../state.js"; // Import logic
 
 
 export const DEFAULT_MUX_CONFIG = {
-  width: 60,
-  outputHeight: 20,
-  inputHeight: 40,
+  width: 20,
+  outputHeight: 65 *(1/2),
+  inputHeight: 65,
   varFontSize: 14,
   labelFontSize: 10,
   strokeColor: "#333",
@@ -44,7 +44,7 @@ const defaultLineStrokeColor = baseSvgConfig.strokeColor;
 const defaultLineStrokeWidth = '1';
 const highlightedLineStrokeWidth = '2';
 const defaultConstantColor = baseSvgConfig.strokeColor; 
-const L_VARS = ['A', 'B', 'C', 'D']; 
+
 
 elementsStore.muxes.forEach(mux => {
 const muxSvgGroup = drawnElements[mux.id];
@@ -115,7 +115,7 @@ for (let depth = 0; depth < expansionOrder.length; depth++) {
 
     if (depth === expansionOrder.length - 1) { // Last MUX in this path, leads to a constant
         const varNameForThisDepth = expansionOrder[depth]; 
-        const originalVarLIndex = L_VARS.indexOf(varNameForThisDepth);
+        const originalVarLIndex = VARIABLE_NAMES.indexOf(varNameForThisDepth);
             if (originalVarLIndex === -1) {
             console.warn(`Variable ${varNameForThisDepth} not found in L_VARS during final step. Path tracing aborted.`);
             break; 
@@ -142,7 +142,7 @@ for (let depth = 0; depth < expansionOrder.length; depth++) {
 
     // Not the last MUX, follow to next MUX
     const varNameForThisDepth = expansionOrder[depth]; 
-    const originalVarLIndex = L_VARS.indexOf(varNameForThisDepth);
+    const originalVarLIndex = VARIABLE_NAMES.indexOf(varNameForThisDepth);
     if (originalVarLIndex === -1) {
             console.warn(`Variable ${varNameForThisDepth} not found in L_VARS. Path tracing aborted.`);
             break; 
@@ -179,6 +179,29 @@ const p2 = `${x + config.width},${y - config.inputHeight / 2}`;
 const p3 = `${x + config.width},${y + config.inputHeight / 2}`;
 const p4 = `${x},${y + config.outputHeight / 2}`;
 
+
+if(varName.toLowerCase() === expansionState.order[0]) {
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  line.setAttribute('x1', cx-50);
+  line.setAttribute('y1', cy - config.outputHeight / Infinity);
+  line.setAttribute('x2', cx);
+  line.setAttribute('y2', cy - config.outputHeight / Infinity);
+  line.setAttribute('stroke', config.strokeColor);
+  line.setAttribute('stroke-width', '1');
+  group.appendChild(line);
+
+  const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  text.setAttribute('x', cx-55);
+  text.setAttribute('y', cy - config.outputHeight / Infinity);
+  text.setAttribute('font-family', 'system-ui, sans-serif');
+  text.setAttribute('font-size', config.varFontSize);
+  text.setAttribute('text-anchor', 'end');
+  text.setAttribute('dominant-baseline', 'middle');
+  text.textContent = "f";
+  group.appendChild(text);
+}
+
+
 const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
 polygon.setAttribute('points', `${p1} ${p2} ${p3} ${p4}`);
 polygon.setAttribute('fill', config.fillColor);
@@ -188,17 +211,27 @@ group.appendChild(polygon);
 
 const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
 text.setAttribute('x', cx);
-text.setAttribute('y', cy);
+text.setAttribute('y', cy+50);
 text.setAttribute('font-family', 'system-ui, sans-serif');
 text.setAttribute('font-size', config.varFontSize);
 text.setAttribute('text-anchor', 'middle');
 text.setAttribute('dominant-baseline', 'middle');
 text.textContent = varName;
 group.appendChild(text);
+    
+  // Linie vom Polygon-Mittelpunkt zum Variablen-Text
+  const lineToVar = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  lineToVar.setAttribute('x1', cx);
+  lineToVar.setAttribute('y1', cy+25);
+  lineToVar.setAttribute('x2', cx);
+  lineToVar.setAttribute('y2', cy+40);
+  lineToVar.setAttribute('stroke', config.strokeColor);
+  lineToVar.setAttribute('stroke-width', '1');
+  group.appendChild(lineToVar);
 
 const label1 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-label1.setAttribute('x', x + config.width + config.labelOffset);
-label1.setAttribute('y', y - config.inputHeight / 4);
+label1.setAttribute('x', x + config.width + config.labelOffset -15);
+label1.setAttribute('y', y - (config.inputHeight / 4));
 label1.setAttribute('font-family', 'system-ui, sans-serif');
 label1.setAttribute('font-size', config.labelFontSize);
 label1.setAttribute('text-anchor', 'start');
@@ -207,8 +240,8 @@ label1.textContent = '1';
 group.appendChild(label1);
 
 const label0 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-label0.setAttribute('x', x + config.width + config.labelOffset);
-label0.setAttribute('y', y + config.inputHeight / 4);
+label0.setAttribute('x', x + config.width + config.labelOffset-15);
+label0.setAttribute('y', y + (config.inputHeight / 4));
 label0.setAttribute('font-family', 'system-ui, sans-serif');
 label0.setAttribute('font-size', config.labelFontSize);
 label0.setAttribute('text-anchor', 'start');
