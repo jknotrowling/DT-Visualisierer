@@ -21,4 +21,6 @@ Die vollständige Dokumentation des Projekts befindet sich im `doc`-Verzeichnis:
 - [Technologie-Stack](doc/02_Technologie-Stack.md)
 - [Architektur](doc/03_Architektur.md)
     - [Boolesche Algorithmen](doc/031_Bool-Algorythmen.md)
+    - [Symmetriediagramm Algorithmen](doc/032_Symmetriediagramm-Algorythmen.md)
+    - [Parser Algorithmen](doc/033_Parser-Algorythmen.md)
 
