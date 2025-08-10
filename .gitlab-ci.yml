@@ -4,10 +4,6 @@ stages:
   - build
   - deploy
 
-cache:
-  paths:
-    - node_modules/
-
 build_job:
   stage: build
   script:
@@ -26,5 +22,6 @@ pages:
   artifacts:
     paths:
       - dist
+  publish: dist
   only:
-    - main  # Oder dein Hauptbranch, z.B. master
+    - main
