@@ -79,13 +79,7 @@ expansionState = { spanData, spanIdCounter, groupIdCounter }
 - **Kernfunktionen**: `minimize()`, `expand()`, `lit()`
 - **Rekursive Expansion**: `simplifiedBooleanExpansionRecursive()`
 - **Baumstruktur** für Boolean-Ausdrücke
-- Implementiert die mathematischen Grundlagen der Digitaltechnik. Mehr erfahren in der Datei [doc/031_Bool-Algorythmen.md](031_Bool-Algorythmen.md).
-
-#### Expression-Parser (`parser.js`)
-- **Parsing-Engine**: Verarbeitung von Boolean-Ausdrücken
-- **Minimierungsalgorithmen**: `getMinimalExpression()`
-- **Syntax-Validierung**: Überprüfung der Eingabe-Syntax
-- **Token-Verarbeitung**: Zerlegung komplexer Ausdrücke
+-  Mehr erfahren in der Datei [doc/031_Bool-Algorythmen.md](031_Bool-Algorythmen.md).
 
 #### Multiplexer-Engine (`mux.js`)
 - **SVG-Rendering**: Dynamische Generierung von MUX-Diagrammen
@@ -97,7 +91,15 @@ expansionState = { spanData, spanIdCounter, groupIdCounter }
 - **Hauptalgorithmus**: `truthTableToSymmetryDiagram()`
 - **Zahlensystem-Konvertierung**: `decimalToOctal()`
 - **Raster-Berechnung**: `getNumberOfRowsAndCols()`
-- Analysiert die Symmetrieeigenschaften digitaler Funktionen
+- Mehr erfahren in der Datei [doc/032_Symmetriediagramm-Algorythmen](032_Symmetriediagramm-Algorythmen).
+
+#### Expression-Parser (`parser.js`)
+- **Parsing-Engine**: Verarbeitung von Boolean-Ausdrücken
+- **Minimierungsalgorithmen**: `getMinimalExpression()`
+- **Syntax-Validierung**: Überprüfung der Eingabe-Syntax
+- **Token-Verarbeitung**: Zerlegung komplexer Ausdrücke
+- Mehr erfahren in der Datei [doc/033_Parser-Algorythmen.md](030_Parser-Algorythmen.md).
+
 
 #### Wahrheitstabellen-Logik (`truth.js`)
 - **Tabellengenerierung**: Basierend auf Anzahl der Variablen (`nVars`)
