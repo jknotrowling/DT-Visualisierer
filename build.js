@@ -16,7 +16,8 @@ async function build() {
     entryPoints: [jsEntry],
     bundle: true,
     minify: true,
-    outfile: path.join(outDir, 'index.min.js'),
+    outdir: outDir,
+    entryNames: 'index.min', // Explizit den Namen festlegen
     sourcemap: false,
     format: 'iife', // Immediately Invoked Function Expression für bessere Kompatibilität
     target: 'es2020', // Kompatibilität mit modernen Browsern

@@ -8,8 +8,7 @@
     "test": "tests"
   },
   "scripts": {
-    "build": "esbuild src/index.js --bundle --minify --outfile=dist/index.js"
-
+    "build": "node build.js"
   },
   "repository": {
     "type": "git",
