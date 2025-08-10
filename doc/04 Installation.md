@@ -10,10 +10,7 @@
 ## Installation
 
 1. **Repository klonen**
-   ```bash
-   git clone https://github.com/jknotrowling/DT-Visualisierer.git
-
-   ```
+ 
 2. **In das Verzeichnis wechseln**
    ```bash
    cd DT-Visualisierer

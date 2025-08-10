@@ -6,13 +6,7 @@ Dieses Projekt wurde für das Institut für Technik der Informationsverarbeitung
 
 Der DT-Visualisierer ist ein webbasiertes Tool, das Studierenden und Lehrenden hilft, digitale Schaltfunktionen,Symmetriediagramme, Multiplexer und Wahrheitstabellen zu visualisieren und interaktiv zu erkunden. Die Anwendung bietet eine intuitive Oberfläche zur Untersuchung digitaler Schaltfunktionen und deren Eigenschaften, einschließlich Symmetrieanalyse.
 
-## Schnellstart
 
-```bash
-git clone https://github.com/jknotrowling/DT-Visualisierer.git
-cd DT-Visualisierer
-npx serve
-```
 
 ## Dokumentation
 
