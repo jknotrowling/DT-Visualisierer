@@ -1,39 +1,24 @@
 # DT-Visualisierer
 
-This project was developed for the Institut für Technik der Informationsverarbeitung (ITIV) at the Karlsruhe Institute of Technology (KIT) as part of the course "Digitaltechnik".
+Dieses Projekt wurde für das Institut für Technik der Informationsverarbeitung (ITIV) am Karlsruher Institut für Technologie (KIT) im Rahmen der Lehrveranstaltung "Digitaltechnik" entwickelt.
 
-## Overview
+## Übersicht
 
-DT-Visualisierer is a web-based tool designed to help students and instructors visualize and interact with digital logic concepts, such as Boolean functions, multiplexers and truth tables. The application provides an intuitive interface for exploring digital circuits and their properties, including symmetry analysis.
+Der DT-Visualisierer ist ein webbasiertes Tool, das Studierenden und Lehrenden hilft, digitale Schaltfunktionen,Symmetriediagramme, Multiplexer und Wahrheitstabellen zu visualisieren und interaktiv zu erkunden. Die Anwendung bietet eine intuitive Oberfläche zur Untersuchung digitaler Schaltfunktionen und deren Eigenschaften, einschließlich Symmetrieanalyse.
 
-## Features
+## 🚀 Schnellstart
 
-- Visualization of Boolean functions and truth tables
-- Interactive multiplexers and logic circuit components
-- Symmetry analysis tools
-- User-friendly UI for educational purposes
+```bash
+git clone https://github.com/jknotrowling/DT-Visualisierer.git
+cd DT-Visualisierer
+npx serve
+```
 
-## Usage
+## 📚 Dokumentation
+Die vollständige Dokumentation des Projekts befindet sich im `doc`-Verzeichnis:
 
-Open `index.html` in your browser to start the application. All logic and UI components are located in the `src/` directory, with assets and styles in the `assets/` folder.
+- [Projektübersicht](doc/01_Projektübersicht.md)
+- [Technologie-Stack](doc/02_Technologie-Stack.md)
+- [Architektur](doc/03_Architektur.md)
+    - [Boolesche Algorithmen](doc/031_Bool-Algorythmen.md)
 
-## Folder Structure
-
-- `index.html` – Main entry point
-- `src/` – Source code (logic, UI, utilities)
-- `assets/` – Images, logos, and CSS files
-- `tests/` – Test scripts
-
-## Documentation
-
-- `doc/` – Documentation files
-  - `customFunctionSyntax.md` – Syntax for custom functions
-  - `symmetryMapperFunction.md` – Explanation of the symmetry mapper function
-
-## Requirements
-
-No installation is required. The application runs entirely in the browser.
-
-## License
-
-This project is intended for educational use at KIT / ITIV.

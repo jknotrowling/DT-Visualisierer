@@ -1,6 +1,6 @@
 import { VARIABLE_NAMES } from "../state.js";
 import { bin } from "../utils/utils.js";
-import { minimize } from "./booleanForm.js";
+import { minimize } from "./bool.js";
 import { logicState } from "../state.js";
 
 /**

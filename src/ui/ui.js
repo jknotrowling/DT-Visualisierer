@@ -5,9 +5,10 @@ import {
 import { renderCurrentFunctionExpression } from "./currentFunctionExpression.js";
 import {setSvgMux} from "../logic/mux.js";
 
-import { $, applyPreset } from "../utils/utils.js";
 
-import { buildTruth } from "../logic/truth.js";
+import {$} from "../utils/utils.js";
+
+import { buildTruth, applyPreset } from "../logic/truth.js";
 
 import { logicState } from "../state.js";
 
@@ -23,7 +24,7 @@ import {
 } from "./controlls.js";
 
 import { renderTruth } from "./truth.js";
-import { renderExpr } from "./booleanForm.js";
+import { renderExpr } from "./canonForm.js";
 import { renderDev } from "./mux.js";
 
 import { setupAllHoverInteractions } from "./hover.js";
@@ -31,11 +32,14 @@ import { setupAllHoverInteractions } from "./hover.js";
 export function renderAll() {
   $("varCountLbl").textContent = logicState.nVars;
 
-  
-  renderTruth();
-  renderCurrentFunctionExpression();
+  renderTruth(); 
+
+  renderCurrentFunctionExpression(); 
+
   renderSymmetryDiagram();
-  renderExpr();
+
+  renderExpr(); 
+
   renderDev();
 
   disabledButtonsOnEditingCustomFunction();

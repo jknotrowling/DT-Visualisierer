@@ -1,11 +1,7 @@
-import { $ } from "../utils/utils.js";
-import { logicState, VARIABLE_NAMES, expansionState } from "../state.js";
-import { setupTouchFriendlyTruthTable } from "./touch.js";
-import { getMinimalExpression } from "../logic/parser.js";
-import { customFunctionState } from "../state.js";
-import { renderAll } from "./ui.js";
+
+import { logicState, expansionState } from "../state.js";
 import { setupTouchFriendlyExpressionTerms } from "./touch.js";
-import { highlightMuxElements, MUX_DIAGRAM_STATE, DEFAULT_MUX_CONFIG } from "../logic/mux.js";
+import { highlightMuxElements, MUX_DIAGRAM_STATE } from "../logic/mux.js";
 
 
 

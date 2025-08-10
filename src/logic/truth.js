@@ -1,6 +1,35 @@
 import { logicState } from "../state.js";
 import { bin } from "../utils/utils.js";
 
+export function applyPreset(logicState) {
+  if (logicState.preset === "custom") return;
+  const preset = logicState.preset.toLowerCase();
+  logicState.truth.forEach((r) => {
+    const ones = [...r.bits].filter((b) => b === "1").length;
+    switch (preset) {
+      case "and":
+        r.out = ones === logicState.nVars ? 1 : 0;
+        break;
+      case "or":
+        r.out = ones ? 1 : 0;
+        break;
+      case "xor":
+        r.out = ones & 1;
+        break;
+      case "nand":
+        r.out = ones === logicState.nVars ? 0 : 1;
+        break;
+      case "nor":
+        r.out = ones ? 0 : 1;
+        break;
+      case "xnor":
+        r.out = ones & 1 ? 0 : 1;
+    }
+  });
+}
+
+
+
 export function buildTruth(oldTruthArray = null, previousNVars = -1) {
   const newNVars = logicState.nVars;
 

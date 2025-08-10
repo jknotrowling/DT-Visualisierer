@@ -1,4 +1,4 @@
-export const VARIABLE_NAMES = ["A", "B", "C", "D"];
+export const VARIABLE_NAMES = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
 export const expansionState = {
     spanData: {},

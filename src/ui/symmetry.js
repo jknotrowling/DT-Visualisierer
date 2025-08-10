@@ -86,6 +86,12 @@ function renderRightFrameCell(row, index, numberOfVariables) {
 
 export function renderSymmetryDiagram() {
     const numberOfVariables = logicState.nVars;
+
+
+    if(numberOfVariables < 2 || numberOfVariables > 4) {
+        return;
+    }
+
     const truthTable = [];
     for (let i = 0; i < (1 << logicState.nVars); i++) {
         const binaryLSB = i.toString(2).padStart(logicState.nVars, '0').split('').reverse().join('');
@@ -94,10 +100,6 @@ export function renderSymmetryDiagram() {
     }
 
 
-    if(numberOfVariables < 2 || numberOfVariables > 4) {
-        throw new Error("'numberOfVariables' must be an integer ∈ [2, 4]");
-
-    }
 
     const symmetryDiagramBox = document.getElementById("symmetry-diagram");
     symmetryDiagramBox.innerHTML = "";
@@ -173,6 +175,8 @@ export function renderSymmetryDiagram() {
 
 
 export function setupSymmetryDiagramClickHandler() {
+    const numberOfVariables = logicState.nVars;
+    if(numberOfVariables < 2 || numberOfVariables > 4)  return;
     const symmetryDiagramClickHandler = (e) => {
         const currentTarget = e.currentTarget;
 

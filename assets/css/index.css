@@ -350,11 +350,11 @@ body {
   width: 1.25rem;
   height: 1.25rem;
   flex-shrink: 0;
-  transition: transform 0.15s ease-in-out;
+  /* transition: transform 0.15s ease-in-out; */
 }
 
 .landscape-btn:hover img {
-  transform: rotate(90deg);
+  /* transform: rotate(90deg); */
 }
 .logo {
   height: 70px;

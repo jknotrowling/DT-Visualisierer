@@ -4,7 +4,7 @@ import { customFunctionState } from "../state.js";
 import { debounce } from "../utils/utils.js";
 import {  renderAll } from "./ui.js";
 import { buildTruth} from "../logic/truth.js"
-import { applyPreset } from "../utils/utils.js";
+import { applyPreset } from "../logic/truth.js";
 
 
 export function disabledButtonsOnEditingCustomFunction() {
@@ -81,15 +81,13 @@ export function setUpNVarsPlusMinusButtonEvents() {
         if (logicState.nVars < 4) {
           const oldNVars = logicState.nVars;
           customFunctionState.customFunction = "0";
-          
-          // If customFunction exists, rebuild truth table from it, otherwise use old logic
-          if (logicState.preset === "custom" && logicState.customFunction && logicState.customFunction.trim() !== "") {
-            logicState.nVars++;
+          logicState.nVars++;
+          if (logicState.preset === "custom") {
+            
             logicState.preset = "AND";
             
           } else {
             const oldTruthCopy = logicState.preset === "custom" ? JSON.parse(JSON.stringify(logicState.truth)) : null;
-            logicState.nVars++;
             buildTruth(oldTruthCopy, oldNVars);
           }
           applyPreset(logicState);

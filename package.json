@@ -1,0 +1,28 @@
+{
+  "name": "dt-visualisierer",
+  "version": "1.0.0",
+  "description": "Dieses Projekt wurde für das Institut für Technik der Informationsverarbeitung (ITIV) am Karlsruher Institut für Technologie (KIT) im Rahmen der Lehrveranstaltung \"Digitaltechnik\" entwickelt.",
+  "main": "index.js",
+  "directories": {
+    "doc": "doc",
+    "test": "tests"
+  },
+  "scripts": {
+    "build": "esbuild src/index.js --bundle --minify --outfile=dist/index.js"
+
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jknotrowling/DT-Visualisierer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jknotrowling/DT-Visualisierer/issues"
+  },
+  "homepage": "https://github.com/jknotrowling/DT-Visualisierer#readme",
+  "devDependencies": {
+    "esbuild": "^0.25.8"
+  }
+}
