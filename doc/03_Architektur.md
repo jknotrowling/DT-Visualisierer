@@ -109,6 +109,8 @@ expansionState = { spanData, spanIdCounter, groupIdCounter }
 
 Die Benutzeroberfläche folgt einer **komponentenbasierten Architektur**, bei der jede UI-Karte ihre eigene Render-Funktion besitzt. Die zentrale `renderAll()`-Methode in `src/ui/ui.js` koordiniert alle einzelnen Komponenten-Renderer.
 
+**Hinweis**: Beim rendern von den UI-Komponenten werden die Bits umgekehrt, sodass die niedrigsten Bits links und die höchsten Bits rechts angezeigt werden. Dies wird wegen der umgekehrten Darstellung des Symmetriediagramms so gemacht, um eine konsistente Darstellung zu gewährleisten und die Relationen zwischen Wahrheitstabelle und Symmetriediagramm korrekt darzustellen.
+
 #### Haupt-UI-Controller (`ui.js`)
 ```javascript
 // Haupt-Rendering-Pipeline - ruft alle Komponenten-Renderer auf
