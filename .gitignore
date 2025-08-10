@@ -1,3 +1,4 @@
 package-lock.json
 node_modules/
 dist/
+push_wiki.sh

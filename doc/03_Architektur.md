@@ -1,10 +1,10 @@
 # Architektur des DT-Visualisierers
 
-## 🏗️ Überblick
+## Überblick
 
 Der DT-Visualisierer folgt einer **modularen, ereignisgetriebenen Architektur** mit klarer Trennung von Datenlogik, UI-Komponenten und Zustandsverwaltung. Die Anwendung ist als **Single Page Application (SPA)** konzipiert und nutzt Vanilla JavaScript mit ES6-Modulen.
 
-## 📁 Projektstruktur
+## Projektstruktur
 
 ```
 src/
@@ -33,7 +33,7 @@ src/
     └── utils.js           # Allgemeine Utilities
 ```
 
-## 🎯 Architektur-Prinzipien
+## Architektur-Prinzipien
 
 ### 1. **Trennung der Verantwortlichkeiten (Separation of Concerns)**
 - **Logic Layer**: Reine Algorithmen ohne DOM-Abhängigkeiten
@@ -51,7 +51,7 @@ src/
 - Observer-Pattern für Layout-Updates
 
 
-## 🗂️ Kern-Komponenten
+## Kern-Komponenten
 
 ### Zustandsverwaltung (`state.js`)
 
@@ -179,7 +179,7 @@ init() {
 
 ### Hilfsfunktionen (`src/utils/`)
 
-## 🏛️ Render-Funktions-Architektur
+## Render-Funktions-Architektur
 
 ### Kernkonzept: Eine Render-Funktion pro UI-Karte
 Die Anwendung folgt dem Prinzip, dass **jede UI-Karte eine eigene Render-Funktion** besitzt:
@@ -208,7 +208,7 @@ renderAll() {
 Benutzereingabe → State Update → renderAll() → Alle Karten neu rendern
 ```
 
-## 🔄 Datenfluss
+## Datenfluss
 
 ### 1. **Anwendungsstart**
 ```
@@ -238,7 +238,7 @@ renderAll() →
   └── Event-Handler-Setup → hover.js, touch.js
 ```
 
-## 🎨 UI-Komponenten-Architektur
+##  UI-Komponenten-Architektur
 
 ### Kartenbasiertes Layout
 - **Modulare Karten**: Jede Funktionalität als separate Karte
