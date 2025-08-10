@@ -30,6 +30,6 @@
     ```bash 
     npx serve dist
     ```
-    Dies startet einen lokalen Server, der die Anwendung unter `http://localhost:5000` verfügbar macht.
+    Dies startet einen lokalen Server, der die Anwendung unter `http://localhost:3000` verfügbar macht.
 
 

@@ -115,10 +115,11 @@ export function normalizedExpressionToLatex(expr) {
 
 ### Operator-Mapping-Tabelle
 
-| Operation | Erlaubte Eingaben | Normalisierter Operator | LaTeX-Darstellung |
-|-----------|-------------------|------------------------|------------------|
-| **Konjunktion (UND)** | `*`, `&`, `∧`, `and` | `&` | `\land` |
-| **Disjunktion (ODER)** | `+`, `\|`, `∨`, `or` | `\|` | `\lor` |
-| **Negation (NICHT)** | `not`, `¬`, `!`, `~` | `!` | `\overline{...}` |
-| **XOR (Exklusiv-ODER)** | `⊕`, `xor`, `XOR` | `^` | `\oplus` |
+| Operation |  Normalisierter Operator | LaTeX-Darstellung |
+|-----------|-------------------|------------------|
+| **Konjunktion (UND)**  | `&` | `\land` |
+| **Disjunktion (ODER)** | `\|` | `\lor` |
+| **Negation (NICHT)**  | `!` | `\overline{...}` |
+| **XOR (Exklusiv-ODER)**  | `^` | `\oplus` |
 
+Eine Liste der unterstützten Operatoren findet sich in der Datei [0331_Benutzerdefinierte-Funktionen-Syntax.md](0331_Benutzerdefinierte-Funktionen-Syntax.md).

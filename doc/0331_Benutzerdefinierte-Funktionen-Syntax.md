@@ -28,16 +28,6 @@ Die Syntax für benutzerdefinierte Funktionen folgt dem folgenden Muster:
     - **Wird gerendert als**: `⊕`
 
 ---
-### Experimentelle Operatoren
-- Für Implikationen (Impliziert) ist der folgende Operator zulässig:
-    - `→` Mathematisches Implikation
-    - `⇒` Mathematisches Implikation (doppelpfeil)
-    - **Wird gerendert als**: $\Rightarrow$
-
-- Für Äquivalenzen (Äquivalent) ist der folgende Operator zulässig:
-    - `↔` Mathematisches Äquivalent
-    - `≡` Mathematisches Äquivalent (doppelpfeil)
-    - **Wird gerendert als**: $\Leftrightarrow$
 
 ## Beispiele
 - `A & B` wird als $A \;\&\; B$ gerendert.

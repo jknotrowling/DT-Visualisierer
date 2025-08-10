@@ -23,4 +23,6 @@ Die vollständige Dokumentation des Projekts befindet sich im `doc`-Verzeichnis:
     - [Boolesche Algorithmen](doc/031_Bool-Algorythmen.md)
     - [Symmetriediagramm Algorithmen](doc/032_Symmetriediagramm-Algorythmen.md)
     - [Parser Algorithmen](doc/033_Parser-Algorythmen.md)
+        - [Benutzerdefinierte Funktionen Syntax](doc/0331_Benutzerdefinierte-Funktionen-Syntax.md)
+- [Installation](doc/04_Installation.md)
 
