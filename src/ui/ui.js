@@ -49,6 +49,7 @@ export function renderAll() {
   updatePresetButtonStates();
   setupSymmetryDiagramClickHandler();
   setupAllHoverInteractions();
+  updateGridCols();
 
    
 

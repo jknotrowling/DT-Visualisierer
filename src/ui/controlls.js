@@ -5,6 +5,9 @@ import { debounce } from "../utils/utils.js";
 import {  renderAll } from "./ui.js";
 import { buildTruth} from "../logic/truth.js"
 import { applyPreset } from "../logic/truth.js";
+import { updateGridCols } from "./layout.js";
+import { renderDev } from "./mux.js";
+
 
 
 export function disabledButtonsOnEditingCustomFunction() {
@@ -209,7 +212,7 @@ export function setUpViewToggleCheckboxEvents() {
         }
         // Special handling for MUX card resize when it becomes visible again
         if (cardId === "muxCard" && this.checked) {
-          debouncedMuxRender();
+          renderDev();
         }
 
         updateGridCols();
