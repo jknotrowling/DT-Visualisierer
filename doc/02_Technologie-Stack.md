@@ -1,7 +1,5 @@
 # Technologie-Stack
 
-
-
 ## Core-Sprachen
 - **HTML5** - Struktur der Webanwendung
 - **CSS3** - Styling und Layout
@@ -9,24 +7,24 @@
 
 ## CSS-Framework & Styling
 - **Tailwind CSS** - Utility-first CSS-Framework via CDN
-- **KaTeX** - Mathematische Formeln und Ausdrücke rendern
+- **KaTeX** - Mathematische Formeln und Ausdrücke
 - **Font Awesome** - Icon-Library für UI-Elemente
 
 
 ## JavaScript-Architektur
-- **Vanilla JavaScript** - Keine externen Framework-Abhängigkeiten
+- **Vanilla JavaScript** - Keine Framework-Abhängigkeiten
 - **ES6 Module System** - Modulare Code-Organisation
 - **Event-driven Architecture** - Reaktive UI-Updates
 
 ## Build-Tools & Development
 
-### Custom Build-System
-- **build.js** - Maßgeschneidertes Build-Script mit ESBuild-Integration
-  - Erstellt optimierte, separate Dateien für bessere Performance
+### Build-System
+- **build.js** - Build-Script mit ESBuild-Integration
+  - Erstellt optimierte, separate Dateien für Performance
   - JavaScript-Module werden gebündelt und als `index.min.js` ausgegeben
   - CSS-Dateien werden zusammengefasst und als `index.min.css` ausgegeben
-  - Assets werden in separaten `dist/assets/` Ordner kopiert (ohne CSS-Ordner)
-  - HTML wird für die Verwendung der minimierten Dateien angepasst
+  - Assets werden in `dist/assets/` Ordner kopiert (ohne CSS-Ordner)
+  - HTML wird für minifizierte Dateien angepasst
 
 
 ### Build-Prozess (10 Schritte)

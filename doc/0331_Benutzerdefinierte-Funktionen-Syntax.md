@@ -9,12 +9,14 @@ Die Syntax für benutzerdefinierte Funktionen folgt dem folgenden Muster:
     - `&` Kaufmännisches UND
     - `*` Sternchen (Multiplikation)
     - `∧` Mathematisches UND
-    - Außerdem ist die Syntax `ab = a & b` zulässig, um eine Konjunktion zu definieren. Oder mit Klammern: `a(b+c) = a & (b + c)`
+    - Außerdem ist die Syntax `ab = a & b` zulässig, um eine Konjunktion zu definieren. Oder mit Klammern: `a(b+c) = a & (b + c)`,
+    - `and` Funktion (z.B. `A and B`)
     - **Wird gerendert als**: `&`
 - Für Disjunktionen (ODER) sind folgende Operatoren zulässig:
     - `+` Pluszeichen
     - `|` Senkrechter Strich 
     - `∨` Mathematisches ODER
+    - `or` Funktion (z.B. `A or B`)
     - **Wird gerendert als**: `∨`
 - Für Negationen (NOT)  sind folgende Operatoren zulässig:
     - `!` Ausrufezeichen
@@ -26,6 +28,19 @@ Die Syntax für benutzerdefinierte Funktionen folgt dem folgenden Muster:
     - `⊕` Mathematisches XOR
     - `XOR` Funktion (z.B. `A XOR B`)
     - **Wird gerendert als**: `⊕`
+- Für NAND (Negiertes UND) ist der folgende Operator zulässig:
+    - `#` Raute
+    - `nand` Funktion (z.B. `A nand B`)
+    - **Wird gerendert als**: `\overline{A \;\&\; B}`
+- Für NOR (Negiertes ODER) ist der folgende Operator zulässig:
+    - `$` Dollarzeichen
+    - `nor` Funktion (z.B. `A nor B`)
+    - **Wird gerendert als**: `\overline{A \;∨\; B}`
+- Für XNOR (Negiertes XOR) ist der folgende Operator zulässig:
+    - `=` Gleichheitszeichen
+    - `xnor` Funktion (z.B. `A xnor B`)
+    - **Wird gerendert als**: `\overline{A \;⊕\; B}`
+
 
 ---
 
@@ -34,5 +49,5 @@ Die Syntax für benutzerdefinierte Funktionen folgt dem folgenden Muster:
 - `A + B` wird als $A \;∨\; B$ gerendert.
 - `!A` wird als $\overline{A}$ gerendert.
 - `A XOR B` wird als $A \;⊕\; B$ ger
-- `not(A & B → C) + D XOR A` wird als $\overline{A \;\&\; B \Rightarrow C} \;∨\; D \;⊕\; A$ gerendert.
+
 
