@@ -21,8 +21,6 @@ export const DEFAULT_LAYOUT_CONFIG = {
 };
 
 
-
-
 export const customFunctionState = {
   isEditing: false,
   isValid: true,

@@ -51,8 +51,6 @@ export function renderAll() {
   setupAllHoverInteractions();
   updateGridCols();
 
-   
-
 }
 
 export function init() {
