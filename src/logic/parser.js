@@ -20,14 +20,9 @@ export function parseLogicFunction(expr, nVars) {
   }
 
   const validVariables = VARIABLE_NAMES.slice(0, nVars);
-  
-  // 1. Normalize operator strings (e.g., 'and' -> '&')
   const normalizedExpr = normalizeExpression(expr);
-  
-  // 2. Build the Abstract Syntax Tree
   const ast = new AST(normalizedExpr);
 
-  // 3. Generate truth table by evaluating the AST for each input combination
   const truthArray = [];
   const totalCombinations = 1 << nVars;
 
@@ -39,8 +34,7 @@ export function parseLogicFunction(expr, nVars) {
       variableValues[validVariables[j]] = parseInt(bits[j]);
     }
 
-    // Evaluate expression using the AST
-    const result = ast.evaluate(ast.root, variableValues);
+    const result = ast.evaluate(variableValues);
     truthArray.push(result ? 1 : 0);
   }
 
@@ -57,6 +51,16 @@ export function parseLogicFunction(expr, nVars) {
  */
 export function normalizeExpression(expr) {
   let normalized = expr.trim();
+
+  // Normalize new operators to internal symbols first
+  normalized = normalized.replace(/\b(nand|NAND)\b/g, '#');
+  normalized = normalized.replace(/![\*]/g, '#'); 
+
+  normalized = normalized.replace(/\b(nor|NOR)\b/g, '$');
+  normalized = normalized.replace(/![+]/g, '$');
+
+  normalized = normalized.replace(/\b(xnor|XNOR)\b/g, '=');
+  normalized = normalized.replace(/![\^]/g, '=');
 
   // Replace textual operators first to avoid conflicts (e.g., 'and' vs 'd')
   normalized = normalized.replace(/\b(and|AND)\b/g, '&');
@@ -84,11 +88,8 @@ export function normalizedExpressionToLatex(expr) {
   if (!expr || typeof expr !== 'string') {
     return '';
   }
-  // 1. Normalize the expression to handle aliases
   const normalizedExpr = normalizeExpression(expr);
-  // 2. Build the AST
   const ast = new AST(normalizedExpr);
-  // 3. Convert AST to LaTeX
   return ast.toLatex();
 }
 
@@ -105,7 +106,7 @@ export function getNormalizedString(expr) {
     }
     const normalizedExpr = normalizeExpression(expr);
     const ast = new AST(normalizedExpr);
-    return ast.toString(ast.root, false); // false = no simplification
+    return ast.toString();
 }
 
 
