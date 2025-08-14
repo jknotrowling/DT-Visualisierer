@@ -102,7 +102,7 @@ Das Herzstück des Algorithmus kombiniert Terme aus benachbarten Gruppen:
 
     const keys = Object.keys(groups).map(Number).sort((a, b) => a - b); //keys sind alle Häufigkeiten der 1 stellen in groups, sortiert
 
-    // Suche nach stellen mit hamming Distanz = 1
+    // Suche nach stellen mit Hamming-Distanz = 1
     for (let i = 0; i < keys.length - 1; i++) {
       (groups[keys[i]] || []).forEach((a) =>
         (groups[keys[i + 1]] || []).forEach((b) => {
