@@ -1,4 +1,10 @@
-
+/**
+ * Bildet einen Dezimalindex aus der Wahrheitstabelle auf Koordinaten im Symmetriediagramm ab
+ * @param {number} decimalIndex - Der Dezimalindex aus der Wahrheitstabelle (0 bis 2^n-1)
+ * @param {number} numberOfVariables - Anzahl der Variablen (2, 3 oder 4)
+ * @returns {number[]} Array mit [Zeile, Spalte] im Symmetriediagramm
+ * @throws {Error} - Wenn numberOfVariables nicht (2,3 oder 4) oder decimalIndex außerhalb des erlaubten Bereichs liegt.
+ */
 export function mapDecimalToSymmetryDiagramField(decimalIndex, numberOfVariables) {
 
     if(numberOfVariables > 4 || numberOfVariables < 2) {
@@ -53,7 +59,16 @@ export function decimalToOctal(decimal) {
     return octal;
 }
 
-
+/**
+ * Projiziert eine vollständige Wahrheitstabelle auf das Symmetriediagramm
+ * Verwendet:
+ *   - createEmptySymmetryDiagram zum Anlegen der Zielmatrix
+ *   - mapDecimalToSymmetryDiagramField zur Koordinatenabbildung
+ * @param {number} numberOfVariables
+ * @param {Array<number|string>} truthTable
+ * @returns {SymmetryDiagram} - 2D-Array mit den in das Diagramm gemappten Werten.
+ * @throws {Error} - Wenn truthTable nicht die exakt benötigte Länge besitzt.
+ */
 export function truthTableToSymmetryDiagram(numberOfVariables, truthTable) {
     console.log(truthTable, truthTable.length, 2**numberOfVariables);
     if (!Array.isArray(truthTable) || truthTable.length !== 2**numberOfVariables) {

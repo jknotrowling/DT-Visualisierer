@@ -14,6 +14,7 @@ Die zentrale Funktion `mapDecimalToSymmetryDiagramField(decimalIndex, numberOfVa
  * @param {number} decimalIndex - Der Dezimalindex aus der Wahrheitstabelle (0 bis 2^n-1)
  * @param {number} numberOfVariables - Anzahl der Variablen (2, 3 oder 4)
  * @returns {number[]} Array mit [Zeile, Spalte] im Symmetriediagramm
+ * @throws {Error} - Wenn numberOfVariables nicht (2,3 oder 4) oder decimalIndex außerhalb des erlaubten Bereichs liegt.
  */
 export function mapDecimalToSymmetryDiagramField(decimalIndex, numberOfVariables) {
 ```

@@ -2,7 +2,6 @@ import { bin, lbl } from "../utils/utils.js";
 import { logicState, VARIABLE_NAMES } from "../state.js";
 
 
-// mInimiert die Min-Terme aus dem State mit dem Quine-McCluskey Verfahren
 /**
  * Minimiert eine Boolesche Funktion nach dem Quine–McCluskey-Algorithmus.
  *
@@ -128,10 +127,10 @@ export function minimize(varCount, terms, dontCares = []) {
   return chosen; 
 }
 
-// Je nachdem welche Form (disjunktiv/konjungtiv) vorliegt,
-// wird die Variable je nach wert and die label funktion aus /utils gegeben
-/**
 
+/**
+ * The array of boolean variables is getting negated according to its type and then passed to the labeling fuction
+ * Verwendet lbl-Funktion aus ../utils/
  * @param {Array|string} bits - An array or string representing the bits of the Boolean variables. Each element should be "1", "0", or "-".
  * @param {string} type - The type of Boolean expression ("dnf", "dmf", etc.). Determines how negation is handled and the join operator.
  * @returns {string} The formatted Boolean literal expression, using " & " for DNF/DMF types and "∨" otherwise.
@@ -160,13 +159,24 @@ export const expand = (p) => {
 };
 
 
-//Erstellt eine Vollstängige Shanon-zerlegung, welche DC Stellen berücksichtigt
+
+/**
+ * Erzeugt die vollständige Shannon-Zerlegung eines Bitmusters und berücksichtigt
+ * DC Stellen. Identische konstante Zweige werden zusammengefasst.
+ *
+ * Verwendet globalen Zustand: logicState.nVars, logicState.truth und VARIABLE_NAMES.
+ *
+ * @param {string} bitsTemplate - Aktuelles Bitmuster (z. B. "10-01"), in dem pro Ebene genau eine Variable festgesetzt wird.
+ * @param {number} depth - Aktuelle Rekursionstiefe (0 beim ersten Aufruf).
+ * @param {string[]} expansionOrder
+ * @returns {ShannonNode} - Bisher erzeugter Zerlegungsbaum (Untere Ebenen nesten rekursiv)
+ */
 export function shannonExpansion(
   bitsTemplate,
   depth,
   expansionOrder
 ) {
-  //Falls es keine Vereinfachungen gibt, ist der Endwert der Branches wie der im Truthtable
+  //Falls alle Variablen belegt sind, kann der Funktionswert aus der Wahrheitstabelle entnommen werden.
   if (depth >= logicState.nVars) {
     const finalBits = bitsTemplate;
     const truthRow = logicState.truth.find(r => r.bits === finalBits);
