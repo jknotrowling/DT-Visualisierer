@@ -75,16 +75,16 @@ export function minimize(varCount, terms, dontCares = []) {
 Der erste Schritt gruppiert alle Terme (einschließlich Don't-Care-Terme) nach der Anzahl ihrer 1-Bits:
 
 ```javascript
-  // Hilfsfunktion: Zählt die Anzahl der 1-Bits in einer Zahl
+  //Zählt die Anzahl der 1-Bits in einer Zahl
   const countOnes = (num) => num.toString(2).replace(/0/g, "").length;
 
-  // Gruppierung der Terme nach Anzahl 1-Bits
   let groups = {};
   let primeImplicants = new Set();
 
+  //Vereint 1- und DC-Stellen in einen Array
   [...terms, ...dontCares].forEach((termIndex) => {
-    const binary = bin(termIndex, varCount); // binärer String mit führenden Nullen
-    (groups[countOnes(termIndex)] ??= []).push(binary);
+    const binary = bin(termIndex, varCount); 
+    (groups[countOnes(termIndex)] ??= []).push(binary); //Gruppiert binäre Indexe nach anzahl der 1-Stellen
   });
 ```
 
@@ -95,23 +95,21 @@ Terme können nur dann kombiniert werden, wenn sie sich in genau einem Bit unter
 Das Herzstück des Algorithmus kombiniert Terme aus benachbarten Gruppen:
 
 ```javascript
-  // Kombinationsphase
   while (true) {
     const nextGroups = {};
     const used = new Set();
     let hasCombination = false;
 
-    const keys = Object.keys(groups).map(Number).sort((a, b) => a - b);
+    const keys = Object.keys(groups).map(Number).sort((a, b) => a - b); //keys sind alle Häufigkeiten der 1 stellen in groups, sortiert
 
-    // Vergleiche nur Gruppen mit aufeinanderfolgender 1-Bit-Anzahl
+    // Suche nach stellen mit hamming Distanz = 1
     for (let i = 0; i < keys.length - 1; i++) {
       (groups[keys[i]] || []).forEach((a) =>
         (groups[keys[i + 1]] || []).forEach((b) => {
-          // Anzahl der Bitpositionen, die sich unterscheiden
           const diff = [...a].filter((_, pos) => a[pos] !== b[pos]).length;
           if (diff === 1) {
             hasCombination = true;
-            // Unterschiedliche Stelle wird durch '-' ersetzt (Wildcard)
+            // Kombiniert Beide Stellen und setzt das unterscheidende bit zu "-"
             const combined = a
               .split("")
               .map((ch, pos) => (ch === b[pos] ? ch : "-"))
@@ -137,7 +135,6 @@ Alle Terme, die nicht weiter kombiniert werden können, sind Primimplikanten:
       if (!used.has(term)) primeImplicants.add(term);
     });
 
-    // Wenn keine neuen Kombinationen entstanden sind → fertig
     if (!hasCombination) break;
 
     // Nächste Iteration mit neuen Gruppen (Duplikate entfernen)
@@ -153,7 +150,7 @@ Alle Terme, die nicht weiter kombiniert werden können, sind Primimplikanten:
 Jetzt wird bestimmt, welche Primimplikanten tatsächlich benötigt werden:
 
 ```javascript
-  // Prüft, ob ein Implikant einen Term abdeckt
+  // Prüft ob ein Implikant einen Term abdeckt
   const covers = (implicant, termIndex) => {
     const binary = bin(termIndex, varCount);
     for (let i = 0; i < varCount; i++) {
@@ -162,7 +159,7 @@ Jetzt wird bestimmt, welche Primimplikanten tatsächlich benötigt werden:
     return true;
   };
 
-  // Erstelle Abdeckungsmatrix (Term → Primimplikanten)
+  // Alle Implikanten, die den Term abdecken
   const chart = terms.map((termIndex) =>
     [...primeImplicants].filter((pi) => covers(pi, termIndex))
   );
@@ -176,7 +173,7 @@ Jetzt wird bestimmt, welche Primimplikanten tatsächlich benötigt werden:
   const essential = [];
   const coveredTerms = new Set();
 
-  // Essentielle Primimplikanten finden
+  // PI, die als einzige einen Term abdecken, als essenziell speichern und alle abgedeckten Terms als "covered" speichern
   chart.forEach((pis) => {
     if (pis.length === 1) {
       const pi = pis[0];
@@ -195,7 +192,8 @@ Jetzt wird bestimmt, welche Primimplikanten tatsächlich benötigt werden:
 ### Greedy-Algorithmus für restliche Abdeckung
 
 ```javascript
-  // Restliche Terme abdecken (greedy)
+  // Restliche Terme abdecken (greedy) -- greedy liefert nicht immer die beste variante, 
+  // ist aber deutlich schneller als varianten mit set theory (bei vier variablen und essenziellen PI ist eine Abweichung unwahrschienlich)
   let remaining = terms.filter((t) => !coveredTerms.has(t));
   let chosen = [...essential];
 
@@ -217,8 +215,6 @@ Jetzt wird bestimmt, welche Primimplikanten tatsächlich benötigt werden:
     chosen.push(bestPI);
     remaining = remaining.filter((t) => !covers(bestPI, t));
   }
-
-  return chosen;
 }
 ```
 
@@ -274,6 +270,7 @@ Alle Variablen sind belegt → Funktionswert aus Wahrheitstabelle ablesen.
 const varName = expansionOrder[depth];
 const varIndex = VARIABLE_NAMES.indexOf(varName);
 
+// setzte die aktuelle Variable fest und bestimme den ganzen Zweig rekursiv
 // Variable = 1 branch
 let bitsWithVarOne = bitsTemplate.split("");
 bitsWithVarOne[varIndex] = "1";
@@ -291,6 +288,7 @@ Die nächste Variable wird in beide mögliche Werte (0 und 1) aufgespalten und r
 
 #### 3. Optimierung: Gleiche Ergebnisse zusammenfassen
 ```javascript
+// Falls die Zweige gleich sind, zusammenfassen.
 if (
   branchOne.type === "constant" &&
   branchZero.type === "constant" &&
@@ -299,7 +297,7 @@ if (
   return {
     type: "constant",
     value: branchOne.value,
-    minterms: [...new Set([...branchOne.minterms, ...branchZero.minterms])],
+    minterms: [...new Set([...branchOne.minterms, ...branchZero.minterms].sort())],
     path: null,
   };
 }
@@ -311,9 +309,7 @@ Wenn beide Zweige denselben konstanten Wert haben, wird die Variable komplett we
 
 #### 4. Don't-Care-Optimierung
 ```javascript
-
-
-// Sonderfall für don't care "/"
+// Bei DC Stellen kann der definierte Zweig übernommen werden
 if (branchOne.type === "constant" && branchZero.type === "constant") {
   if (
     branchOne.value === "/" &&

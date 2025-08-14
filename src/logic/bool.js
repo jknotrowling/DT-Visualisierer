@@ -3,18 +3,29 @@ import { logicState, VARIABLE_NAMES } from "../state.js";
 
 
 // mInimiert die Min-Terme aus dem State mit dem Quine-McCluskey Verfahren
+/**
+ * Minimiert eine Boolesche Funktion nach dem Quine–McCluskey-Algorithmus.
+ *
+ * @param {number} varCount  - Anzahl der Variablen in der Funktion.
+ * @param {number[]} terms   - Indizes der Zeilen in der Wahrheitstabelle,
+ *                              die minimiert werden sollen.
+ *                              Bei DNF: Zeilen mit Funktionswert 1 (Minterme).
+ *                              Bei KNF: Zeilen mit Funktionswert 0 (Maxterme) nach Negation.
+ * @param {number[]} dontCares - Indizes der "Don't Care"-Zeilen (optional).
+ *
+ * @returns {string[]} Liste minimierter Implikanten in Binärform mit '-' als Platzhalter.
+ */
 export function minimize(varCount, terms, dontCares = []) {
   //Zählt die Anzahl der 1-Bits in einer Zahl
   const countOnes = (num) => num.toString(2).replace(/0/g, "").length;
 
-  
   let groups = {};
   let primeImplicants = new Set();
 
-  //merges 1-terms and DCs into one array
+  //Vereint 1- und DC-Stellen in einen Array
   [...terms, ...dontCares].forEach((termIndex) => {
     const binary = bin(termIndex, varCount); 
-    (groups[countOnes(termIndex)] ??= []).push(binary); //create a new group that groups the binary index by number of 1s
+    (groups[countOnes(termIndex)] ??= []).push(binary); //Gruppiert binäre Indexe nach anzahl der 1-Stellen
   });
 
   // Kombinationsphase des Quine-McCluskey
@@ -60,7 +71,7 @@ export function minimize(varCount, terms, dontCares = []) {
     });
   }
 
-  // Checkt ob ein Implikant einen Term abdeckt
+  // Prüft ob ein Implikant einen Term abdeckt
   const covers = (implicant, termIndex) => {
     const binary = bin(termIndex, varCount);
     for (let i = 0; i < varCount; i++) {
@@ -119,6 +130,12 @@ export function minimize(varCount, terms, dontCares = []) {
 
 // Je nachdem welche Form (disjunktiv/konjungtiv) vorliegt,
 // wird die Variable je nach wert and die label funktion aus /utils gegeben
+/**
+
+ * @param {Array|string} bits - An array or string representing the bits of the Boolean variables. Each element should be "1", "0", or "-".
+ * @param {string} type - The type of Boolean expression ("dnf", "dmf", etc.). Determines how negation is handled and the join operator.
+ * @returns {string} The formatted Boolean literal expression, using " & " for DNF/DMF types and "∨" otherwise.
+**/
 export function lit(bits, type) {
   return [...bits]
     .map((b, i) => {
