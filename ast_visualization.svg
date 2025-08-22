@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AST als SVG-Baum</title>
+  <style>
+    body { background:#fff; margin:0; display:flex; align-items:center; justify-content:center; height:100vh; }
+    svg { width:100%; max-width:760px; height:auto; }
+    .node circle { fill:#fff; stroke:#000; stroke-width:1.5; }
+    .edge { stroke:#000; stroke-width:1.5; }
+  </style>
+</head>
+<body>
+  <svg viewBox="0 0 760 520">
+    <!-- Edges -->
+    <line class="edge" x1="370" y1="70" x2="150" y2="150" />
+    <line class="edge" x1="370" y1="70" x2="480" y2="150" />
+
+    <line class="edge" x1="150" y1="150" x2="150" y2="230" />
+    <line class="edge" x1="150" y1="310" x2="100" y2="390" />
+    <line class="edge" x1="150" y1="310" x2="200" y2="390" />
+
+    <line class="edge" x1="480" y1="150" x2="370" y2="230" />
+    <line class="edge" x1="480" y1="150" x2="590" y2="230" />
+
+    <line class="edge" x1="370" y1="230" x2="320" y2="310" />
+    <line class="edge" x1="370" y1="230" x2="420" y2="310" />
+
+    <line class="edge" x1="590" y1="230" x2="590" y2="310" />
+    <line class="edge" x1="590" y1="390" x2="540" y2="470" />
+    <line class="edge" x1="590" y1="390" x2="640" y2="470" />
+
+    <!-- Nodes as circles -->
+    <g class="node" transform="translate(370,50)">
+      <circle r="20" />
+    </g>
+    <g class="node" transform="translate(150,150)">
+      <circle r="20" />
+    </g>
+    <g class="node" transform="translate(150,310)">
+      <circle r="20" />
+    </g>
+    <g class="node" transform="translate(100,390)">
+      <circle r="20" />
+    </g>
+    <g class="node" transform="translate(200,390)">
+      <circle r="20" />
+    </g>
+    <g class="node" transform="translate(480,150)">
+      <circle r="20" />
+    </g>
+    <g class="node" transform="translate(370,230)">
+      <circle r="20" />
+    </g>
+    <g class="node" transform="translate(320,310)">
+      <circle r="20" />
+    </g>
+    <g class="node" transform="translate(420,310)">
+      <circle r="20" />
+    </g>
+    <g class="node" transform="translate(590,230)">
+      <circle r="20" />
+    </g>
+    <g class="node" transform="translate(590,390)">
+      <circle r="20" />
+    </g>
+    <g class="node" transform="translate(540,470)">
+      <circle r="20" />
+    </g>
+    <g class="node" transform="translate(640,470)">
+      <circle r="20" />
+    </g>
+  </svg>
+</body>
+</html>

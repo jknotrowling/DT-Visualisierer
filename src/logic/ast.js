@@ -116,6 +116,7 @@ class Parser {
     this.currentToken = this.lexer.getNextToken();
   }
 
+«  
   eat(tokenType) {
     if (this.currentToken.type === tokenType) {
       this.currentToken = this.lexer.getNextToken();
@@ -123,7 +124,7 @@ class Parser {
       throw new Error(`Parsing error: Expected ${tokenType}, got ${this.currentToken.type}`);
     }
   }
-
+  // 
   factor() {
     const token = this.currentToken;
 
@@ -145,6 +146,7 @@ class Parser {
       throw new Error(`Parsing error: Unexpected token ${token.type}`);
     }
   }
+
 
   term() {
     let node = this.factor();
@@ -189,9 +191,6 @@ class Parser {
   }
 }
 
-// ===================================================================
-// Public API
-// ===================================================================
 
 export class AST {
     #root;
@@ -271,7 +270,7 @@ export class AST {
         }
         if (node instanceof UnaryOpNode) {
             const operandValue = this.#evaluateNode(node.operand, variableValues);
-            if (node.operator === '!') return operandValue ? 0 : 1;
+            return operandValue ? 0 : 1; // Negation is the only unary operation in this context
         }
         if (node instanceof BinaryOpNode) {
             const leftValue = this.#evaluateNode(node.left, variableValues);
@@ -299,4 +298,51 @@ export class AST {
     evaluate(variableValues) {
         return this.#evaluateNode(this.#root, variableValues);
     }
+
+    /**
+     * Visualizes the AST structure as a tree.
+     * @param {string} prefix - The prefix for tree visualization (used internally for recursion)
+     * @param {ASTNode} node - The node to visualize (used internally for recursion)
+     * @returns {string} The tree structure as a string
+     */
+    visualizeTree(prefix = '', node = null) {
+        if (node === null) {
+            node = this.#root;
+        }
+        
+        let result = '';
+        
+        if (node instanceof VariableNode) {
+            result += prefix + `Variable: ${node.name}\n`;
+        } else if (node instanceof ConstantNode) {
+            result += prefix + `Constant: ${node.value}\n`;
+        } else if (node instanceof UnaryOpNode) {
+            result += prefix + `UnaryOp: ${node.operator}\n`;
+            result += this.visualizeTree(prefix + '  ├─ ', node.operand);
+        } else if (node instanceof BinaryOpNode) {
+            const operatorNames = {
+                '&': 'AND',
+                '|': 'OR', 
+                '^': 'XOR',
+                '#': 'NAND',
+                '$': 'NOR',
+                '=': 'XNOR'
+            };
+            result += prefix + `BinaryOp: ${operatorNames[node.operator] || node.operator}\n`;
+            result += this.visualizeTree(prefix + '  ├─ ', node.left);
+            result += this.visualizeTree(prefix + '  └─ ', node.right);
+        }
+        
+        return result;
+    }
+
+    /**
+     * Prints the AST structure to console.
+     */
+    printTree() {
+        console.log('AST Structure:');
+        console.log(this.visualizeTree());
+    }
+
+    
 }
