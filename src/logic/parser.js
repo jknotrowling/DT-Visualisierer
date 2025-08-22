@@ -84,7 +84,7 @@ export function normalizeExpression(expr) {
  * @param {string} expr The input expression.
  * @returns {string} The LaTeX-formatted string.
  */
-export function normalizedExpressionToLatex(expr) {
+export function expressionToLatex(expr) {
   if (!expr || typeof expr !== 'string') {
     return '';
   }

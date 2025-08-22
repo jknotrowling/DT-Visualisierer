@@ -3,8 +3,8 @@ import {
   setupSymmetryDiagramClickHandler,
 } from "./symmetry.js";
 import { renderCurrentFunctionExpression } from "./currentFunctionExpression.js";
-import {setSvgMux} from "../logic/mux.js";
-import { layoutState } from "../state.js";
+import {setSvgMux} from "../ui/mux.js";
+
 
 
 import {$} from "../utils/utils.js";

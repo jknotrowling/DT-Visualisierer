@@ -27,31 +27,17 @@
   - HTML wird für minifizierte Dateien angepasst
 
 
-### Build-Prozess (10 Schritte)
+### Build-Prozess 
 1. **JavaScript-Bundling**: Alle Module aus `src/` mit ESBuild gebündelt und minifiziert als `index.min.js`
 2. **CSS-Aggregation**: Alle Dateien aus `assets/css/` zusammengefasst und minifiziert als `index.min.css`
-3. **HTML-Einlesen**: Basis `index.html` als Template
-4. **Script-Tag Entfernung**: Lokale `<script>` Tags entfernt (CDN-Links bleiben erhalten)
-5. **CSS-Link Entfernung**: Lokale `<link>` Tags für CSS entfernt (externe CDN-Links bleiben)
-6. **Asset-Pfad Korrektur**: Relative Pfade für Assets angepasst (führende Slashes entfernt)
-7. **CSS-Link Einfügung**: Verweis auf `index.min.css` im `<head>` hinzugefügt
-8. **JavaScript-Link Einfügung**: Verweis auf `index.min.js` vor `</body>` hinzugefügt
-9. **Asset-Kopierung**: Rekursive Kopie des `assets/` Ordners (CSS-Ordner übersprungen)
-10. **HTML-Ausgabe**: Finale `dist/index.html` mit Verweisen auf separate minifizierte Dateien
+3.  **Asset-Kopierung**: Rekursive Kopie des `assets/` Ordners (CSS-Ordner übersprungen)
+4. **HTML-Ausgabe**: Finale `dist/index.html` mit Verweisen auf separate minifizierte Dateien
 
 ### Package Management
 - **npm** - Dependency-Management
 - **package.json** - Projekt-Konfiguration und Scripts
 - **ESBuild** - Schneller JavaScript Bundler und Minifier
 - **Einfacher Build-Command**: `npm run build` nutzt das custom `build.js` Script
-
-
-### Build-Ausgabe
-Das Build-System erstellt folgende Struktur im `dist/` Ordner:
-- **index.html** - Optimierte HTML-Datei mit Verweisen auf minifizierte Assets
-- **index.min.js** - Gebündeltes und minifiziertes JavaScript (IIFE Format)
-- **index.min.css** - Zusammengefasste und minifizierte Stylesheets
-- **assets/** - Kopie aller Assets außer CSS (da in index.min.css enthalten)
 
 
 ## Rendering
@@ -65,12 +51,6 @@ Das Build-System erstellt folgende Struktur im `dist/` Ordner:
 - **Progressive Enhancement** - Schrittweise Feature-Verbesserung
 
 ## Hosting & Deployment
-
-### Statische Website
-- **Optimierte Multi-File-Distribution** - Separate HTML, CSS und JS Dateien für bessere Caching-Performance
-- **GitHub Pages** - Einfaches Hosting über Repository
-- **CDN-Integration** - Externe Bibliotheken über Content Delivery Networks
-- **Browser-Caching** - Separate CSS/JS-Dateien ermöglichen effizientes Caching
 
 ### Browser-Kompatibilität
 - **Modern Browsers** - Chrome, Firefox, Safari, Edge

@@ -11,8 +11,8 @@ src/
 ├── index.js              # Einstiegspunkt der Anwendung
 ├── state.js               # Zentrale Zustandsverwaltung
 ├── logic/                 # Geschäftslogik und Algorithmen
-│   ├── booleanForm.js     # Boolean-Algebra und Ausdrücke
-│   ├── mux.js             # Multiplexer-Logik und SVG-Rendering
+│   ├── ast.js             # Abstract Syntax Tree für Parser
+│   ├── bool.js            # Boolean-Algebra und Ausdrücke
 │   ├── parser.js          # Expression-Parser
 │   ├── symmetry.js        # Symmetriediagramm-Algorithmen
 │   └── truth.js           # Wahrheitstabellen-Logik
@@ -22,10 +22,8 @@ src/
 │   ├── controlls.js       # Interaktive Steuerelemente
 │   ├── hover.js           # Hover-Interaktionen
 │   ├── touch.js           # Touch-Support
-│   ├── booleanForm.js     # Boolean-Expression-UI
+│   ├── canonForm.js       # Boolean-Expression-UI (kanonische Formen)
 │   ├── currentFunctionExpression.js  # Aktuelle Funktionsanzeige und Eingabe mit KaTeX
-│   ├── hover.js           # Hover-Interaktionen
-│   ├── touch.js           # Touch-Support
 │   ├── mux.js             # MUX-Diagramm-UI
 │   ├── symmetry.js        # Symmetriediagramm-UI
 │   └── truth.js           # Wahrheitstabellen-UI
@@ -35,7 +33,7 @@ src/
 
 ## Architektur-Prinzipien
 
-### 1. **Trennung der Verantwortlichkeiten (Separation of Concerns)**
+### 1. **Trennung der Verantwortlichkeiten**
 - **Logic Layer**: Reine Algorithmen ohne DOM-Abhängigkeiten
 - **UI Layer**: DOM-Manipulation und Event-Handling
 - **State Layer**: Zentrale Zustandsverwaltung
@@ -45,7 +43,7 @@ src/
 - Explizite Imports/Exports
 - Keine globalen Variablen (außer notwendigen DOM-Referenzen)
 
-### 3. **Ereignisgetriebene Architektur (Event-Driven Architecture)**
+### 3. **Ereignisgetriebene Architektur**
 - Reaktive UI-Updates basierend auf Zustandsänderungen
 - Event-Handler für Benutzerinteraktionen
 - Observer-Pattern für Layout-Updates
@@ -75,11 +73,16 @@ expansionState = { spanData, spanIdCounter, groupIdCounter }
 
 ### Logik-Schicht (`src/logic/`)
 
+#### Abstract Syntax Tree (`ast.js`)
+- **AST-Klassen**: Node-Typen für Parser-Baumstruktur
+- **Traversierung**: Methoden zur Baum-Navigation
+- **Visualisierung**: SVG-Export für AST-Darstellung
+
 #### Boolean-Verarbeitung (`bool.js`)
 - **Kernfunktionen**: `minimize()`, `expand()`, `lit()`
 - **Rekursive Expansion**: `simplifiedBooleanExpansionRecursive()`
 - **Baumstruktur** für Boolean-Ausdrücke
--  Mehr erfahren in der Datei [doc/031_Bool-Algorythmen.md](031_Bool-Algorythmen.md).
+- Mehr erfahren in der Datei [doc/031_Bool-Algorythmen.md](031_Bool-Algorythmen.md).
 
 #### Multiplexer-Engine (`mux.js`)
 - **SVG-Rendering**: Dynamische Generierung von MUX-Diagrammen
@@ -91,14 +94,15 @@ expansionState = { spanData, spanIdCounter, groupIdCounter }
 - **Hauptalgorithmus**: `truthTableToSymmetryDiagram()`
 - **Zahlensystem-Konvertierung**: `decimalToOctal()`
 - **Raster-Berechnung**: `getNumberOfRowsAndCols()`
-- Mehr erfahren in der Datei [doc/032_Symmetriediagramm-Algorythmen](032_Symmetriediagramm-Algorythmen).
+- Mehr erfahren in der Datei [doc/032_Symmetriediagramm-Algorythmen.md](032_Symmetriediagramm-Algorythmen.md)
 
 #### Expression-Parser (`parser.js`)
 - **Parsing-Engine**: Verarbeitung von Boolean-Ausdrücken
+- **AST-Integration**: Arbeitet mit Abstract Syntax Tree
 - **Minimierungsalgorithmen**: `getMinimalExpression()`
 - **Syntax-Validierung**: Überprüfung der Eingabe-Syntax
 - **Token-Verarbeitung**: Zerlegung komplexer Ausdrücke
-- Mehr erfahren in der Datei [doc/033_Parser-Algorythmen.md](030_Parser-Algorythmen.md).
+- Mehr erfahren in der Datei [doc/033_Parser-und-AST-Algorythmen.md](033_Parser-und-AST-Algorythmen.md)
 
 
 #### Wahrheitstabellen-Logik (`truth.js`)
@@ -145,7 +149,9 @@ init() {
 - Interaktive Zell-Klicks mit `setupSymmetryDiagramClickHandler()`
 
 **Boolean-Ausdrücke (`canonForm.js`)**
-- **`renderExpr()`**: Zeigt normalisierte und minimierte Logik-Ausdrücke der aktiven Funktion
+- **`renderExpr()`**: Zeigt kanonische und minimierte Logik-Ausdrücke der aktiven Funktion
+- **Normalformen**: Darstellung von DNF und KNF
+- **Minimierung**: Anzeige der minimalen Schaltungsrealisierung
 
 
 **MUX-Diagramme und Boolsche Entwicklung (`mux.js`)**

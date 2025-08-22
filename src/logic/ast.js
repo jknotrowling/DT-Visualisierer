@@ -1,9 +1,5 @@
-// ===================================================================
-// Internal Implementation: AST Node Classes, Lexer, Parser
-// ===================================================================
-
 class ASTNode {
-  // Base class for all AST nodes
+  // Basisklasse für alle Knoten AST.
 }
 
 class VariableNode extends ASTNode {
@@ -23,7 +19,7 @@ class ConstantNode extends ASTNode {
 class UnaryOpNode extends ASTNode {
   constructor(operator, operand) {
     super();
-    this.operator = operator; // e.g., '!'
+    this.operator = operator; // z.B., '!'
     this.operand = operand;
   }
 }
@@ -31,7 +27,7 @@ class UnaryOpNode extends ASTNode {
 class BinaryOpNode extends ASTNode {
   constructor(operator, left, right) {
     super();
-    this.operator = operator; // e.g., '&', '|', '^'
+    this.operator = operator; // z.B., '&', '|', '^'
     this.left = left;
     this.right = right;
   }
@@ -46,6 +42,19 @@ const tokenTypes = {
   EOF: 'EOF',
 };
 
+/**
+ * Der Lexer zerlegt einen Eingabetext in einzelne Token für die weitere Verarbeitung.
+ * Er erkennt Variablen (A-H, a-h), Konstanten (0, 1), Operatoren (&, |, ^, !, #, $, =),
+ * sowie Klammern und ignoriert Leerzeichen.
+ *
+ * @class
+ * @param {string} text - Der zu analysierende Eingabetext.
+ *
+ * @property {string} text - Der Eingabetext.
+ * @property {number} pos - Aktuelle Position im Text.
+ * @property {string|null} currentChar - Das aktuell betrachtete Zeichen.
+
+ */
 class Lexer {
   constructor(text) {
     this.text = text;
@@ -53,6 +62,10 @@ class Lexer {
     this.currentChar = this.text[this.pos];
   }
 
+  /**
+   * Setzt den Positionszeiger um eins weiter und aktualisiert das aktuelle Zeichen.
+   * Falls das Ende des Eingabetextes erreicht ist, wird `currentChar` auf `null` gesetzt.
+   */
   advance() {
     this.pos++;
     if (this.pos > this.text.length - 1) {
@@ -62,11 +75,28 @@ class Lexer {
     }
   }
 
+  /**
+   * Überspringt alle Leerzeichen im aktuellen Eingabestrom,
+   * indem der aktuelle Zeichenzeiger solange weitergeschaltet wird,
+   * bis kein Leerzeichen mehr gefunden wird.
+   */
+
   skipWhitespace() {
     while (this.currentChar !== null && /\s/.test(this.currentChar)) {
       this.advance();
     }
   }
+
+  /**
+   * Gibt das nächste Token aus dem Eingabe-String zurück.
+   * Überspringt Leerzeichen und erkennt Variablen (A-H, a-h), Konstanten (0, 1),
+   * Operatoren (&, |, ^, !, #, $, =), sowie Klammern '(' und ')'.
+   * Wirft einen Fehler bei ungültigen Zeichen.
+   * Gibt ein Token-Objekt mit Typ und Wert zurück oder ein EOF-Token am Ende der Eingabe.
+   *
+   * @returns {{ type: string, value: any }} Das nächste erkannte Token.
+   * @throws {Error} Wenn ein ungültiges Zeichen gefunden wird.
+   */
 
   getNextToken() {
     while (this.currentChar !== null) {
@@ -110,13 +140,32 @@ class Lexer {
   }
 }
 
+
+
+/**
+ * Parser für logische Ausdrücke.
+ * 
+ * Der Parser verarbeitet einen Token-Stream, der von einem Lexer bereitgestellt wird, und erzeugt einen abstrakten Syntaxbaum (AST) für logische Ausdrücke.
+ * Unterstützt Variablen, Konstanten, geklammerte Ausdrücke, unäre und binäre Operatoren sowie implizite UND-Verknüpfungen.
+ * 
+ * @class
+ * @param {Lexer} lexer - Der Lexer, der die Token für den Parser bereitstellt.
+ */
+
 class Parser {
   constructor(lexer) {
     this.lexer = lexer;
     this.currentToken = this.lexer.getNextToken();
   }
 
-«  
+
+  /**
+   * Verbraucht das aktuelle Token, wenn es dem erwarteten Token-Typ entspricht.
+   * Wechselt zum nächsten Token vom Lexer.
+   *
+   * @param {string} tokenType - Der erwartete Typ des aktuellen Tokens.
+   * @throws {Error} Falls der aktuelle Token-Typ nicht mit dem erwarteten tokenType übereinstimmt.
+   */
   eat(tokenType) {
     if (this.currentToken.type === tokenType) {
       this.currentToken = this.lexer.getNextToken();
@@ -124,7 +173,15 @@ class Parser {
       throw new Error(`Parsing error: Expected ${tokenType}, got ${this.currentToken.type}`);
     }
   }
-  // 
+  
+  /**
+   * Parst einen Faktor aus dem aktuellen Token-Stream.
+   * Ein Faktor kann eine Variable, eine Konstante, ein geklammerter Ausdruck oder eine unäre Operation (z.B. '!') sein.
+   * Verschiebt den Token-Stream entsprechend und erstellt den passenden AST-Knoten.
+   *
+   * @returns {VariableNode|ConstantNode|UnaryOpNode|ASTNode} Der geparste AST-Knoten, der den Faktor repräsentiert.
+   * @throws {Error} Falls das aktuelle Token keinem erwarteten Faktor-Typ entspricht.
+   */
   factor() {
     const token = this.currentToken;
 
@@ -148,6 +205,13 @@ class Parser {
   }
 
 
+  /**
+   * Analysiert und erstellt einen AST-Knoten für einen Term.
+   * Ein Term besteht aus Faktoren, die durch Operatoren wie '&', '^', '#', '=' verbunden sind.
+   * Implizite UND-Verknüpfungen werden ebenfalls unterstützt, wenn zwei Faktoren direkt aufeinander folgen.
+   *
+   * @returns {BinaryOpNode} Der AST-Knoten, der den analysierten Term repräsentiert.
+   */
   term() {
     let node = this.factor();
     while (true) {
@@ -172,6 +236,12 @@ class Parser {
     return node;
   }
 
+  /**
+   * Analysiert und parst einen Ausdruck, der aus Termen besteht, die durch die Operatoren '|' oder '$' verbunden sind.
+   * Gibt einen abstrakten Syntaxbaum (AST) für den Ausdruck zurück.
+   *
+   * @returns {Node} Der Wurzelknoten des geparsten Ausdrucks.
+   */
   expression() {
     let node = this.term();
     while (this.currentToken.type === tokenTypes.OPERATOR && ['|', '$'].includes(this.currentToken.value)) {
@@ -182,7 +252,15 @@ class Parser {
     return node;
   }
 
+  /**
+   * Analysiert den aktuellen Ausdruck und gibt den resultierenden AST-Knoten zurück.
+   * Wirft einen Fehler, wenn nach dem Parsen noch zusätzliche Zeichen vorhanden sind.
+   *
+   * @returns {ASTNode} Der Wurzelknoten des geparsten Ausdrucks.
+   * @throws {Error} Wenn sich nach dem Ausdruck noch weitere Zeichen befinden.
+   */
   parse() {
+    // Startpunkt des Parsers. Es wird mit einer Expression begonnen, weil dies die höchste Ebene der Syntax ist.
     const node = this.expression();
     if (this.currentToken.type !== tokenTypes.EOF) {
         throw new Error("Parsing error: Extra characters at end of expression");
@@ -190,6 +268,16 @@ class Parser {
     return node;
   }
 }
+
+
+/**
+ * Repräsentiert einen abstrakten Syntaxbaum (AST) für boolesche Ausdrücke.
+ * 
+ * Die Klasse parst einen booleschen Ausdruck, stellt ihn als AST dar und bietet Methoden zur String-, LaTeX- und Baum-Darstellung sowie zur Auswertung.
+ * 
+ * @class
+  * @param {string} expression - Der boolesche Ausdruck, der geparst werden soll.
+ */
 
 
 export class AST {
@@ -260,6 +348,7 @@ export class AST {
         return '';
     }
 
+
     #evaluateNode(node, variableValues) {
         if (node instanceof ConstantNode) return node.value;
         if (node instanceof VariableNode) {
@@ -287,62 +376,33 @@ export class AST {
         throw new Error('Invalid AST node');
     }
 
+    /**
+     * Gibt eine String-Darstellung des AST (Abstract Syntax Tree) zurück.
+     * 
+     * @returns {string} Die String-Repräsentation des AST.
+     */
     toString() {
         return this.#stringifyNode(this.#root, 0, false);
     }
 
+    /**
+     * Gibt eine LaTeX-Darstellung des aktuellen AST zurück.
+     * 
+     * @returns {string} Die LaTeX-Repräsentation des AST.
+     */
     toLatex() {
         return this.#stringifyNode(this.#root, 0, true);
     }
 
+    /**
+     * Bewertet den AST (Abstract Syntax Tree) mit den angegebenen Variablenwerten.
+     *
+     * @param {Object} variableValues - Ein Objekt, das Variablennamen auf ihre Werte abbildet. z.B. { A: 1, B: 0, C: 1 }
+     * @returns {*} Das Ergebnis der Auswertung des AST.
+     */
     evaluate(variableValues) {
         return this.#evaluateNode(this.#root, variableValues);
     }
 
-    /**
-     * Visualizes the AST structure as a tree.
-     * @param {string} prefix - The prefix for tree visualization (used internally for recursion)
-     * @param {ASTNode} node - The node to visualize (used internally for recursion)
-     * @returns {string} The tree structure as a string
-     */
-    visualizeTree(prefix = '', node = null) {
-        if (node === null) {
-            node = this.#root;
-        }
-        
-        let result = '';
-        
-        if (node instanceof VariableNode) {
-            result += prefix + `Variable: ${node.name}\n`;
-        } else if (node instanceof ConstantNode) {
-            result += prefix + `Constant: ${node.value}\n`;
-        } else if (node instanceof UnaryOpNode) {
-            result += prefix + `UnaryOp: ${node.operator}\n`;
-            result += this.visualizeTree(prefix + '  ├─ ', node.operand);
-        } else if (node instanceof BinaryOpNode) {
-            const operatorNames = {
-                '&': 'AND',
-                '|': 'OR', 
-                '^': 'XOR',
-                '#': 'NAND',
-                '$': 'NOR',
-                '=': 'XNOR'
-            };
-            result += prefix + `BinaryOp: ${operatorNames[node.operator] || node.operator}\n`;
-            result += this.visualizeTree(prefix + '  ├─ ', node.left);
-            result += this.visualizeTree(prefix + '  └─ ', node.right);
-        }
-        
-        return result;
-    }
 
-    /**
-     * Prints the AST structure to console.
-     */
-    printTree() {
-        console.log('AST Structure:');
-        console.log(this.visualizeTree());
-    }
-
-    
 }

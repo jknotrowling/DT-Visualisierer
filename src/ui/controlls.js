@@ -1,12 +1,13 @@
-import { logicState, layoutState } from "../state.js";
-import { $ } from "../utils/utils.js";
+import { logicState, layoutState, VARIABLE_NAMES } from "../state.js";
+import { $, truthArrayToTruthTable } from "../utils/utils.js";
 import { customFunctionState } from "../state.js";
-import { debounce } from "../utils/utils.js";
 import {  renderAll } from "./ui.js";
 import { buildTruth} from "../logic/truth.js"
 import { applyPreset } from "../logic/truth.js";
 import { updateGridCols } from "./layout.js";
 import { renderDev } from "./mux.js";
+import { parseLogicFunction } from "../logic/parser.js";
+
 
 
 
@@ -68,8 +69,19 @@ export function setUpNVarsPlusMinusButtonEvents() {
           const oldTruthCopy =
             logicState.preset === "custom" ? JSON.parse(JSON.stringify(logicState.truth)) : null;
           logicState.nVars--;
-          customFunctionState.customFunction = "0";
-          if(logicState.preset === "custom") logicState.preset = "AND";
+          if(logicState.preset === "custom") {
+            // replace the variable, that is removed, with 0
+            const removedVar = VARIABLE_NAMES[logicState.nVars];
+            
+
+            customFunctionState.customFunction = customFunctionState.customFunction.replace(
+              new RegExp(removedVar, "g"),
+              "0"
+            );
+            const truthArray = parseLogicFunction(customFunctionState.customFunction, logicState.nVars);
+            const truthTable = truthArrayToTruthTable(truthArray, logicState.nVars);
+            logicState.truth = truthTable;
+          }
 
          
 
@@ -85,11 +97,12 @@ export function setUpNVarsPlusMinusButtonEvents() {
       plusBtnEl.onclick = () => {
         if (logicState.nVars < 4) {
           const oldNVars = logicState.nVars;
-          customFunctionState.customFunction = "0";
           logicState.nVars++;
           if (logicState.preset === "custom") {
-          
-            logicState.preset = "AND";
+            
+            const truthArray = parseLogicFunction(customFunctionState.customFunction, logicState.nVars);
+            const truthTable = truthArrayToTruthTable(truthArray, logicState.nVars);
+            logicState.truth = truthTable;
             
           } else {
             const oldTruthCopy = logicState.preset === "custom" ? JSON.parse(JSON.stringify(logicState.truth)) : null;

@@ -1,6 +1,6 @@
 import { customFunctionState, VARIABLE_NAMES, logicState} from '../state.js';
 import {$, truthArrayToTruthTable} from '../utils/utils.js'
-import { normalizedExpressionToLatex, parseLogicFunction, normalizeExpression } from '../logic/parser.js';
+import { expressionToLatex, parseLogicFunction, normalizeExpression } from '../logic/parser.js';
 import {renderAll} from './ui.js';
 
 
@@ -40,8 +40,8 @@ export function renderCurrentFunctionExpression() {
       break;
     case "CUSTOM":
     
-      latexToRender += normalizedExpressionToLatex(
-        normalizeExpression(customFunctionState.customFunction)
+      latexToRender += expressionToLatex(
+        customFunctionState.customFunction
       );
       break;
       

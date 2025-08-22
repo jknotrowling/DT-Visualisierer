@@ -23,7 +23,7 @@ Webbasiertes Tool zur Visualisierung und Analyse digitaler Schaltfunktionen für
 - **Boolesche Entwicklung**: Darstellung der Booleschen Entwicklung von Funktionen
 
 ### Eingabe und Manipulation
-- **Vordefinierte Funktionen**: Bibliothek grundlegender n-stelliger Boolescher Funktionen (AND, OR, XOR, NAND, NOR, Majority, Parity)
+- **Vordefinierte Funktionen**: Bibliothek grundlegender n-stelliger Boolescher Funktionen (AND, OR, XOR, NAND, NOR, NOT)
 - **Ausdrucksparser**: Syntaxvalidierung und Interpretation benutzerdefinierter logischer Ausdrücke mit Unterstützung für Operatorpräzedenz
 - **Bearbeitung**: Manipulation von Wahrheitswerten durch Klick-Interface mit automatischer Aktualisierung aller Darstellungsformen
 - **Referenzierung**: Hervorhebung korrespondierender Elemente zwischen verschiedenen Visualisierungen

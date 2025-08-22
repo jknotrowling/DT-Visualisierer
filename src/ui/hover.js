@@ -1,7 +1,7 @@
 
 import { logicState, expansionState } from "../state.js";
 import { setupTouchFriendlyExpressionTerms } from "./touch.js";
-import { highlightMuxElements, MUX_DIAGRAM_STATE } from "../logic/mux.js";
+import { highlightMuxElements, MUX_DIAGRAM_STATE } from "../ui/mux.js";
 
 
 
@@ -44,7 +44,10 @@ export function handleCellOrTermHover(hoveredElement, isOn) {
   } else if (hoveredElement.dataset.cover) {
     mintermsToHighlightInTables = hoveredElement.dataset.cover.split("|");
     termCoversMintermsForExpansionLookup = mintermsToHighlightInTables;
-    hoveredElement.classList.toggle("hl-cmf-cell", isOn);
+    const isKMF = hoveredElement.classList.contains("cmf");
+    const isDMF = hoveredElement.classList.contains("dmf");
+    if(isKMF) hoveredElement.classList.toggle("hl-cmf-cell", isOn);
+    if(isDMF) hoveredElement.classList.toggle("hl-dmf-cell", isOn);
   }
 
   if (mintermsToHighlightInTables.length > 0) {
@@ -177,6 +180,7 @@ export function handleCellOrTermHover(hoveredElement, isOn) {
 }
 
 export function handleExpansionSpanHover(spanElement, isOn, highlightClass) {
+  
   const spanId = spanElement.dataset.spanId;
   if (!spanId || !expansionState.spanData[spanId]) return;
 
