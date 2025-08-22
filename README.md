@@ -22,7 +22,7 @@ Der DT-Visualisierer ist ein webbasiertes Tool, das Studierenden und Lehrenden h
 | Dokument | Beschreibung |
 |----------|-------------|
 | **[Boolesche Algorithmen](doc/031_Bool-Algorythmen.md)** | Implementierung der Booleschen Algebra |
-| **[Symmetriediagramm-Algorithmen](doc/032_Symmetriediagramm-Algorythmen.md)** | Algorithmen für Symmetrieanalyse |
-| **[Parser-Algorithmen](doc/033_Parser-Algorythmen.md)** | Ausdrucksparser und Syntax-Analyse |
+| **[Symmetriediagramm](doc/032_Symmetriediagramm-Algorythmen.md)** | Algorithmen für Symmetrieanalyse |
+| **[Parser und AST](doc/033_Parser-und-AST-Algorythmen.md)** | Ausdrucksparser und Syntax-Analyse |
 
 ---
