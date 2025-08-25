@@ -42,17 +42,17 @@ export function parseLogicFunction(expr, nVars) {
 }
 
 /**
- * Normalizes a boolean expression by replacing various operator aliases 
- * with a standard set of operators used by the AST parser.
- * This function does NOT perform logical simplifications.
+ * Normalisiert einen booleschen Ausdruck, indem verschiedene Operator-Aliase
+ * durch einen einheitlichen Satz von Operatoren ersetzt werden, die vom AST-Parser verwendet werden.
+ * Diese Funktion führt KEINE logischen Vereinfachungen durch.
  * 
- * @param {string} expr The input expression.
- * @returns {string} The normalized expression.
+ * @param {string} expr Der Eingabe-Ausdruck.
+ * @returns {string} Der normalisierte Ausdruck.
  */
 export function normalizeExpression(expr) {
   let normalized = expr.trim();
 
-  // Normalize new operators to internal symbols first
+  // Neue Operatoren zuerst auf interne Symbole normalisieren
   normalized = normalized.replace(/\b(nand|NAND)\b/g, '#');
   normalized = normalized.replace(/![\*]/g, '#'); 
 
@@ -62,13 +62,13 @@ export function normalizeExpression(expr) {
   normalized = normalized.replace(/\b(xnor|XNOR)\b/g, '=');
   normalized = normalized.replace(/![\^]/g, '=');
 
-  // Replace textual operators first to avoid conflicts (e.g., 'and' vs 'd')
+  // Textuelle Operatoren zuerst ersetzen, um Konflikte zu vermeiden (z.B. 'and' vs 'd')
   normalized = normalized.replace(/\b(and|AND)\b/g, '&');
   normalized = normalized.replace(/\b(or|OR)\b/g, '|');
-  normalized = normalized.replace(/\b(not|NOT)\s*/g, '!'); // Consume trailing space
+  normalized = normalized.replace(/\b(not|NOT)\s*/g, '!'); // Nachfolgendes Leerzeichen entfernen
   normalized = normalized.replace(/\b(xor|XOR)\b/g, '^');
 
-  // Replace symbolic operators
+  // Symbolische Operatoren ersetzen
   normalized = normalized.replace(/[*∧]/g, '&');
   normalized = normalized.replace(/[+∨]/g, '|');
   normalized = normalized.replace(/[¬~]/g, '!');
@@ -78,11 +78,11 @@ export function normalizeExpression(expr) {
 }
 
 /**
- * Converts a normalized boolean expression to a LaTeX string.
- * This function does not perform any simplification.
+ * Wandelt einen normalisierten booleschen Ausdruck in einen LaTeX-String um.
+ * Diese Funktion führt keine Vereinfachung durch.
  * 
- * @param {string} expr The input expression.
- * @returns {string} The LaTeX-formatted string.
+ * @param {string} expr Der Eingabe-Ausdruck.
+ * @returns {string} Der LaTeX-formatierte String.
  */
 export function expressionToLatex(expr) {
   if (!expr || typeof expr !== 'string') {
@@ -94,11 +94,11 @@ export function expressionToLatex(expr) {
 }
 
 /**
- * Takes a raw expression, builds an AST, and returns a clean,
- * standardized string representation of the expression without simplification.
+ * Nimmt einen rohen Ausdruck, erstellt einen AST und gibt eine saubere,
+ * standardisierte String-Darstellung des Ausdrucks ohne Vereinfachung zurück.
  * 
- * @param {string} expr The raw expression.
- * @returns {string} The standardized expression string.
+ * @param {string} expr Der rohe Ausdruck.
+ * @returns {string} Der standardisierte Ausdruck als String.
  */
 export function getNormalizedString(expr) {
     if (!expr || typeof expr !== 'string') {
@@ -111,9 +111,9 @@ export function getNormalizedString(expr) {
 
 
 /**
- * Calculates the minimal DNF expression from the current truth table state.
- * This function is not directly related to the AST parser but uses its output.
- * @returns {string} The minimal expression in DNF form (e.g., "A&!B | C").
+ * Berechnet den minimalen DNF-Ausdruck aus dem aktuellen Zustand der Wahrheitstabelle.
+ * Diese Funktion ist nicht direkt mit dem AST-Parser verbunden, verwendet aber dessen Ausgabe.
+ * @returns {string} Der minimale Ausdruck in DNF-Form (z.B. "A&!B | C").
  */
 export function getMinimalExpression() {
   const minterms = logicState.truth
