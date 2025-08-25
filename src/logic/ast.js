@@ -133,7 +133,7 @@ class Lexer {
         return { type: tokenTypes.RPAREN, value: ')' };
       }
 
-      throw new Error(`Invalid character: ${this.currentChar}`);
+      throw new Error(`Ungültiges Zeichen: ${this.currentChar}`);
     }
 
     return { type: tokenTypes.EOF, value: null };
@@ -170,7 +170,7 @@ class Parser {
     if (this.currentToken.type === tokenType) {
       this.currentToken = this.lexer.getNextToken();
     } else {
-      throw new Error(`Parsing error: Expected ${tokenType}, got ${this.currentToken.type}`);
+      throw new Error(`Parsing-Fehler: Erwartet ${tokenType}, erhalten ${this.currentToken.type}`);
     }
   }
   
@@ -200,7 +200,7 @@ class Parser {
       this.eat(tokenTypes.OPERATOR);
       return new UnaryOpNode('!', this.factor());
     } else {
-      throw new Error(`Parsing error: Unexpected token ${token.type}`);
+      throw new Error(`Parsing-Fehler: Unerwartetes Token ${token.type}`);
     }
   }
 
@@ -263,7 +263,7 @@ class Parser {
     // Startpunkt des Parsers. Es wird mit einer Expression begonnen, weil dies die höchste Ebene der Syntax ist.
     const node = this.expression();
     if (this.currentToken.type !== tokenTypes.EOF) {
-        throw new Error("Parsing error: Extra characters at end of expression");
+        throw new Error("Parsing-Fehler: Zusätzliche Zeichen am Ende des Ausdrucks");
     }
     return node;
   }
@@ -353,7 +353,7 @@ export class AST {
         if (node instanceof ConstantNode) return node.value;
         if (node instanceof VariableNode) {
             if (variableValues[node.name] === undefined) {
-                throw new Error(`Undefined variable: ${node.name}`);
+                throw new Error(`Nicht definierte Variable: ${node.name}`);
             }
             return variableValues[node.name];
         }
@@ -373,7 +373,7 @@ export class AST {
                 case '=': return (leftValue === rightValue) ? 1 : 0; // XNOR
             }
         }
-        throw new Error('Invalid AST node');
+        throw new Error('Ungültiger AST-Knoten');
     }
 
     /**

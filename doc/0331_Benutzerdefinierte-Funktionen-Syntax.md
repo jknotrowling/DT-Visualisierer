@@ -48,6 +48,6 @@ Die Syntax für benutzerdefinierte Funktionen folgt dem folgenden Muster:
 - `A & B` wird als $A \;\&\; B$ gerendert.
 - `A + B` wird als $A \;∨\; B$ gerendert.
 - `!A` wird als $\overline{A}$ gerendert.
-- `A XOR B` wird als $A \;⊕\; B$ ger
+- `A XOR B` wird als $A \;⊕\; B$ gerendert.
 
 

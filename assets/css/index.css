@@ -795,3 +795,13 @@ svg {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* Modal Styles */
+.modal-backdrop {
+  z-index: 50;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.modal-panel {
+  transition: transform 0.3s ease-in-out;
+}
