@@ -1,13 +1,12 @@
 version: '3.8'
 
 services:
-web:
-# Baut das Docker-Image aus der Dockerfile im aktuellen Verzeichnis
-build: .
+  web:
+  # Baut das Docker-Image aus der Dockerfile im aktuellen Verzeichnis
+    build: .
+      # Ordnet Port 80 des Containers auf Port 80 des Hosts ab
+    ports:
+      - "8080:80"
 
-# Ordnet Port 80 des Containers auf Port 80 des Hosts ab
-ports:
-  - "8080:80"
-
-# Startet den Container automatisch neu, falls er abstürzt
-restart: always
+    # Startet den Container automatisch neu, falls er abstürzt
+    restart: always
