@@ -8,7 +8,8 @@
     "test": "tests"
   },
   "scripts": {
-    "build": "node build.js"
+    "build": "node build.js",
+    "start": "http-server ./dist -p 80"
   },
   "repository": {
     "type": "git",
@@ -22,6 +23,7 @@
   },
   "homepage": "https://github.com/jknotrowling/DT-Visualisierer#readme",
   "devDependencies": {
-    "esbuild": "^0.25.8"
+    "esbuild": "^0.25.8",
+    "http-server": "^14.1.1"
   }
 }
