@@ -6,7 +6,7 @@ services:
     build: .
       # Ordnet Port 80 des Containers auf Port 80 des Hosts ab
     ports:
-      - "8080:80"
+      - "8081:80"
 
     # Startet den Container automatisch neu, falls er abstürzt
     restart: always
