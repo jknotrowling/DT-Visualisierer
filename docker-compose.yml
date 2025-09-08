@@ -5,9 +5,17 @@ services:
   # Baut das Docker-Image aus der Dockerfile im aktuellen Verzeichnis
     build: .
     image: dt_visualisierer
+    # cap_add:
+    #   - SYS_ADMIN
       # Ordnet Port 8081 des Hosts auf Port 80 des Containers ab
     ports:
       - "8081:80"
+    networks:
+      - web_webnet
 
     # Startet den Container automatisch neu, falls er abstürzt
     restart: always
+
+networks:
+  web_webnet:
+    external: true
