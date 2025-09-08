@@ -16,7 +16,8 @@ Der DT-Visualisierer ist ein webbasiertes Tool, das Studierenden und Lehrenden h
 | **[Projektübersicht](doc/01_Projektübersicht.md)** | Ziele, Zielgruppe und Kernfunktionen des Projekts |
 | **[Technologie-Stack](doc/02_Technologie-Stack.md)** | Verwendete Technologien und Build-System |
 | **[Architektur](doc/03_Architektur.md)** | Systemarchitektur und Projektstruktur |
-| **[Installation](doc/04_Installation.md)** | Installationsanleitung und Setup |
+| **[Installation](doc/04_Installation.md)** | Lokale Installationsanleitung und Setup |
+| **[Deployment](doc/05_Deployment.md)** | Schritte zur Bereitstellung auf ITIV Infrastruktur |
 
 ### Algorithmen und Implementierung
 | Dokument | Beschreibung |
