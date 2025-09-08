@@ -4,6 +4,7 @@ services:
   web:
   # Baut das Docker-Image aus der Dockerfile im aktuellen Verzeichnis
     build: .
+    image: dt_visualisierer
       # Ordnet Port 8081 des Hosts auf Port 80 des Containers ab
     ports:
       - "8081:80"
