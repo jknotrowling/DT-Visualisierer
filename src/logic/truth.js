@@ -1,6 +1,12 @@
 import { logicState } from "../state.js";
 import { bin } from "../utils/utils.js";
 
+/**
+ * Applies a preset logic function (e.g., AND, OR, XOR) to the truth table.
+ * Each row's output is determined by the selected preset logic.
+ *
+ * @param {object} logicState - The current state of the logic, including the truth table and preset setting.
+ */
 export function applyPreset(logicState) {
   if (logicState.preset === "custom") return;
   const preset = logicState.preset.toLowerCase();
@@ -29,7 +35,13 @@ export function applyPreset(logicState) {
 }
 
 
-
+/**
+ * Constructs or modifies the truth table based on the number of variables (nVars).
+ * When nVars changes, it attempts to preserve the existing truth values.
+ *
+ * @param {Array|null} oldTruthArray - The previous truth table array, if any.
+ * @param {number} previousNVars - The previous number of variables.
+ */
 export function buildTruth(oldTruthArray = null, previousNVars = -1) {
   const newNVars = logicState.nVars;
 

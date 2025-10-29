@@ -27,6 +27,7 @@ import {
 import { renderTruth } from "./truth.js";
 import { renderExpr } from "./canonForm.js";
 import { renderDev, renderMUX} from "./mux.js";
+import { renderLogicGate } from "./logicGate.js";
 
 import { setupAllHoverInteractions } from "./hover.js";
 
@@ -44,6 +45,8 @@ export function renderAll() {
   renderExpr(); 
 
   renderDev();
+
+  renderLogicGate();
 
   disabledButtonsOnEditingCustomFunction();
   updatePresetButtonStates();

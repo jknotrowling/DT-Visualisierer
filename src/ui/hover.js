@@ -2,17 +2,30 @@
 import { logicState, expansionState } from "../state.js";
 import { setupTouchFriendlyExpressionTerms } from "./touch.js";
 import { highlightMuxElements, MUX_DIAGRAM_STATE } from "../ui/mux.js";
+import { highlightLogicGateElements } from "./logicGate.js";
 
 
 
 
 
 
+/**
+ * Sets up all hover interactions for the UI.
+ * This function initializes touch-friendly expression term handlers.
+ */
 export function setupAllHoverInteractions() {
   
   setupTouchFriendlyExpressionTerms(handleCellOrTermHover);
 }
 
+/**
+ * Handles hover events on table cells or expression terms.
+ * It coordinates highlighting across different UI components like truth tables,
+ * expression cards, and the MUX and logic gate diagrams based on the hovered element's data.
+ *
+ * @param {HTMLElement} hoveredElement The element that is being hovered over.
+ * @param {boolean} isOn True if the mouse is over the element, false otherwise.
+ */
 export function handleCellOrTermHover(hoveredElement, isOn) {
   let mintermsToHighlightInTables = [];
   let singleMintermForExpansionLookup = null;
@@ -177,8 +190,23 @@ export function handleCellOrTermHover(hoveredElement, isOn) {
       MUX_DIAGRAM_STATE.currentActiveMuxConfig
     );
   }
+
+  if (typeof highlightLogicGateElements === "function") {
+    highlightLogicGateElements(activePathsForMux, isOn);
+  }
 }
 
+
+/**
+ * Handles hover events on expansion spans within the UI.
+ * This function is responsible for highlighting corresponding elements in truth tables,
+ * the MUX diagram, and logic gate diagrams when a user hovers over a span
+ * in the expansion view.
+ *
+ * @param {HTMLElement} spanElement The span element being hovered over.
+ * @param {boolean} isOn True if the hover is starting, false if it's ending.
+ * @param {string} highlightClass The CSS class to apply for highlighting.
+ */
 export function handleExpansionSpanHover(spanElement, isOn, highlightClass) {
   
   const spanId = spanElement.dataset.spanId;
@@ -233,8 +261,19 @@ export function handleExpansionSpanHover(spanElement, isOn, highlightClass) {
       MUX_DIAGRAM_STATE.currentActiveMuxConfig
     );
   }
+  
+  if (typeof highlightLogicGateElements === "function") {
+    highlightLogicGateElements(activePathsForMux, isOn);
+  }
 }
 
+/**
+ * Highlights cells in various tables (truth table, symmetry diagram, expression cards)
+ * based on an array of bit strings.
+ *
+ * @param {string[]} arr An array of bit strings (minterms) to highlight.
+ * @param {boolean} on True to apply the highlight, false to remove it.
+ */
 export function highlightTableCells(arr, on) {
   arr.forEach((b) => {
     const valueAtField = logicState.truth.find((t) => t.bits === b);

@@ -1,135 +1,94 @@
-
+/**
+ * Checks if the current device is a touch-enabled device.
+ * @returns {boolean} True if it's a touch device, false otherwise.
+ */
 export function isTouchDevice() {
   return 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0;
 }
 
+let selectedElement = null;
 
-const touchState = new Map();
-
-
+/**
+ * Adds touch-friendly interaction to an element, with fallback for desktop.
+ * On touch devices: single tap to select/deselect, double tap to click.
+ * On desktop: hover to highlight, click to execute.
+ *
+ * @param {HTMLElement} element The element to make touch-friendly.
+ * @param {function(HTMLElement, boolean): void} hoverHandler The function to call on hover/selection.
+ * @param {function(Event): void} clickHandler The function to call on click/double-tap.
+ */
 export function addTouchFriendlyInteraction(element, hoverHandler, clickHandler) {
   if (!element) return;
 
-  const elementId = element.dataset.bits || element.id || Math.random().toString(36);
-  
   if (isTouchDevice()) {
-    
-    let touchStartTime = 0;
-    let touchTimeout = null;
-    let isHovering = false;
-    
+    let lastTap = 0;
+
     element.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      touchStartTime = Date.now();
-      
-     
-      if (touchTimeout) {
-        clearTimeout(touchTimeout);
-        touchTimeout = null;
-      }
-      
-  
-      touchTimeout = setTimeout(() => {
-        if (!isHovering) {
-          isHovering = true;
-          hoverHandler(element, true);
-        }
-      }, 50); 
+      e.preventDefault(); 
     });
-    
-    
+
     element.addEventListener('touchend', (e) => {
       e.preventDefault();
-      const touchDuration = Date.now() - touchStartTime;
-      
-    
-      if (touchTimeout) {
-        clearTimeout(touchTimeout);
-        touchTimeout = null;
-      }
-      
-     
-      if (touchDuration < 300) { 
-        const lastTouchState = touchState.get(elementId);
-        const now = Date.now();
-        
-        if (lastTouchState && (now - lastTouchState.time) < 500) {
-          
-          if (isHovering) {
-            hoverHandler(element, false);
-            isHovering = false;
-          }
-          clickHandler(e);
-          touchState.delete(elementId);
-        } else {
-         
-          touchState.set(elementId, { time: now });
-          if (!isHovering) {
-            hoverHandler(element, true);
-            isHovering = true;
-          }
-          
-         
-          setTimeout(() => {
-            const currentState = touchState.get(elementId);
-            if (currentState && (Date.now() - currentState.time) >= 400) {
-              if (isHovering) {
-                hoverHandler(element, false);
-                isHovering = false;
-              }
-              touchState.delete(elementId);
-            }
-          }, 500);
-        }
+      const now = Date.now();
+      const timeSinceLastTap = now - lastTap;
+
+      if (timeSinceLastTap < 300) {
+        // Double tap
+        clickHandler(e);
+        lastTap = 0; 
       } else {
-        
-        if (isHovering) {
+        // Single tap
+        if (selectedElement === element) {
+          // Deselect if the same element is tapped again
           hoverHandler(element, false);
-          isHovering = false;
+          selectedElement = null;
+        } else {
+          // Deselect the old element
+          if (selectedElement) {
+            hoverHandler(selectedElement, false);
+          }
+          // Select the new element
+          hoverHandler(element, true);
+          selectedElement = element;
         }
+        lastTap = now;
       }
     });
-    
-    element.addEventListener('touchcancel', (e) => {
-      if (touchTimeout) {
-        clearTimeout(touchTimeout);
-        touchTimeout = null;
-      }
-      if (isHovering) {
-        hoverHandler(element, false);
-        isHovering = false;
-      }
-    });
-    
+
   } else {
-   // remove all previous event listeners
-    
+    // Desktop interaction
     element.addEventListener('mouseenter', () => hoverHandler(element, true));
-    element.addEventListener('mouseleave', () => hoverHandler(element, false));
+    element.addEventListener('mouseleave', () => {
+      if (selectedElement !== element) {
+        hoverHandler(element, false);
+      }
+    });
     element.addEventListener('click', clickHandler);
   }
 }
 
-
+/**
+ * Sets up touch-friendly interactions for the truth table cells.
+ *
+ * @param {function(HTMLElement, boolean): void} hoverHandler The hover/selection handler.
+ * @param {function(Event): void} clickHandler The click/double-tap handler.
+ */
 export function setupTouchFriendlyTruthTable(hoverHandler, clickHandler) {
-  // Clean up existing event listeners first
-  document.querySelectorAll("#truthTableCard .outCell").forEach((el) => {
-    // Clone the element to remove all event listeners
+  document.querySelectorAll("#truthTableCard .outCell, #truthTableCard .dontCareCell").forEach((el) => {
     const newEl = el.cloneNode(true);
     el.parentNode.replaceChild(newEl, el);
-  });
-
-  // Add new event listeners to cleaned elements
-  document.querySelectorAll("#truthTableCard .outCell").forEach((el) => {
-    addTouchFriendlyInteraction(el, hoverHandler, clickHandler);
+    addTouchFriendlyInteraction(newEl, hoverHandler, clickHandler);
   });
 }
 
-
+/**
+ * Sets up touch-friendly interactions for the symmetry diagram cells.
+ *
+ * @param {function(HTMLElement, boolean): void} hoverHandler The hover/selection handler.
+ * @param {function(Event): void} clickHandler The click/double-tap handler.
+ */
 export function setupTouchFriendlySymmetryDiagram(hoverHandler, clickHandler) {
-  // Clean up existing event listeners first
   document.querySelectorAll("#symmetry-diagram div[data-bits]").forEach((el) => {
-    // Clone the element to remove all event listeners
     const newEl = el.cloneNode(true);
     el.parentNode.replaceChild(newEl, el);
   });
@@ -141,22 +100,40 @@ export function setupTouchFriendlySymmetryDiagram(hoverHandler, clickHandler) {
   }, 0);
 }
 
-
+/**
+ * Sets up touch-friendly interactions for the expression term elements.
+ *
+ * @param {function(HTMLElement, boolean): void} hoverHandler The hover/selection handler.
+ */
 export function setupTouchFriendlyExpressionTerms(hoverHandler) {
-  // Clean up existing event listeners first
   document.querySelectorAll("#expressionsCard .term").forEach((el) => {
-    // Clone the element to remove all event listeners
     const newEl = el.cloneNode(true);
     el.parentNode.replaceChild(newEl, el);
-  });
-
-  // Add new event listeners to cleaned elements
-  document.querySelectorAll("#expressionsCard .term").forEach((el) => {
     if (isTouchDevice()) {
-      addTouchFriendlyInteraction(el, hoverHandler, () => {}); 
+      addTouchFriendlyInteraction(newEl, hoverHandler, () => {});
     } else {
-      el.addEventListener('mouseenter', () => hoverHandler(el, true));
-      el.addEventListener('mouseleave', () => hoverHandler(el, false));
+      newEl.addEventListener('mouseenter', () => hoverHandler(newEl, true));
+      newEl.addEventListener('mouseleave', () => hoverHandler(newEl, false));
     }
   });
 }
+
+document.addEventListener('touchstart', (e) => {
+  if (selectedElement && !selectedElement.contains(e.target)) {
+    let isInteractive = false;
+    let target = e.target;
+    while (target && target !== document.body) {
+      if (target.classList.contains('interactive-cell')) {
+        isInteractive = true;
+        break;
+      }
+      target = target.parentElement;
+    }
+
+    if (!isInteractive) {
+      // Tapped on a non-interactive area, deselect
+      hoverHandler(selectedElement, false);
+      selectedElement = null;
+    }
+  }
+}, true);

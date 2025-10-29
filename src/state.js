@@ -36,6 +36,7 @@ export const layoutState = {
     toggleExpressions: {id: "expressionsCard", active: true},
     toggleBooleanDev: {id: "booleanDevCard", active: true},
     toggleMux: {id: "muxCard", active: true},
+    toggleLogicGate: {id: "logicGateCard", active: true},
   }
 }
 

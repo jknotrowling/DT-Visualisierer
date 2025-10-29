@@ -4,6 +4,11 @@ import { $ } from "../utils/utils.js";
 
 
 
+/**
+ * Resets the grid column classes of the main card grid to their default state.
+ * This function removes any dynamically added grid and span classes from the card
+ * grid and its children, preparing it for a new layout configuration.
+ */
 function resetGridColsToDefault() {
   const cardGrid = document.querySelector("#card-grid");
   if (!cardGrid) return;
@@ -43,6 +48,12 @@ function resetGridColsToDefault() {
 
 } 
 
+/**
+ * Retrieves all active cards except for the ones specified.
+ *
+ * @param {string|string[]} notThisIds An ID or an array of IDs to exclude from the result.
+ * @returns {HTMLElement[]} An array of active card elements.
+ */
 function getOtherActiveCards(notThisIds) {
   const viewToggleMappings = layoutState.viewToggleMappings;
     const excludeIds = Array.isArray(notThisIds) ? notThisIds : [notThisIds];
@@ -194,6 +205,15 @@ export function updateGridCols() {
 
       break;
     }
+    case 6: {
+      if (isLandscape) {
+        cardGrid.classList.add(GRID3);
+      } else {
+        cardGrid.classList.add(GRID2);
+      }
+      break;
+    }
+    
   }
 }
 

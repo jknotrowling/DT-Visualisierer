@@ -2,6 +2,9 @@ import { minimize, expand, lit } from "../logic/bool.js";
 import { logicState} from "../state.js";
 
 
+/**
+ * Renders the canonical forms (DNF, CNF, DNF_min, CNF_min) of the current truth table.
+ */
 export function renderExpr() {
   const ones = logicState.truth
     .filter((r) => r.out === 1)

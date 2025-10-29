@@ -9,6 +9,12 @@ import { getMinimalExpression } from '../logic/parser.js';
 import { customFunctionState } from '../state.js';
 import { renderAll } from './ui.js';
 
+/**
+ * Renders the top frame row of the symmetry diagram, which includes variable labels.
+ *
+ * @param {HTMLElement} wrapper The parent element to which the row will be appended.
+ * @param {number} numberOfVariables The number of variables in the logic function.
+ */
 function renderTopFrameRow(wrapper, numberOfVariables) {
     const topRow = document.createElement("div");
     topRow.classList.add("symmetry-diagram-row", "symmetry-diagram-top-frame-row");
@@ -31,6 +37,12 @@ function renderTopFrameRow(wrapper, numberOfVariables) {
     wrapper.appendChild(topRow);
 }
 
+/**
+ * Renders the bottom frame row of the symmetry diagram, which includes variable labels.
+ *
+ * @param {HTMLElement} wrapper The parent element to which the row will be appended.
+ * @param {number} numberOfVariables The number of variables in the logic function.
+ */
 function renderBottomFrameRow(wrapper, numberOfVariables) {
     const bottomRow = document.createElement("div");
     bottomRow.classList.add("symmetry-diagram-row", "symmetry-diagram-bottom-frame-cell");
@@ -55,6 +67,13 @@ function renderBottomFrameRow(wrapper, numberOfVariables) {
     wrapper.appendChild(bottomRow);
 }
 
+/**
+ * Renders a single cell for the left frame of the symmetry diagram, which may include a variable label.
+ *
+ * @param {HTMLElement} row The parent row element to which the cell will be appended.
+ * @param {number} index The row index, used to determine the label.
+ * @param {number} numberOfVariables The total number of variables.
+ */
 function renderLeftFrameCell(row, index, numberOfVariables) {
     const leftCell = document.createElement("div");
     leftCell.classList.add("symmetry-diagram-frame-cell", "symmetry-diagram-left-frame-cell",);
@@ -71,6 +90,13 @@ function renderLeftFrameCell(row, index, numberOfVariables) {
 
 }
 
+/**
+ * Renders a single cell for the right frame of the symmetry diagram, which may include a variable label.
+ *
+ * @param {HTMLElement} row The parent row element to which the cell will be appended.
+ * @param {number} index The row index, used to determine the label.
+ * @param {number} numberOfVariables The total number of variables.
+ */
 function renderRightFrameCell(row, index, numberOfVariables) {
     const rightCell = document.createElement("div");
     rightCell.classList.add("symmetry-diagram-frame-cell", "symmetry-diagram-right-frame-cell");
@@ -84,6 +110,11 @@ function renderRightFrameCell(row, index, numberOfVariables) {
     row.appendChild(rightCell);
 }
 
+/**
+ * Renders the entire symmetry diagram, including the frame and the data cells,
+ * based on the current state of the logic function.
+ * It's only rendered for 2, 3, or 4 variables.
+ */
 export function renderSymmetryDiagram() {
     const numberOfVariables = logicState.nVars;
 
@@ -174,6 +205,12 @@ export function renderSymmetryDiagram() {
 }
 
 
+/**
+ * Sets up the click handler for the symmetry diagram cells.
+ * Clicking a cell cycles its value (0 -> 1 -> null -> 0).
+ * This function also sets up touch-friendly interactions for the diagram.
+ * It's only active for 2, 3, or 4 variables.
+ */
 export function setupSymmetryDiagramClickHandler() {
     const numberOfVariables = logicState.nVars;
     if(numberOfVariables < 2 || numberOfVariables > 4)  return;
@@ -213,8 +250,3 @@ export function setupSymmetryDiagramClickHandler() {
         symmetryDiagramClickHandler
     );
 }
-
-
-
-
-

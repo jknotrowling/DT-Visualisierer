@@ -5,12 +5,17 @@ import {
 import { debounce } from "../utils/utils.js";
 
 import { handleExpansionSpanHover } from "./hover.js";
+import { generateExpansionHtmlRecursive } from "./expansion.js";
 
 import { logicState, expansionState, VARIABLE_NAMES, DEFAULT_LAYOUT_CONFIG } from "../state.js";
 import { $ } from "../utils/utils.js";
 
 
 
+/**
+ * Default configuration for drawing a single MUX.
+ * @type {{width: number, outputHeight: number, inputHeight: number, varFontSize: number, labelFontSize: number, strokeColor: string, fillColor: string, labelOffset: number}}
+ */
 export const DEFAULT_MUX_CONFIG = {
   width: 20,
   outputHeight: 65 * (1 / 2),
@@ -22,6 +27,10 @@ export const DEFAULT_MUX_CONFIG = {
   labelOffset: 5,
 };
 
+/**
+ * Global state management for the MUX diagram.
+ * @type {{currentMuxDrawnElements: object, currentExpansionOrderForMuxHighlight: Array<string>, currentMuxElementsStore: object|null, currentActiveMuxConfig: object, muxSvgElement: SVGElement|null}}
+ */
 export const MUX_DIAGRAM_STATE = {
   currentMuxDrawnElements: {},
   currentExpansionOrderForMuxHighlight: [],
@@ -30,296 +39,355 @@ export const MUX_DIAGRAM_STATE = {
   muxSvgElement: null,
 };
 
+/**
+ * Selects and sets the main SVG element for the MUX diagram from the DOM.
+ */
 export function setSvgMux() {
   MUX_DIAGRAM_STATE.muxSvgElement = document.querySelector(
     "#muxCard .card-body #muxDiagramSvg"
   );
 }
 
-export function highlightMuxElements(
-  activeMintermPaths,
-  isOn,
-  elementsStore,
-  drawnElements,
-  expansionOrder,
-  baseSvgConfig
-) {
-  if (!drawnElements || Object.keys(drawnElements).length === 0) {
-    return;
-  }
-
-  const highlightColor = "#F57C00";
-  const defaultMuxStrokeColor = baseSvgConfig.strokeColor;
-  const defaultMuxStrokeWidth = "1.5";
-  const highlightedMuxStrokeWidth = "2.5";
-  const defaultLineStrokeColor = baseSvgConfig.strokeColor;
-  const defaultLineStrokeWidth = "1";
-  const highlightedLineStrokeWidth = "2";
-  const defaultConstantColor = baseSvgConfig.strokeColor;
-
-  elementsStore.muxes.forEach((mux) => {
-    const muxSvgGroup = drawnElements[mux.id];
-    if (muxSvgGroup && muxSvgGroup.querySelector("polygon")) {
-      muxSvgGroup
-        .querySelector("polygon")
-        .setAttribute("stroke", defaultMuxStrokeColor);
-      muxSvgGroup
-        .querySelector("polygon")
-        .setAttribute("stroke-width", defaultMuxStrokeWidth);
-    }
-  });
-  elementsStore.constants.forEach((constant) => {
-    const constSvgText = drawnElements[constant.id];
-    if (constSvgText) {
-      constSvgText.setAttribute("fill", defaultConstantColor);
-      constSvgText.setAttribute("font-weight", "normal");
-    }
-  });
-  elementsStore.connections.forEach((connection) => {
-    const lineId = `line_${connection.fromId}_${connection.fromPin}_${connection.toId}`;
-    const lineSvg = drawnElements[lineId];
-    if (lineSvg) {
-      lineSvg.setAttribute("stroke", defaultLineStrokeColor);
-      lineSvg.setAttribute("stroke-width", defaultLineStrokeWidth);
-    }
-  });
-
-  if (!isOn || !activeMintermPaths || activeMintermPaths.length === 0) {
-    return;
-  }
-
-  activeMintermPaths.forEach((mintermPathStr) => {
-    if (mintermPathStr.length !== logicState.nVars) {
-      console.warn(
-        `Minterm path ${mintermPathStr} length does not match nVars ${logicState.nVars}. Skipping.`
-      );
-      return;
+/**
+ * Highlights or de-highlights paths in the MUX diagram based on active minterms.
+ * @param {Array<string>} activeMintermPaths - An array of minterm path strings (e.g., "010") to highlight.
+ * @param {boolean} isOn - Whether to turn the highlight on or off.
+ * @param {object} elementsStore - The store of all logical elements (muxes, constants, connections).
+ * @param {object} drawnElements - A map of drawn SVG elements, keyed by their logical ID.
+ * @param {Array<string>} expansionOrder - The current variable expansion order.
+ * @param {object} baseSvgConfig - The base SVG configuration containing default styles.
+ */
+export function highlightMuxElements(activeMintermPaths, isOn, elementsStore, drawnElements, expansionOrder, baseSvgConfig) {
+    if (!drawnElements || Object.keys(drawnElements).length === 0 || !elementsStore) {
+        return;
     }
 
-    let currentLogicalElementId = null;
-    const rootMuxVar = expansionOrder[0];
-    const rootMux = elementsStore.muxes.find(
-      (m) => m.depth === 0 && m.varName === rootMuxVar
-    );
+    const highlightColor = '#F57C00';
+    const offColor = '#AAAAAA';
+    const defaultColor = baseSvgConfig.strokeColor;
+    const defaultStrokeWidth = '1.5';
+    const highlightStrokeWidth = '2.5';
 
-    if (!rootMux) {
-      console.warn(
-        `Root MUX for var ${rootMuxVar} not found. Skipping path ${mintermPathStr}.`
-      );
-      return;
-    }
-    currentLogicalElementId = rootMux.id;
+    // Helper to reset all elements to their default appearance
+    const resetElements = () => {
+        // Reset MUX bodies
+        elementsStore.muxes.forEach(mux => {
+            const muxGroup = drawnElements[mux.id];
+            if (!muxGroup) return;
+            const polygon = muxGroup.querySelector('polygon');
+            const varText = muxGroup.querySelector('.mux-var-text');
+            const lineToVar = muxGroup.querySelector('.mux-var-line');
+            const inputLabels = muxGroup.querySelectorAll('.mux-input-label');
+            const outputLine = muxGroup.querySelector('.mux-output-line');
+            const outputF = muxGroup.querySelector('.mux-output-f-text');
 
-    for (let depth = 0; depth < expansionOrder.length; depth++) {
-      if (!currentLogicalElementId) break;
-
-      const currentLogicalMux = elementsStore.muxes.find(
-        (m) => m.id === currentLogicalElementId
-      );
-      if (!currentLogicalMux) {
-        const constItem = elementsStore.constants.find(
-          (c) => c.id === currentLogicalElementId
-        );
-        if (constItem) {
-          if (depth === expansionOrder.length) {
-            const constSvg = drawnElements[constItem.id];
-            if (constSvg) {
-              constSvg.setAttribute("fill", highlightColor);
-              constSvg.setAttribute("font-weight", "bold");
+            if (polygon) {
+                polygon.setAttribute('stroke', defaultColor);
+                polygon.setAttribute('stroke-width', defaultStrokeWidth);
             }
-          }
-        }
-        break;
-      }
+            if (varText) varText.setAttribute('fill', defaultColor);
+            if (lineToVar) lineToVar.setAttribute('stroke', defaultColor);
+            inputLabels.forEach(label => label.setAttribute('fill', defaultColor));
+            if (outputLine) outputLine.setAttribute('stroke', defaultColor);
+            if (outputF) outputF.setAttribute('fill', defaultColor);
+        });
 
-      const muxSvgGroup = drawnElements[currentLogicalMux.id];
-      if (muxSvgGroup && muxSvgGroup.querySelector("polygon")) {
-        muxSvgGroup
-          .querySelector("polygon")
-          .setAttribute("stroke", highlightColor);
-        muxSvgGroup
-          .querySelector("polygon")
-          .setAttribute("stroke-width", highlightedMuxStrokeWidth);
-      }
+        // Reset constants
+        elementsStore.constants.forEach(c => {
+            const el = drawnElements[c.id];
+            if (el) {
+                el.setAttribute('fill', defaultColor);
+                el.setAttribute('font-weight', 'normal');
+            }
+        });
 
-      if (depth === expansionOrder.length - 1) {
-        // Last MUX in this path, leads to a constant
-        const varNameForThisDepth = expansionOrder[depth];
-        const originalVarLIndex = VARIABLE_NAMES.indexOf(varNameForThisDepth);
-        if (originalVarLIndex === -1) {
-          console.warn(
-            `Variable ${varNameForThisDepth} not found in L_VARS during final step. Path tracing aborted.`
-          );
-          break;
-        }
-        const pinToFollowToConstant = mintermPathStr[originalVarLIndex];
+        // Reset connections
+        elementsStore.connections.forEach(conn => {
+            const lineId = `line_${conn.fromId}_${conn.fromPin}_${conn.toId}`;
+            const line = drawnElements[lineId];
+            if (line) {
+                line.setAttribute('stroke', defaultColor);
+                line.setAttribute('stroke-width', '1');
+            }
+        });
+    };
 
-        const finalConn = elementsStore.connections.find(
-          (c) =>
-            c.fromId === currentLogicalMux.id &&
-            c.fromPin === pinToFollowToConstant
-        );
-        if (finalConn) {
-          const finalLineId = `line_${finalConn.fromId}_${finalConn.fromPin}_${finalConn.toId}`;
-          const finalLineSvg = drawnElements[finalLineId];
-          if (finalLineSvg) {
-            finalLineSvg.setAttribute("stroke", highlightColor);
-            finalLineSvg.setAttribute(
-              "stroke-width",
-              highlightedLineStrokeWidth
-            );
-          }
+    resetElements();
 
-          const constSvg = drawnElements[finalConn.toId];
-          if (
-            constSvg &&
-            elementsStore.constants.find((c) => c.id === finalConn.toId)
-          ) {
-            constSvg.setAttribute("fill", highlightColor);
-            constSvg.setAttribute("font-weight", "bold");
-          }
-        }
-        break;
-      }
-
-      // Not the last MUX, follow to next MUX
-      const varNameForThisDepth = expansionOrder[depth];
-      const originalVarLIndex = VARIABLE_NAMES.indexOf(varNameForThisDepth);
-      if (originalVarLIndex === -1) {
-        console.warn(
-          `Variable ${varNameForThisDepth} not found in L_VARS. Path tracing aborted.`
-        );
-        break;
-      }
-      const pinToFollow = mintermPathStr[originalVarLIndex];
-
-      const conn = elementsStore.connections.find(
-        (c) => c.fromId === currentLogicalMux.id && c.fromPin === pinToFollow
-      );
-      if (!conn) {
-        console.warn(
-          `Connection from MUX ${currentLogicalMux.id} via pin ${pinToFollow} not found. Path tracing aborted.`
-        );
-        break;
-      }
-
-      const lineId = `line_${conn.fromId}_${conn.fromPin}_${conn.toId}`;
-      const lineSvg = drawnElements[lineId];
-      if (lineSvg) {
-        lineSvg.setAttribute("stroke", highlightColor);
-        lineSvg.setAttribute("stroke-width", highlightedLineStrokeWidth);
-      }
-
-      currentLogicalElementId = conn.toId;
+    if (!isOn || !activeMintermPaths || activeMintermPaths.length === 0) {
+        return; // Exit after resetting if highlighting is off
     }
-  });
+
+    // --- 3-State Logic Calculation ---
+    const controlVarValues = {}; // e.g., { 'A': 1, 'B': 0, 'C': null }
+    expansionOrder.forEach(varName => {
+        const varIndex = VARIABLE_NAMES.indexOf(varName);
+        if (varIndex === -1) {
+            controlVarValues[varName] = null;
+            return;
+        }
+        const firstValue = activeMintermPaths[0][varIndex];
+        const isConsistent = activeMintermPaths.every(path => path[varIndex] === firstValue);
+        controlVarValues[varName] = isConsistent ? parseInt(firstValue, 10) : null;
+    });
+
+    const elementOutputValues = {}; // Memoization for element output values
+
+    // Recursive function to calculate the output value of any element (mux or constant)
+    const getElementOutput = (elementId) => {
+        if (elementOutputValues.hasOwnProperty(elementId)) {
+            return elementOutputValues[elementId];
+        }
+
+        const constant = elementsStore.constants.find(c => c.id === elementId);
+        if (constant) {
+            return (elementOutputValues[elementId] = parseInt(constant.value, 10));
+        }
+
+        const mux = elementsStore.muxes.find(m => m.id === elementId);
+        if (!mux) {
+            return (elementOutputValues[elementId] = null); // Should not happen
+        }
+
+        const controlValue = controlVarValues[mux.varName];
+        let result = null;
+
+        if (controlValue === 1) {
+            // Path '1' is chosen
+            const conn = elementsStore.connections.find(c => c.fromId === mux.id && c.fromPin === '1');
+            result = conn ? getElementOutput(conn.toId) : null;
+        } else if (controlValue === 0) {
+            // Path '0' is chosen
+            const conn = elementsStore.connections.find(c => c.fromId === mux.id && c.fromPin === '0');
+            result = conn ? getElementOutput(conn.toId) : null;
+        } else {
+            // Undetermined control signal
+            const conn1 = elementsStore.connections.find(c => c.fromId === mux.id && c.fromPin === '1');
+            const conn0 = elementsStore.connections.find(c => c.fromId === mux.id && c.fromPin === '0');
+            const output1 = conn1 ? getElementOutput(conn1.toId) : null;
+            const output0 = conn0 ? getElementOutput(conn0.toId) : null;
+
+            if (output1 === output0 && output1 !== null) {
+                result = output1; // Both paths lead to the same result
+            } else {
+                result = null; // Paths diverge or are unknown
+            }
+        }
+        return (elementOutputValues[elementId] = result);
+    };
+
+    // Calculate the output value for every element, starting from the root MUX
+    const rootMux = elementsStore.muxes.find(m => m.depth === 0);
+    if (rootMux) {
+        getElementOutput(rootMux.id);
+    }
+
+
+    // --- Apply 3-State Styling ---
+    const applyStyles = (element, value) => {
+        const color = value === 1 ? highlightColor : (value === 0 ? offColor : defaultColor);
+        const isUndecided = value === null;
+
+        if (!element) return;
+        
+        // MUX Group
+        if (element.matches('.mux-group')) {
+            const polygon = element.querySelector('polygon');
+            if (polygon) {
+                polygon.setAttribute('stroke', color);
+                polygon.setAttribute('stroke-width', isUndecided ? defaultStrokeWidth : highlightStrokeWidth);
+            }
+            // The variable name and its line are styled based on the *control* signal
+            const varName = element.dataset.varName;
+            const controlValue = controlVarValues[varName];
+            const controlColor = controlValue === 1 ? highlightColor : (controlValue === 0 ? offColor : defaultColor);
+            const controlIsUndecided = controlValue === null;
+
+            const varText = element.querySelector('.mux-var-text');
+            const lineToVar = element.querySelector('.mux-var-line');
+            if (varText) varText.setAttribute('fill', controlColor);
+            if (lineToVar) lineToVar.setAttribute('stroke', controlColor);
+            
+            // Highlight input number labels
+            const label1 = element.querySelector('.mux-input-label[data-pin="1"]');
+            const label0 = element.querySelector('.mux-input-label[data-pin="0"]');
+            if (label1) label1.setAttribute('fill', controlValue === 1 ? highlightColor : (controlValue === null ? defaultColor : offColor));
+            if (label0) label0.setAttribute('fill', controlValue === 0 ? highlightColor : (controlValue === null ? defaultColor : offColor));
+
+            // Highlight final output line and 'f' text
+            if(element.dataset.depth === "0") {
+                const outputLine = element.querySelector('.mux-output-line');
+                const outputF = element.querySelector('.mux-output-f-text');
+                if (outputLine) outputLine.setAttribute('stroke', color);
+                if (outputF) outputF.setAttribute('fill', color);
+            }
+
+        } // Connection Line
+        else if (element.matches('.connection-line')) {
+            element.setAttribute('stroke', color);
+            element.setAttribute('stroke-width', isUndecided ? '1' : '2');
+        } // Constant Text
+        else if (element.matches('.constant-text')) {
+            element.setAttribute('fill', color);
+            element.setAttribute('font-weight', isUndecided ? 'normal' : 'bold');
+        }
+    };
+
+    // Apply styles to all elements
+    elementsStore.muxes.forEach(mux => {
+        const muxGroup = drawnElements[mux.id];
+        const outputValue = getElementOutput(mux.id);
+        applyStyles(muxGroup, outputValue);
+    });
+
+    elementsStore.constants.forEach(c => {
+        const constEl = drawnElements[c.id];
+        const outputValue = getElementOutput(c.id);
+        applyStyles(constEl, outputValue);
+    });
+
+    elementsStore.connections.forEach(conn => {
+        const lineId = `line_${conn.fromId}_${conn.fromPin}_${conn.toId}`;
+        const lineEl = drawnElements[lineId];
+        if (!lineEl) return;
+
+        // A connection is always highlighted according to the element to its left (toId),
+        // which is its source in the data flow. The MUX body's color is determined
+        // by its own output value, which correctly reflects the pass-through logic.
+        const value = getElementOutput(conn.toId);
+        applyStyles(lineEl, value);
+    });
 }
 
-export function createSvgMuxElement(
-  cx,
-  cy,
-  varName,
-  config = DEFAULT_MUX_CONFIG
-) {
-  const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
-  group.dataset.varName = varName;
+/**
+ * Creates an SVG group element representing a single multiplexer (MUX).
+ * @param {number} cx - The center x-coordinate of the MUX.
+ * @param {number} cy - The center y-coordinate of the MUX.
+ * @param {string} varName - The name of the control variable for this MUX.
+ * @param {object} [config=DEFAULT_MUX_CONFIG] - Configuration for MUX dimensions and styles.
+ * @returns {SVGElement} The SVG group element for the MUX.
+ */
+export function createSvgMuxElement(cx, cy, varName, depth, config = DEFAULT_MUX_CONFIG) {
+    const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    group.classList.add('mux-group');
+    group.dataset.varName = varName;
+    group.dataset.depth = depth;
 
-  const x = cx - config.width / 2;
-  const y = cy;
+    const x = cx - config.width / 2;
+    const y = cy;
 
-  const p1 = `${x},${y - config.outputHeight / 2}`;
-  const p2 = `${x + config.width},${y - config.inputHeight / 2}`;
-  const p3 = `${x + config.width},${y + config.inputHeight / 2}`;
-  const p4 = `${x},${y + config.outputHeight / 2}`;
+    const p1 = `${x + config.width},${y - config.outputHeight / 2}`; // Top-right
+    const p2 = `${x},${y - config.inputHeight / 2}`; // Top-left
+    const p3 = `${x},${y + config.inputHeight / 2}`; // Bottom-left
+    const p4 = `${x + config.width},${y + config.outputHeight / 2}`; // Bottom-right
 
-  if (varName.toLowerCase() === expansionState.order[0]) {
-    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-    line.setAttribute("x1", cx - 50);
-    line.setAttribute("y1", cy - config.outputHeight / Infinity);
-    line.setAttribute("x2", cx);
-    line.setAttribute("y2", cy - config.outputHeight / Infinity);
-    line.setAttribute("stroke", config.strokeColor);
-    line.setAttribute("stroke-width", "1");
-    group.appendChild(line);
+    // The final output 'f' is now on the right side of the root MUX
+    if (depth === 0) {
+        const outputLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        outputLine.classList.add('mux-output-line');
+        outputLine.setAttribute("x1", cx + config.width / 2);
+        outputLine.setAttribute("y1", cy);
+        outputLine.setAttribute("x2", cx + 50);
+        outputLine.setAttribute("y2", cy);
+        outputLine.setAttribute("stroke", config.strokeColor);
+        outputLine.setAttribute("stroke-width", "1");
+        group.appendChild(outputLine);
 
-    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    text.setAttribute("x", cx - 55);
-    text.setAttribute("y", cy - config.outputHeight / Infinity);
-    text.setAttribute("font-family", "system-ui, sans-serif");
-    text.setAttribute("font-size", config.varFontSize);
-    text.setAttribute("text-anchor", "end");
-    text.setAttribute("dominant-baseline", "middle");
-    text.textContent = "f";
-    group.appendChild(text);
-  }
+        const outputF = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        outputF.classList.add('mux-output-f-text');
+        outputF.setAttribute("x", cx + 55);
+        outputF.setAttribute("y", cy);
+        outputF.setAttribute("font-family", "system-ui, sans-serif");
+        outputF.setAttribute("font-size", config.varFontSize);
+        outputF.setAttribute("text-anchor", "start");
+        outputF.setAttribute("dominant-baseline", "middle");
+        outputF.textContent = "f";
+        group.appendChild(outputF);
+    }
 
-  const polygon = document.createElementNS(
-    "http://www.w3.org/2000/svg",
-    "polygon"
-  );
-  polygon.setAttribute("points", `${p1} ${p2} ${p3} ${p4}`);
-  polygon.setAttribute("fill", config.fillColor);
-  polygon.setAttribute("stroke", config.strokeColor);
-  polygon.setAttribute("stroke-width", "1.5");
-  group.appendChild(polygon);
+    const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+    polygon.setAttribute("points", `${p1} ${p2} ${p3} ${p4}`);
+    polygon.setAttribute("fill", config.fillColor);
+    polygon.setAttribute("stroke", config.strokeColor);
+    polygon.setAttribute("stroke-width", "1.5");
+    group.appendChild(polygon);
 
-  const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-  text.setAttribute("x", cx);
-  text.setAttribute("y", cy + 50);
-  text.setAttribute("font-family", "system-ui, sans-serif");
-  text.setAttribute("font-size", config.varFontSize);
-  text.setAttribute("text-anchor", "middle");
-  text.setAttribute("dominant-baseline", "middle");
-  text.textContent = varName;
-  group.appendChild(text);
+    const varText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    varText.classList.add('mux-var-text');
+    varText.setAttribute("x", cx);
+    varText.setAttribute("y", cy + 50);
+    varText.setAttribute("font-family", "system-ui, sans-serif");
+    varText.setAttribute("font-size", config.varFontSize);
+    varText.setAttribute("text-anchor", "middle");
+    varText.setAttribute("dominant-baseline", "middle");
+    varText.textContent = varName;
+    group.appendChild(varText);
 
-  // Linie vom Polygon-Mittelpunkt zum Variablen-Text
-  const lineToVar = document.createElementNS(
-    "http://www.w3.org/2000/svg",
-    "line"
-  );
-  lineToVar.setAttribute("x1", cx);
-  lineToVar.setAttribute("y1", cy + 25);
-  lineToVar.setAttribute("x2", cx);
-  lineToVar.setAttribute("y2", cy + 40);
-  lineToVar.setAttribute("stroke", config.strokeColor);
-  lineToVar.setAttribute("stroke-width", "1");
-  group.appendChild(lineToVar);
+    // Line from polygon center to variable text
+    const lineToVar = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    lineToVar.classList.add('mux-var-line');
+    lineToVar.setAttribute("x1", cx);
+    lineToVar.setAttribute("y1", cy + config.inputHeight / 2 - 5);
+    lineToVar.setAttribute("x2", cx);
+    lineToVar.setAttribute("y2", cy + 40);
+    lineToVar.setAttribute("stroke", config.strokeColor);
+    lineToVar.setAttribute("stroke-width", "1");
+    group.appendChild(lineToVar);
 
-  const label1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
-  label1.setAttribute("x", x + config.width + config.labelOffset - 15);
-  label1.setAttribute("y", y - config.inputHeight / 4);
-  label1.setAttribute("font-family", "system-ui, sans-serif");
-  label1.setAttribute("font-size", config.labelFontSize);
-  label1.setAttribute("text-anchor", "start");
-  label1.setAttribute("dominant-baseline", "middle");
-  label1.textContent = "1";
-  group.appendChild(label1);
+    // Input labels '1' and '0'
+    const label1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    label1.classList.add('mux-input-label');
+    label1.dataset.pin = "1";
+    label1.setAttribute("x", x + config.labelOffset);
+    label1.setAttribute("y", y - config.inputHeight / 4);
+    label1.setAttribute("font-family", "system-ui, sans-serif");
+    label1.setAttribute("font-size", config.labelFontSize);
+    label1.setAttribute("text-anchor", "start");
+    label1.setAttribute("dominant-baseline", "middle");
+    label1.textContent = "1";
+    group.appendChild(label1);
 
-  const label0 = document.createElementNS("http://www.w3.org/2000/svg", "text");
-  label0.setAttribute("x", x + config.width + config.labelOffset - 15);
-  label0.setAttribute("y", y + config.inputHeight / 4);
-  label0.setAttribute("font-family", "system-ui, sans-serif");
-  label0.setAttribute("font-size", config.labelFontSize);
-  label0.setAttribute("text-anchor", "start");
-  label0.setAttribute("dominant-baseline", "middle");
-  label0.textContent = "0";
-  group.appendChild(label0);
+    const label0 = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    label0.classList.add('mux-input-label');
+    label0.dataset.pin = "0";
+    label0.setAttribute("x", x + config.labelOffset);
+    label0.setAttribute("y", y + config.inputHeight / 4);
+    label0.setAttribute("font-family", "system-ui, sans-serif");
+    label0.setAttribute("font-size", config.labelFontSize);
+    label0.setAttribute("text-anchor", "start");
+    label0.setAttribute("dominant-baseline", "middle");
+    label0.textContent = "0";
+    group.appendChild(label0);
 
-  group.dataset.connOutX = -config.width / 2;
-  group.dataset.connOutY = 0;
-  group.dataset.connIn1X = config.width / 2;
-  group.dataset.connIn1Y = -config.inputHeight / 4;
-  group.dataset.connIn0X = config.width / 2;
-  group.dataset.connIn0Y = config.inputHeight / 4;
+    // Connection points data
+    group.dataset.connOutX = config.width / 2;
+    group.dataset.connOutY = 0;
+    group.dataset.connIn1X = -config.width / 2;
+    group.dataset.connIn1Y = -config.inputHeight / 4;
+    group.dataset.connIn0X = -config.width / 2;
+    group.dataset.connIn0Y = config.inputHeight / 4;
 
-  return group;
+    return group;
 }
 
+/**
+ * Generates a unique ID for a MUX element.
+ * @param {object} _idCounter - An object with a `next` property to be incremented.
+ * @returns {string} A unique ID string.
+ */
 export function getNextMuxId(_idCounter) {
   return `el_mux_${_idCounter.next++}`;
 }
 
+/**
+ * Recursively traverses the Shannon expansion tree to generate a logical structure of the MUX diagram.
+ * @param {object} node - The current node in the expansion tree.
+ * @param {number} depth - The current depth in the tree.
+ * @param {object} _elementsStore - The object to store generated muxes, constants, and connections.
+ * @param {object} _idCounter - The counter for generating unique IDs.
+ * @param {Array<number>} _yOrderCounters - An array to track the vertical order of elements at each depth.
+ * @returns {{id: string, type: string}} Information about the created element (ID and type).
+ */
 export function generateMuxStructureRecursive(
   node,
   depth,
@@ -387,6 +455,11 @@ export function generateMuxStructureRecursive(
   return { id: currentId, type: "mux" };
 }
 
+/**
+ * Initializes the process of generating the MUX diagram's logical structure from a root expansion node.
+ * @param {object} rootNode - The root node of the Shannon expansion tree.
+ * @returns {object} The complete logical structure of the diagram (muxes, constants, connections).
+ */
 export function generateMuxDiagramStructure(rootNode) {
   const elementsStore = { muxes: [], constants: [], connections: [] };
   const idCounter = { next: 0 };
@@ -402,6 +475,13 @@ export function generateMuxDiagramStructure(rootNode) {
   return elementsStore;
 }
 
+/**
+ * Calculates the x and y coordinates for each element in the MUX diagram.
+ * @param {object} elementsStore - The logical structure of the diagram.
+ * @param {object} [layoutConfig=DEFAULT_LAYOUT_CONFIG] - Configuration for overall layout (padding, spacing).
+ * @param {object} [muxDisplayConfig=DEFAULT_MUX_CONFIG] - Configuration for MUX element display.
+ * @returns {object} A map of element coordinates, keyed by element ID.
+ */
 export function calculateMuxLayout(
   elementsStore,
   layoutConfig = DEFAULT_LAYOUT_CONFIG,
@@ -465,7 +545,8 @@ export function calculateMuxLayout(
     elementsInColumn.forEach((element, index) => {
       const x =
         layoutConfig.paddingX +
-        element.depth * (muxDisplayConfig.width + layoutConfig.spacingX);
+        (maxDepth - element.depth) *
+          (muxDisplayConfig.width + layoutConfig.spacingX);
       const y =
         layoutConfig.paddingY +
         columnBlockStartY +
@@ -490,7 +571,7 @@ export function calculateMuxLayout(
         if (sourceMuxCoords) {
           const x =
             layoutConfig.paddingX +
-            constantElement.depth *
+            (maxDepth - constantElement.depth) *
               (muxDisplayConfig.width + layoutConfig.spacingX);
           // Calculate y based on the source MUX's pin
           // connIn1Y is for pin '1' (top input), connIn0Y is for pin '0' (bottom input)
@@ -511,7 +592,7 @@ export function calculateMuxLayout(
           // Fallback for safety, though sourceMuxCoords should always exist if structure is valid
           const x =
             layoutConfig.paddingX +
-            constantElement.depth *
+            (maxDepth - constantElement.depth) *
               (muxDisplayConfig.width + layoutConfig.spacingX);
           const y = layoutConfig.paddingY + svgUsableHeight / 2; // Default to center if source MUX not found
           elementCoords[constantElement.id] = {
@@ -528,7 +609,7 @@ export function calculateMuxLayout(
         // Fallback for constants not connected (should not happen in a valid MUX tree)
         const x =
           layoutConfig.paddingX +
-          constantElement.depth *
+          (maxDepth - constantElement.depth) *
             (muxDisplayConfig.width + layoutConfig.spacingX);
         const y = layoutConfig.paddingY + svgUsableHeight / 2; // Default to center
         elementCoords[constantElement.id] = {
@@ -546,6 +627,13 @@ export function calculateMuxLayout(
   return elementCoords;
 }
 
+/**
+ * Renders the entire MUX diagram as SVG elements in the DOM.
+ * @param {object} elementsStore - The logical structure of the diagram.
+ * @param {object} elementCoords - The calculated coordinates for each element.
+ * @param {object} [muxConfig=DEFAULT_MUX_CONFIG] - Configuration for MUX element display.
+ * @returns {object} A map of the drawn SVG elements, keyed by their logical ID.
+ */
 export function renderMuxDiagram(
   elementsStore,
   elementCoords,
@@ -577,6 +665,7 @@ export function renderMuxDiagram(
       coords.x,
       coords.y,
       muxData.varName,
+      muxData.depth,
       muxConfig
     );
     muxGroup.id = muxData.id;
@@ -589,6 +678,7 @@ export function renderMuxDiagram(
     if (!coords) return;
     const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
     text.setAttribute("id", constantData.id);
+    text.classList.add('constant-text'); // Add class for highlighting
     text.setAttribute("x", coords.x);
     text.setAttribute("y", coords.y);
     text.setAttribute("font-family", "system-ui, sans-serif");
@@ -629,11 +719,13 @@ export function renderMuxDiagram(
       endX = toCoords.x + parseFloat(toElementGroup.dataset.connOutX);
       endY = toCoords.y + parseFloat(toElementGroup.dataset.connOutY);
     } else {
-      endX = toCoords.x - 5;
+      // Constant is a terminal. Line comes from the right. Stop the line just before the text center to avoid overlap.
+      endX = toCoords.x + 5;
       endY = toCoords.y;
     }
 
     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.classList.add('connection-line'); // Add class for highlighting
     line.setAttribute("x1", startX);
     line.setAttribute("y1", startY);
     line.setAttribute("x2", endX);
@@ -684,127 +776,17 @@ export function renderMuxDiagram(
 
 
 
-function genSpanId() {
-  return `expSpan-${expansionState.spanIdCounter++}`;
-}
-function genGroupId() {
-  return `expGroup-${expansionState.groupIdCounter++}`;
-}
-export function generateExpansionHtmlRecursive(node, ancestorGroupChain = []) {
-  let htmlOutput = "";
-  const styleType = "color";
-
-  if (node.type === "constant") {
-    const id = genSpanId();
-    let currentGroupChain = ancestorGroupChain;
-    if (ancestorGroupChain.length === 0) {
-      currentGroupChain = [genGroupId()];
-    }
-    expansionState.spanData[id] = {
-      minterms: node.minterms,
-      textContent: node.value,
-      isLeaf: true,
-      path: node.path,
-      groupChain: currentGroupChain,
-      styleType: styleType,
-    };
-    htmlOutput = `<span id="${id}" data-span-id="${id}">${node.value}</span>`;
-  } else if (node.type === "expression") {
-    const { variable, positiveBranch, negativeBranch } = node;
-
-    const positiveBranchGroupId = genGroupId();
-    const currentPositiveGroupChain = [
-      ...ancestorGroupChain,
-      positiveBranchGroupId,
-    ];
-
-    const varPosId = genSpanId();
-    expansionState.spanData[varPosId] = {
-      minterms: positiveBranch.minterms,
-      textContent: variable,
-      isVar: true,
-      varName: variable,
-      groupChain: currentPositiveGroupChain,
-      styleType: styleType,
-    };
-    htmlOutput += `<span id="${varPosId}" data-span-id="${varPosId}">${variable}</span>`;
-
-    const openParenPosId = genSpanId();
-    expansionState.spanData[openParenPosId] = {
-      minterms: positiveBranch.minterms,
-      textContent: "(",
-      isParen: true,
-      groupChain: currentPositiveGroupChain,
-      styleType: styleType,
-    };
-    htmlOutput += `<span id="${openParenPosId}" data-span-id="${openParenPosId}">(</span>`;
-
-    htmlOutput += generateExpansionHtmlRecursive(
-      positiveBranch,
-      currentPositiveGroupChain
-    );
-
-    const closeParenPosId = genSpanId();
-    expansionState.spanData[closeParenPosId] = {
-      minterms: positiveBranch.minterms,
-      textContent: ")",
-      isParen: true,
-      groupChain: currentPositiveGroupChain,
-      styleType: styleType,
-    };
-    htmlOutput += `<span id="${closeParenPosId}" data-span-id="${closeParenPosId}">)</span>`;
-
-    const negativeBranchGroupId = genGroupId();
-    const currentNegativeGroupChain = [
-      ...ancestorGroupChain,
-      negativeBranchGroupId,
-    ];
-
-    const varNegId = genSpanId();
-    expansionState.spanData[varNegId] = {
-      minterms: negativeBranch.minterms,
-      textContent: `${variable}'`,
-      isVar: true,
-      varName: variable,
-      isNegated: true,
-      groupChain: currentNegativeGroupChain,
-      styleType: styleType,
-    };
-    htmlOutput += `<span id="${varNegId}" data-span-id="${varNegId}" class="ov">${variable}</span>`;
-
-    const openParenNegId = genSpanId();
-    expansionState.spanData[openParenNegId] = {
-      minterms: negativeBranch.minterms,
-      textContent: "(",
-      isParen: true,
-      groupChain: currentNegativeGroupChain,
-      styleType: styleType,
-    };
-    htmlOutput += `<span id="${openParenNegId}" data-span-id="${openParenNegId}">(</span>`;
-
-    htmlOutput += generateExpansionHtmlRecursive(
-      negativeBranch,
-      currentNegativeGroupChain
-    );
-
-    const closeParenNegId = genSpanId();
-    expansionState.spanData[closeParenNegId] = {
-      minterms: negativeBranch.minterms,
-      textContent: ")",
-      isParen: true,
-      groupChain: currentNegativeGroupChain,
-      styleType: styleType,
-    };
-    htmlOutput += `<span id="${closeParenNegId}" data-span-id="${closeParenNegId}">)</span>`;
-  }
-  return htmlOutput;
-}
 
 
+/**
+ * Main rendering function for the developer/debug view, including the Shannon expansion and MUX diagram.
+ * It reads the desired expansion order, generates the expansion tree, renders the HTML representation,
+ * and then generates and renders the corresponding MUX diagram.
+ */
 export function renderDev() {
   // based on expansionOrderInputEl
-  
-  
+
+
   expansionState.spanIdCounter = 0;
   expansionState.groupIdCounter = 0;
   for (const key in expansionState.spanData)
@@ -927,6 +909,10 @@ export function renderDev() {
   }
 }
 
+/**
+ * Sets up event listeners and observers for the MUX diagram to handle user interactions and resizing.
+ * This function is the entry point for making the MUX diagram interactive.
+ */
 export function renderMUX() {
     const expansionOrderInputEl = $("expansionOrderInput");
     console.log("Rendering MUX diagram with current state...", !!expansionOrderInputEl);

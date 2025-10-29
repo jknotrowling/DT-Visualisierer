@@ -11,10 +11,13 @@ import { parseLogicFunction } from "../logic/parser.js";
 
 
 
+/**
+ * Disables or enables buttons based on whether the custom function is being edited.
+ */
 export function disabledButtonsOnEditingCustomFunction() {
   const minusBtnEl = $("minusBtn");
   const plusBtnEl = $("plusBtn");
-  console.log("Is edditing",customFunctionState.isEditing)
+  console.log("Is editing",customFunctionState.isEditing)
   if (minusBtnEl && plusBtnEl) {
     const disableMinus = customFunctionState.isEditing || logicState.nVars <= 2;
     const disablePlus = customFunctionState.isEditing || logicState.nVars >= 4;
@@ -44,6 +47,9 @@ export function disabledButtonsOnEditingCustomFunction() {
 
 }
 
+/**
+ * Updates the visual state of the preset buttons to reflect the current preset.
+ */
 export function updatePresetButtonStates() {
   const presetBtns = document.querySelectorAll('.preset-btn');
   presetBtns.forEach(btn => {
@@ -60,6 +66,9 @@ export function updatePresetButtonStates() {
   });
 }
 
+/**
+ * Sets up the event listeners for the plus and minus buttons to change the number of variables.
+ */
 export function setUpNVarsPlusMinusButtonEvents() {
     const minusBtnEl = $("minusBtn");
     if (minusBtnEl) {
@@ -116,6 +125,9 @@ export function setUpNVarsPlusMinusButtonEvents() {
 }
 
 
+/**
+ * Sets up the event listeners for the preset buttons.
+ */
 export function setUpPresetButtonEvents() {
   const presetBtns = document.querySelectorAll('.preset-btn');
   presetBtns.forEach(btn => {
@@ -129,6 +141,9 @@ export function setUpPresetButtonEvents() {
   });
 }
 
+/**
+ * Initializes the collapse toggle for the display options.
+ */
 export function initializeCollapseToggle() {
   const collapseToggle = $("collapseToggle");
   const displayOptionsContent = $("displayOptionsContent");
@@ -147,11 +162,17 @@ export function initializeCollapseToggle() {
   collapseToggle.addEventListener("click", toggleDisplayOptions);
 }
 
+/**
+ * Toggles the display options.
+ */
 function toggleDisplayOptions() {
   layoutState.displayOptionsExpanded = !layoutState.displayOptionsExpanded;
   updateCollapseState();
 }
 
+/**
+ * Updates the collapse state of the display options.
+ */
 function updateCollapseState() {
   const displayOptionsContent = $("displayOptionsContent");
   const collapseIcon = $("collapseIcon");
@@ -206,6 +227,9 @@ function updateCollapseState() {
   }
 }
 
+/**
+ * Sets up the event listeners for the view toggle checkboxes.
+ */
 export function setUpViewToggleCheckboxEvents() {
   const viewToggleMappings = layoutState.viewToggleMappings;
 
@@ -215,6 +239,11 @@ export function setUpViewToggleCheckboxEvents() {
     const card = $(cardId);
 
     if (checkbox && card) {
+      // Set initial state from layoutState
+      const isActive = layoutState.viewToggleMappings[checkboxId].active;
+      checkbox.checked = isActive;
+      card.style.display = isActive ? "flex" : "none";
+
       checkbox.addEventListener("change", function () {
         layoutState.viewToggleMappings[checkboxId].active = this.checked;
 
@@ -236,6 +265,9 @@ export function setUpViewToggleCheckboxEvents() {
   }
 }
 
+/**
+ * Sets up the event listener for the landscape toggle button.
+ */
 export function setUpLandscapeToggleButton() {
     const landscapeToggleBtnEl = $("landscapeToggleBtn");
     const pageEl = document.querySelector(".page"); // Assuming .page is the main container to toggle class on

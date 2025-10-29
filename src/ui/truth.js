@@ -7,6 +7,11 @@ import { $ } from "../utils/utils.js";
 import { handleCellOrTermHover } from "./hover.js";
 
 
+/**
+ * Rendert die Wahrheitstabelle basierend auf dem aktuellen Zustand der Logikvariablen.
+ * Erstellt das HTML für die Tabelle und fügt es in das DOM ein.
+ * Richtet auch berührungsfreundliche Interaktionen für die Tabelle ein.
+ */
 export function renderTruth() {
   const nVars = logicState.nVars;
   const header = [...VARIABLE_NAMES.slice(0, nVars).reverse(), "f"];
@@ -57,6 +62,12 @@ export function renderTruth() {
 }
 
 
+/**
+ * Behandelt Klick-Ereignisse auf einer Zelle in der Wahrheitstabelle.
+ * Ändert den Ausgabezustand der entsprechenden Zeile (0 -> 1 -> null -> 0).
+ * Aktualisiert den globalen Zustand und rendert die gesamte Benutzeroberfläche neu.
+ * @param {MouseEvent} e - Das Klick-Ereignis vom Event-Listener.
+ */
 function onTruthTableCellClick(e) {
     const currentTarget = e.currentTarget;
     if (!currentTarget) return;

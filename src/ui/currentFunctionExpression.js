@@ -8,6 +8,9 @@ import {
 import { renderAll } from "./ui.js";
 import { showModal } from "./modal.js";
 
+/**
+ * Renders the current function expression in LaTeX format.
+ */
 export function renderCurrentFunctionExpression() {
   const currentFunction = logicState.preset;
   const nVars = logicState.nVars;
@@ -174,6 +177,11 @@ export function renderCurrentFunctionExpression() {
   }
 }
 
+/**
+ * Handles the submission of the custom function.
+ * @param {HTMLButtonElement} editButton - The button that toggles the edit mode.
+ * @returns {boolean} - True if the submission was successful, false otherwise.
+ */
 function submitEditCustomFunction(editButton) {
   if (customFunctionState.isEditing) {
     const customFunctionInput = $("custom-function");
